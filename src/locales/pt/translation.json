@@ -33,5 +33,19 @@
     "edit": "Editar",
     "create": "Criar",
     "update": "Atualizar"
+  },
+  "users": {
+    "list": {
+      "success": "Usuários listados com sucesso",
+      "error": "Erro ao buscar usuários"
+    },
+    "create": {
+      "success": "Usuário criado com sucesso",
+      "error": "Erro ao criar usuário",
+      "validation": "Dados inválidos fornecidos",
+      "email_required": "Email é obrigatório",
+      "password_required": "Senha é obrigatória",
+      "email_exists": "Este email já está em uso"
+    }
   }
 }

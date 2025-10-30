@@ -91,3 +91,10 @@ yarn.lock
 
 **/dist/
 .history/
+
+# Prisma
+/src/db/generated/
+/prisma/generated/
+*.db
+*.sqlite
+*.sqlite3

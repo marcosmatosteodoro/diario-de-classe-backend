@@ -33,5 +33,19 @@
     "edit": "Edit",
     "create": "Create",
     "update": "Update"
+  },
+  "users": {
+    "list": {
+      "success": "Users listed successfully",
+      "error": "Error fetching users"
+    },
+    "create": {
+      "success": "User created successfully",
+      "error": "Error creating user",
+      "validation": "Invalid data provided",
+      "email_required": "Email is required",
+      "password_required": "Password is required",
+      "email_exists": "This email is already in use"
+    }
   }
 }

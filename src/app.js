@@ -11,6 +11,7 @@ import cookieParser from 'cookie-parser';
 
 import Constants from './utilities/constants.js';
 import routes from './routes.js';
+import usersRoutes from './routes/users.js';
 import LoggerManager from './utilities/logger-manager.js';
 import ErrorHandler from './middlewares/error-handler.js';
 import cleanRequest from './middlewares/cleanRequest.js';
@@ -50,6 +51,7 @@ app.use(cleanRequest); // Middleware customizado para limpeza/sanitização das 
 
 // Definir rotas
 app.use('/api', routes); // Importa e usa as rotas definidas no arquivo routes.js
+app.use('/api/users', usersRoutes); // Rotas para gerenciamento de usuários
 
 // Captura 404 e encaminha para o manipulador de erros
 app.use((req, res) => {
