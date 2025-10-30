@@ -1,12 +1,13 @@
 import express from 'express';
 import { healthCheck, welcome } from './controllers/healthController.js';
+import userRoutes from './routes/users.js';
+
+const userController = userRoutes;
 
 const router = express.Router();
 
-// Rota para verificar se a API está funcionando
-router.get('/health', healthCheck);
-
-// Rota raiz da API
 router.get('/', welcome);
+router.get('/health', healthCheck);
+router.use('/api/users', userController);
 
 export default router;
