@@ -14,7 +14,7 @@ import routes from './routes.js';
 import LoggerManager from './utilities/logger-manager.js';
 import ErrorHandler from './middlewares/error-handler.js';
 import cleanRequest from './middlewares/cleanRequest.js';
-// import i18nMiddleware from "./routes/middlewares/i18n/i18nMiddleware";
+import i18nMiddleware from './middlewares/i18n.js';
 
 const app = express();
 
@@ -30,7 +30,8 @@ if (!Constants.isProduction) {
   );
 }
 
-// app.use(i18nMiddleware);
+// Middleware de internacionalização - deve vir antes das rotas
+app.use(i18nMiddleware);
 app.use('/api/stripe', bodyParser.raw({ type: '*/*' })); // Configura endpoint específico do Stripe para receber dados brutos (webhooks)
 app.use(responseTime({ header: 'execution-time' })); // Adiciona header com tempo de execução das requisições
 app.use(bodyParser.json({ limit: '100mb' })); // Permite parsing de JSON com limite de 100MB
@@ -52,7 +53,11 @@ app.use('/api', routes); // Importa e usa as rotas definidas no arquivo routes.j
 
 // Captura 404 e encaminha para o manipulador de erros
 app.use((req, res) => {
-  res.status(httpStatus.NOT_FOUND).json();
+  const t = req.t || (key => key); // Fallback se i18n não estiver disponível
+  res.status(httpStatus.NOT_FOUND).json({
+    error: 'Not Found',
+    message: t('api.errors.not_found')
+  });
 });
 
 // Handle 500

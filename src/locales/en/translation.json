@@ -1,0 +1,37 @@
+{
+  "server": {
+    "started": "Server started on port {{port}}",
+    "error": "Server error"
+  },
+  "api": {
+    "welcome": "Welcome to the Class Diary API!",
+    "health": {
+      "status": "OK",
+      "message": "API is working correctly!",
+      "endpoints": "Available endpoints"
+    },
+    "errors": {
+      "not_found": "Endpoint not found",
+      "internal_error": "Internal server error",
+      "bad_request": "Invalid request",
+      "unauthorized": "Unauthorized"
+    }
+  },
+  "validation": {
+    "required": "Required field",
+    "invalid_format": "Invalid format",
+    "min_length": "Must have at least {{count}} characters",
+    "max_length": "Cannot have more than {{count}} characters"
+  },
+  "common": {
+    "success": "Success",
+    "error": "Error",
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "update": "Update"
+  }
+}

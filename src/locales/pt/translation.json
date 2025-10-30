@@ -1,0 +1,37 @@
+{
+  "server": {
+    "started": "Servidor iniciado na porta {{port}}",
+    "error": "Erro no servidor"
+  },
+  "api": {
+    "welcome": "Bem-vindo à API do Diário de Classe!",
+    "health": {
+      "status": "OK",
+      "message": "API está funcionando corretamente!",
+      "endpoints": "Endpoints disponíveis"
+    },
+    "errors": {
+      "not_found": "Endpoint não encontrado",
+      "internal_error": "Erro interno do servidor",
+      "bad_request": "Requisição inválida",
+      "unauthorized": "Não autorizado"
+    }
+  },
+  "validation": {
+    "required": "Campo obrigatório",
+    "invalid_format": "Formato inválido",
+    "min_length": "Deve ter pelo menos {{count}} caracteres",
+    "max_length": "Não pode ter mais de {{count}} caracteres"
+  },
+  "common": {
+    "success": "Sucesso",
+    "error": "Erro",
+    "loading": "Carregando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "create": "Criar",
+    "update": "Atualizar"
+  }
+}
