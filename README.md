@@ -44,11 +44,13 @@ npm run db:push
 ## 🗄️ Configuração de Banco de Dados
 
 ### SQLite (Desenvolvimento - Padrão)
+
 ```bash
 npm run db:setup:sqlite
 ```
 
 ### PostgreSQL (Produção)
+
 ```bash
 npm run db:setup:postgresql
 # Depois configure as variáveis no .env:
@@ -56,6 +58,7 @@ npm run db:setup:postgresql
 ```
 
 ### MySQL (Alternativa)
+
 ```bash
 npm run db:setup:mysql
 # Configure as variáveis MYSQL_* no .env
@@ -77,14 +80,17 @@ npm run db:studio
 ## 📡 Endpoints da API
 
 ### Health Check
+
 - `GET /` - Status da API
 - `GET /health` - Health check detalhado
 
 ### Usuários
+
 - `GET /api/users` - Listar usuários
 - `POST /api/users` - Criar usuário
 
 ### Internacionalização
+
 Use o header `Accept-Language` ou query `?lng=pt|en` para alternar idiomas.
 
 ## 🔧 Scripts Disponíveis
@@ -119,7 +125,11 @@ src/
 ├── app.js                 # Configuração do Express
 ├── server.js             # Entry point
 ├── routes/               # Rotas da API
-│   └── users.js         # CRUD de usuários
+│   ├── routes.js        # Rotas principais (health/welcome)
+│   └── users.js         # Rotas de usuários
+├── controllers/          # Lógica de negócio
+│   ├── healthController.js # Health check e welcome
+│   └── usersController.js  # CRUD de usuários
 ├── middlewares/          # Middlewares customizados
 │   ├── i18n.js          # Configuração i18n
 │   └── errorHandler.js  # Tratamento de erros
@@ -145,19 +155,52 @@ O arquivo `.env` contém todas as configurações necessárias:
 - `DATABASE_PROVIDER` - Tipo de banco (sqlite/postgresql/mysql)
 - `DATABASE_URL` - URL de conexão do banco
 
+## 🏗️ Arquitetura
+
+O projeto segue uma arquitetura baseada no padrão **MVC (Model-View-Controller)**:
+
+- **Models**: Definidos no Prisma Schema (`src/db/prisma/schema.prisma`)
+- **Views**: Respostas JSON estruturadas pelos controllers
+- **Controllers**: Lógica de negócio em `src/controllers/`
+- **Routes**: Definição de endpoints em `src/routes/`
+- **Middlewares**: Funcionalidades transversais (auth, i18n, logs)
+
+### Fluxo de Requisição
+```
+Request → Middleware → Route → Controller → Model (Prisma) → Response
+```
+
 ## 👥 Desenvolvimento
 
-### Adicionando Nova Rota
-1. Crie o arquivo em `src/routes/`
-2. Implemente os endpoints com i18n
-3. Registre no `src/app.js`
+### Adicionando Nova Funcionalidade
+
+1. **Controller**: Crie em `src/controllers/nomeController.js`
+   ```javascript
+   export const actionName = async (req, res) => {
+     // Lógica aqui
+   };
+   ```
+
+2. **Route**: Crie em `src/routes/nome.js`
+   ```javascript
+   import { actionName } from '../controllers/nomeController.js';
+   router.get('/endpoint', actionName);
+   ```
+
+3. **Registre**: No `src/app.js`
+   ```javascript
+   import nomeRoutes from './routes/nome.js';
+   app.use('/api/nome', nomeRoutes);
+   ```
 
 ### Adicionando Tradução
+
 1. Edite `src/locales/pt/translation.json`
 2. Edite `src/locales/en/translation.json`
-3. Use `req.t('chave.da.traducao')` nas rotas
+3. Use `req.t('chave.da.traducao')` nos controllers
 
 ### Mudando Banco de Dados
+
 1. Execute `npm run db:setup:[tipo]`
 2. Configure as variáveis específicas no `.env`
 3. Execute `npm run db:generate && npm run db:push`
@@ -165,6 +208,7 @@ O arquivo `.env` contém todas as configurações necessárias:
 ## 📚 Exemplos de Uso
 
 ### Criar Usuário
+
 ```bash
 curl -X POST http://localhost:3000/api/users \
   -H "Content-Type: application/json" \
@@ -173,6 +217,7 @@ curl -X POST http://localhost:3000/api/users \
 ```
 
 ### Listar Usuários em Inglês
+
 ```bash
 curl http://localhost:3000/api/users?lng=en
 ```

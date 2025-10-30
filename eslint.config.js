@@ -6,6 +6,28 @@ export default [
   js.configs.recommended,
   prettierConfig,
   {
+    // Arquivos e diretórios ignorados
+    ignores: [
+      // Arquivos gerados pelo Prisma
+      'src/db/generated/**',
+      'src/db/prisma/migrations/**',
+      // Node modules
+      'node_modules/**',
+      // Logs
+      '**/*.log',
+      'logs/**',
+      // Build e dist
+      'dist/**',
+      'build/**',
+      'coverage/**',
+      // Arquivos temporários
+      '.tmp/**',
+      '.cache/**',
+      // Configurações específicas do ambiente
+      '.env*'
+    ]
+  },
+  {
     files: ['**/*.js'],
     languageOptions: {
       ecmaVersion: 2024,
