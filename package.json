@@ -1,0 +1,49 @@
+{
+  "name": "diario-de-classe-backend",
+  "version": "0.1.0",
+  "description": "Api do diário de classe",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BLS-idiomas/diario-de-classe-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BLS-idiomas/diario-de-classe-backend/issues"
+  },
+  "homepage": "https://github.com/BLS-idiomas/diario-de-classe-backend#readme",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "custom-env": "^2.0.6",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "http-status": "^2.1.0",
+    "method-override": "^3.0.0",
+    "morgan": "^1.10.1",
+    "newrelic": "^13.6.2",
+    "response-time": "^2.3.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.38.0",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2"
+  }
+}

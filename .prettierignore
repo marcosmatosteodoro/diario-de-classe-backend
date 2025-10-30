@@ -1,0 +1,25 @@
+# Dependências
+node_modules/
+package-lock.json
+
+# Build e dist
+dist/
+build/
+coverage/
+
+# Logs
+*.log
+logs/
+
+# Arquivos temporários
+.tmp/
+.cache/
+
+# Configurações específicas do ambiente
+.env
+.env.local
+.env.production
+
+# Arquivos gerados
+*.min.js
+*.min.css
