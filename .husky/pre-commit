@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+
+echo "🔍 Running pre-commit checks..."
+
+# Verifica se há erros de lint
+echo "📝 Checking code style with ESLint..."
+npm run lint
+
+# Verifica formatação do código
+echo "🎨 Checking code formatting with Prettier..."
+npm run format:check
+
+# Executa os testes unitários
+echo "🧪 Running unit tests..."
+npm run test:unit
+
+echo "✅ All pre-commit checks passed!"

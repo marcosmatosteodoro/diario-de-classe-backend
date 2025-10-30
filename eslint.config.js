@@ -135,5 +135,36 @@ export default [
       // Permite console.log em arquivos de configuração
       'no-console': 'off'
     }
+  },
+  {
+    // Configurações específicas para arquivos de teste
+    files: ['**/*.test.js', '**/__tests__/**/*.js', '**/__mocks__/**/*.js'],
+    languageOptions: {
+      globals: {
+        // Globais do Jest
+        test: 'readonly',
+        expect: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        jest: 'readonly'
+      }
+    },
+    rules: {
+      // Permite console.log nos testes
+      'no-console': 'off',
+
+      // Permite funções maiores nos testes (cenários complexos)
+      'max-lines-per-function': ['warn', { max: 150, skipBlankLines: true, skipComments: true }],
+
+      // Permite mais parâmetros nos testes
+      'max-params': ['warn', 6],
+
+      // Permite complexidade maior nos testes
+      complexity: ['warn', 15]
+    }
   }
 ];

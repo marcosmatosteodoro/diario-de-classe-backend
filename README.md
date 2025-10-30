@@ -8,7 +8,9 @@ Uma API moderna em Node.js com Express para sistema de diário de classe, com su
 - **Express.js 5.1.0** - Framework web
 - **Prisma ORM 6.18.0** - ORM moderno com suporte multi-database
 - **i18next** - Internacionalização (Português/Inglês)
+- **Jest 29.x** - Framework de testes
 - **ESLint + Prettier** - Qualidade e formatação de código
+- **Husky** - Git hooks para automação
 - **SQLite/PostgreSQL/MySQL** - Suporte flexível a bancos de dados
 
 ## 📋 Funcionalidades
@@ -19,6 +21,8 @@ Uma API moderna em Node.js com Express para sistema de diário de classe, com su
 - ✅ Validação de dados
 - ✅ Logs estruturados
 - ✅ Tratamento de erros centralizado
+- ✅ Testes unitários automatizados
+- ✅ Git hooks com verificações automáticas
 - ✅ Configuração flexível por ambiente
 
 ## 🛠️ Instalação
@@ -112,10 +116,17 @@ npm run db:setup:sqlite      # Configurar SQLite
 npm run db:setup:postgresql  # Configurar PostgreSQL
 npm run db:setup:mysql       # Configurar MySQL
 
-# Código
-npm run lint        # Verificar código
-npm run lint:fix    # Corrigir automaticamente
-npm run format      # Formatar código
+# Qualidade de código
+npm run lint         # Verificar código
+npm run lint:fix     # Corrigir automaticamente
+npm run format       # Formatar código
+npm run format:check # Verificar formatação
+
+# Testes
+npm test            # Executar todos os testes
+npm run test:unit   # Executar testes unitários
+npm run test:watch  # Executar testes em modo watch
+npm run test:coverage # Executar com relatório de cobertura
 ```
 
 ## 🌍 Estrutura de Arquivos
@@ -141,9 +152,13 @@ src/
 │   ├── prisma/
 │   │   └── schema.prisma # Schema do banco
 │   └── client.js        # Cliente Prisma
-└── locales/             # Traduções
-    ├── pt/translation.json
-    └── en/translation.json
+├── locales/             # Traduções
+│   ├── pt/translation.json
+│   └── en/translation.json
+└── __tests__/           # Testes automatizados
+    ├── units/           # Testes unitários
+    │   └── middlewares/ # Testes dos middlewares
+    └── __mocks__/       # Mocks para testes
 ```
 
 ## 🔐 Variáveis de Ambiente
@@ -225,13 +240,66 @@ curl -X POST http://localhost:3000/api/users \
 curl http://localhost:3000/api/users?lng=en
 ```
 
-## 🤝 Contribuição
+## � Testes
+
+O projeto possui uma suíte completa de testes automatizados:
+
+### Executar Testes
+
+```bash
+# Todos os testes
+npm test
+
+# Apenas testes unitários
+npm run test:unit
+
+# Modo watch (re-executa ao salvar)
+npm run test:watch
+
+# Com relatório de cobertura
+npm run test:coverage
+```
+
+### Estrutura de Testes
+
+- **Unitários**: Testam componentes isolados (middlewares, controllers)
+- **Integração**: Testam interação entre componentes
+- **Cobertura**: Relatórios detalhados de cobertura de código
+
+## 🪝 Automação com Git Hooks
+
+O projeto utiliza **Husky** para garantir qualidade do código:
+
+### Hooks Configurados
+
+- **pre-commit**: Executa lint, formatação e testes unitários
+- **pre-push**: Executa todos os testes e verificação final
+- **commit-msg**: Valida mensagens seguindo Conventional Commits
+
+### Conventional Commits
+
+Use mensagens padronizadas:
+
+```bash
+feat: add user authentication
+fix: resolve database connection issue
+docs: update API documentation
+test: add unit tests for user service
+```
+
+## �🤝 Contribuição
+
+Para contribuir com o projeto, consulte o **[CONTRIBUTING.md](CONTRIBUTING.md)** com diretrizes detalhadas.
+
+**Resumo rápido:**
 
 1. Fork o projeto
 2. Crie uma branch: `git checkout -b feature/nova-funcionalidade`
-3. Commit: `git commit -m 'Adiciona nova funcionalidade'`
+3. Commit seguindo Conventional Commits: `git commit -m 'feat: adiciona nova funcionalidade'`
 4. Push: `git push origin feature/nova-funcionalidade`
 5. Abra um Pull Request
+
+**Importante**: Os git hooks executarão automaticamente verificações de qualidade antes dos commits e pushes.
 
 ## 📄 Licença
 

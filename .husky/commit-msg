@@ -1,0 +1,41 @@
+#!/usr/bin/env sh
+
+# Lê a mensagem do commit
+commit_msg=$(cat "$1")
+
+# Padrão para Conventional Commits
+# Exemplo: feat: add new feature
+# Tipos válidos: feat, fix, docs, style, refactor, test, chore
+conventional_commit_regex='^(feat|fix|docs|style|refactor|perf|test|chore|ci|build|revert)(\(.+\))?: .{1,50}'
+
+# Verifica se a mensagem segue o padrão
+if echo "$commit_msg" | grep -qE "$conventional_commit_regex"; then
+    echo "✅ Commit message follows Conventional Commits format"
+    exit 0
+else
+    echo "❌ Invalid commit message format!"
+    echo ""
+    echo "📝 Your commit message should follow Conventional Commits format:"
+    echo "   <type>[optional scope]: <description>"
+    echo ""
+    echo "🏷️  Valid types:"
+    echo "   feat:     A new feature"
+    echo "   fix:      A bug fix"
+    echo "   docs:     Documentation only changes"
+    echo "   style:    Changes that do not affect code meaning"
+    echo "   refactor: Code changes that neither fix bugs nor add features"
+    echo "   perf:     Performance improvements"
+    echo "   test:     Adding missing tests or correcting existing tests"
+    echo "   chore:    Changes to build process or auxiliary tools"
+    echo "   ci:       Changes to CI configuration files and scripts"
+    echo "   build:    Changes that affect the build system or dependencies"
+    echo "   revert:   Reverts a previous commit"
+    echo ""
+    echo "📌 Examples:"
+    echo "   feat: add user authentication"
+    echo "   fix: resolve database connection issue"
+    echo "   docs: update API documentation"
+    echo "   test: add unit tests for user service"
+    echo ""
+    exit 1
+fi

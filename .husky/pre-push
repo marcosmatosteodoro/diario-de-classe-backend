@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+
+echo "🚀 Running pre-push checks..."
+
+# Executa todos os testes
+echo "🧪 Running all tests..."
+npm test
+
+# Verifica se há erros de lint que possam ter sido perdidos
+echo "📝 Final lint check..."
+npm run lint
+
+echo "✅ All pre-push checks passed! Ready to push! 🎉"
