@@ -186,42 +186,47 @@ O projeto segue uma arquitetura baseada no padrão **MVC (Model-View-Controller)
 Request → Middleware → Route → Controller → Model (Prisma) → Response
 ```
 
-## 👥 Desenvolvimento
+## � Detalhes da API
 
-### Adicionando Nova Funcionalidade
+### Códigos de Status HTTP
 
-1. **Controller**: Crie em `src/controllers/nomeController.js`
+A API utiliza os códigos de status HTTP padrão:
 
-   ```javascript
-   export const actionName = async (req, res) => {
-     // Lógica aqui
-   };
-   ```
+- `200` - OK (Sucesso)
+- `201` - Created (Recurso criado)
+- `400` - Bad Request (Dados inválidos)
+- `401` - Unauthorized (Não autorizado)
+- `404` - Not Found (Recurso não encontrado)
+- `422` - Unprocessable Entity (Erro de validação)
+- `500` - Internal Server Error (Erro interno)
 
-2. **Route**: Crie em `src/routes/nome.js`
+### Internacionalização (i18n)
 
-   ```javascript
-   import { actionName } from '../controllers/nomeController.js';
-   router.get('/endpoint', actionName);
-   ```
+A API suporta múltiplos idiomas através de:
 
-3. **Registre**: No `src/app.js`
-   ```javascript
-   import nomeRoutes from './routes/nome.js';
-   app.use('/api/nome', nomeRoutes);
-   ```
+1. **Header Accept-Language**: `Accept-Language: pt-BR` ou `Accept-Language: en-US`
+2. **Query Parameter**: `?lng=pt` ou `?lng=en`
+3. **Idioma padrão**: Português (pt)
 
-### Adicionando Tradução
+### Tratamento de Erros
 
-1. Edite `src/locales/pt/translation.json`
-2. Edite `src/locales/en/translation.json`
-3. Use `req.t('chave.da.traducao')` nos controllers
+Todos os erros retornam um objeto padronizado:
 
-### Mudando Banco de Dados
-
-1. Execute `npm run db:setup:[tipo]`
-2. Configure as variáveis específicas no `.env`
-3. Execute `npm run db:generate && npm run db:push`
+```javascript
+{
+  "success": false,
+  "error": {
+    "message": "Mensagem traduzida do erro",
+    "code": "VALIDATION_ERROR",
+    "details": [
+      {
+        "field": "email",
+        "message": "Email é obrigatório"
+      }
+    ]
+  }
+}
+```
 
 ## 📚 Exemplos de Uso
 
@@ -263,28 +268,167 @@ npm run test:coverage
 ### Estrutura de Testes
 
 - **Unitários**: Testam componentes isolados (middlewares, controllers)
-- **Integração**: Testam interação entre componentes
 - **Cobertura**: Relatórios detalhados de cobertura de código
 
-## 🪝 Automação com Git Hooks
+## 🔧 CORS e Segurança
 
-O projeto utiliza **Husky** para garantir qualidade do código:
+### Configuração CORS
 
-### Hooks Configurados
+Para permitir requisições do frontend, configure as origens permitidas:
 
-- **pre-commit**: Executa lint, formatação e testes unitários
-- **pre-push**: Executa todos os testes e verificação final
-- **commit-msg**: Valida mensagens seguindo Conventional Commits
+```javascript
+// Exemplo de configuração para diferentes ambientes
+const corsOptions = {
+  origin:
+    process.env.NODE_ENV === 'production'
+      ? ['https://meudominio.com']
+      : ['http://localhost:3000', 'http://localhost:5173'],
+  credentials: true
+};
+```
 
-### Conventional Commits
+### Headers de Segurança
 
-Use mensagens padronizadas:
+A API inclui headers de segurança padrão:
+
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 1; mode=block`
+
+## 🌟 Status de Qualidade
 
 ```bash
 feat: add user authentication
 fix: resolve database connection issue
 docs: update API documentation
 test: add unit tests for user service
+```
+
+## 🌐 Comunicação com Frontend
+
+### Headers de Requisição
+
+```javascript
+// Definir idioma da resposta
+{
+  "Accept-Language": "pt-BR" // ou "en-US"
+  // ou usar query parameter: ?lng=pt
+}
+
+// Para requisições POST/PUT
+{
+  "Content-Type": "application/json",
+  "Accept-Language": "pt"
+}
+```
+
+### Respostas da API
+
+Todas as respostas seguem o padrão JSON:
+
+```javascript
+// Sucesso
+{
+  "success": true,
+  "data": { /* dados */ },
+  "message": "Operação realizada com sucesso"
+}
+
+// Erro
+{
+  "success": false,
+  "error": {
+    "message": "Mensagem do erro",
+    "code": "ERROR_CODE",
+    "details": []
+  }
+}
+```
+
+### Exemplos de Integração Frontend
+
+#### JavaScript/Fetch
+
+```javascript
+// Listar usuários
+const response = await fetch('http://localhost:3000/api/users', {
+  headers: {
+    'Accept-Language': 'pt'
+  }
+});
+const data = await response.json();
+
+// Criar usuário
+const newUser = await fetch('http://localhost:3000/api/users', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept-Language': 'pt'
+  },
+  body: JSON.stringify({
+    email: 'usuario@exemplo.com',
+    senha: 'minhasenha123'
+  })
+});
+```
+
+#### React/Axios
+
+```javascript
+import axios from 'axios';
+
+// Configurar instância do axios
+const api = axios.create({
+  baseURL: 'http://localhost:3000/api',
+  headers: {
+    'Accept-Language': 'pt'
+  }
+});
+
+// Usar nos componentes
+const users = await api.get('/users');
+const newUser = await api.post('/users', userData);
+```
+
+#### Vue.js
+
+```javascript
+// Em um componente Vue
+async fetchUsers() {
+  try {
+    const response = await this.$http.get('/api/users', {
+      headers: { 'Accept-Language': this.$i18n.locale }
+    });
+    this.users = response.data.data;
+  } catch (error) {
+    console.error('Erro ao buscar usuários:', error);
+  }
+}
+```
+
+## 🔧 Configuração para Produção
+
+### Variáveis de Ambiente Essenciais
+
+```bash
+NODE_ENV=production
+PORT=3000
+DATABASE_URL="postgresql://user:password@localhost:5432/dbname"
+```
+
+### Deploy
+
+```bash
+# Instalar dependências
+npm ci --production
+
+# Aplicar migrações do banco
+npm run db:push
+
+# Iniciar em produção
+npm start
+```
+
 ```
 
 ## �🤝 Contribuição
@@ -304,3 +448,4 @@ Para contribuir com o projeto, consulte o **[CONTRIBUTING.md](CONTRIBUTING.md)**
 ## 📄 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+```
