@@ -166,6 +166,7 @@ O projeto segue uma arquitetura baseada no padrão **MVC (Model-View-Controller)
 - **Middlewares**: Funcionalidades transversais (auth, i18n, logs)
 
 ### Fluxo de Requisição
+
 ```
 Request → Middleware → Route → Controller → Model (Prisma) → Response
 ```
@@ -175,6 +176,7 @@ Request → Middleware → Route → Controller → Model (Prisma) → Response
 ### Adicionando Nova Funcionalidade
 
 1. **Controller**: Crie em `src/controllers/nomeController.js`
+
    ```javascript
    export const actionName = async (req, res) => {
      // Lógica aqui
@@ -182,6 +184,7 @@ Request → Middleware → Route → Controller → Model (Prisma) → Response
    ```
 
 2. **Route**: Crie em `src/routes/nome.js`
+
    ```javascript
    import { actionName } from '../controllers/nomeController.js';
    router.get('/endpoint', actionName);

@@ -5,10 +5,12 @@ Esta API suporta múltiplos idiomas usando **i18next**. Português é o idioma p
 ## 🔧 Configuração
 
 ### Idiomas Suportados
+
 - **Português (pt)** - Padrão
 - **Inglês (en)**
 
 ### Estrutura de Arquivos
+
 ```
 src/
 ├── locales/
@@ -29,18 +31,21 @@ src/
 O idioma é detectado automaticamente através de:
 
 #### **Header Accept-Language** (Recomendado)
+
 ```bash
 curl -H "Accept-Language: en" http://localhost:3000/api/health
 curl -H "Accept-Language: pt" http://localhost:3000/api/health
 ```
 
 #### **Query Parameter**
+
 ```bash
 curl http://localhost:3000/api/health?lng=en
 curl http://localhost:3000/api/health?lng=pt
 ```
 
 #### **Cookie**
+
 ```bash
 curl -H "Cookie: lng=en" http://localhost:3000/api/health
 ```
@@ -65,7 +70,7 @@ router.get('/exemplo', (req, res) => {
 // Verificar qual idioma foi detectado
 router.get('/info', (req, res) => {
   res.json({
-    language: req.language,  // 'pt' ou 'en'
+    language: req.language, // 'pt' ou 'en'
     languages: req.languages // ['pt', 'en-US', 'en']
   });
 });
@@ -74,6 +79,7 @@ router.get('/info', (req, res) => {
 ## 📝 Estrutura das Traduções
 
 ### Arquivo: `src/locales/pt/translation.json`
+
 ```json
 {
   "server": {
@@ -102,10 +108,13 @@ router.get('/info', (req, res) => {
 ### Testando as Rotas
 
 #### Em Português (padrão):
+
 ```bash
 curl http://localhost:3000/api/health
 ```
+
 **Resposta:**
+
 ```json
 {
   "status": "OK",
@@ -117,13 +126,16 @@ curl http://localhost:3000/api/health
 ```
 
 #### Em Inglês:
+
 ```bash
 curl -H "Accept-Language: en" http://localhost:3000/api/health
 ```
+
 **Resposta:**
+
 ```json
 {
-  "status": "OK", 
+  "status": "OK",
   "message": "API is working correctly!",
   "timestamp": "2025-10-30T...",
   "uptime": 123.45,
@@ -147,10 +159,12 @@ req.t('welcome', { name: 'João', count: 5 })
 ## 🔑 Chaves de Tradução Disponíveis
 
 ### **server.**
+
 - `server.started` - Mensagem de servidor iniciado
 - `server.error` - Erro no servidor
 
 ### **api.**
+
 - `api.welcome` - Mensagem de boas-vindas
 - `api.health.status` - Status da API
 - `api.health.message` - Mensagem de saúde da API
@@ -160,12 +174,14 @@ req.t('welcome', { name: 'João', count: 5 })
 - `api.errors.internal_error` - Erro interno
 
 ### **validation.**
+
 - `validation.required` - Campo obrigatório
 - `validation.invalid_format` - Formato inválido
 - `validation.min_length` - Mínimo de caracteres
 - `validation.max_length` - Máximo de caracteres
 
 ### **common.**
+
 - `common.success` - Sucesso
 - `common.error` - Erro
 - `common.save` - Salvar
@@ -174,6 +190,7 @@ req.t('welcome', { name: 'João', count: 5 })
 ## ➕ Adicionando Novas Traduções
 
 1. **Adicione a chave em português:**
+
 ```json
 // src/locales/pt/translation.json
 {
@@ -184,6 +201,7 @@ req.t('welcome', { name: 'João', count: 5 })
 ```
 
 2. **Adicione a tradução em inglês:**
+
 ```json
 // src/locales/en/translation.json
 {
@@ -194,6 +212,7 @@ req.t('welcome', { name: 'João', count: 5 })
 ```
 
 3. **Use na rota:**
+
 ```javascript
 router.get('/exemplo', (req, res) => {
   res.json({
@@ -205,12 +224,15 @@ router.get('/exemplo', (req, res) => {
 ## 🛠️ Desenvolvimento
 
 ### Debug Mode
+
 No ambiente de desenvolvimento, o i18n mostra logs detalhados. Configure:
+
 ```bash
 NODE_ENV=development npm run dev
 ```
 
 ### Recarregar Traduções
+
 Em desenvolvimento, as traduções são recarregadas automaticamente quando os arquivos são modificados.
 
 ## 🌐 Fallbacks
