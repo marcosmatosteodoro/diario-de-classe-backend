@@ -1,6 +1,6 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
-import ErrorHandler, { ThrowErrors } from '../../src/middlewares/error-handler.js';
-import UnauthorizedError from '../../src/utilities/errors/unauthorized.js';
+import ErrorHandler, { ThrowErrors } from '../../../src/middlewares/error-handler.js';
+import UnauthorizedError from '../../../src/utilities/errors/unauthorized.js';
 
 // Mock das dependências
 jest.mock('http-status', () => ({
@@ -9,7 +9,7 @@ jest.mock('http-status', () => ({
   INTERNAL_SERVER_ERROR: 500
 }));
 
-jest.mock('../../src/utilities/constants.js', () => ({
+jest.mock('../../../src/utilities/constants.js', () => ({
   isProduction: false
 }));
 
