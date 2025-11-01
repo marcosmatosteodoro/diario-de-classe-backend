@@ -24,7 +24,9 @@
     "db:setup:sqlite": "node scripts/setup-database.js sqlite",
     "db:setup:postgresql": "node scripts/setup-database.js postgresql",
     "db:setup:mysql": "node scripts/setup-database.js mysql",
-    "prepare": "husky"
+    "prepare": "husky || echo 'Husky not found, skipping...'",
+    "build": "npm run db:generate",
+    "vercel-build": "npm run db:generate"
   },
   "repository": {
     "type": "git",
