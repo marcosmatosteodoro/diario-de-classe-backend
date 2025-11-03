@@ -11,13 +11,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Modelo de usuário
+enum Permissao {
+  member
+  admin
+}
+
 model User {
-  id              String   @id @default(cuid())
-  email           String   @unique
+  id              String    @id @default(cuid())
+  nome            String // máximo 255 caracteres
+  sobrenome       String // máximo 255 caracteres
+  email           String    @unique // máximo 255 caracteres
+  telefone        String? // máximo 11 caracteres
   senha           String
-  dataCriacao     DateTime @default(now())
-  dataAtualizacao DateTime @updatedAt
+  resetarSenha    Boolean   @default(false)
+  permissao       Permissao @default(member)
+  dataCriacao     DateTime  @default(now())
+  dataAtualizacao DateTime  @updatedAt
 
   @@map("users")
 }
