@@ -146,7 +146,7 @@ describe('GetUserService', () => {
         }
       }
 
-      const result = await GetUserService.handle(MockRepository, 1);
+      const result = await GetUserService.handle(1, MockRepository);
 
       expect(result).toEqual(mockUser);
     });
@@ -170,8 +170,8 @@ describe('GetUserService', () => {
         }
       }
 
-      const result1 = await GetUserService.handle(MockRepository, 1);
-      const result2 = await GetUserService.handle(MockRepository, 2);
+      const result1 = await GetUserService.handle(1, MockRepository);
+      const result2 = await GetUserService.handle(2, MockRepository);
 
       // Cada chamada deve criar uma nova instância do repository
       expect(result1.instanceCount).toBe(1);
