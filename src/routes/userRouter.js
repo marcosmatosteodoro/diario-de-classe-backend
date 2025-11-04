@@ -1,10 +1,11 @@
 import express from 'express';
-import { listUsers, createUser } from '../controllers/usersController.js';
+import { createUser } from '../controllers/usersController.js';
+import { GetUserListController } from '../controllers/user/getUserListController.js';
 
 const router = express.Router();
 
 // GET /api/users - Buscar todos os usuários
-router.get('/', listUsers);
+router.get('/', GetUserListController.handle);
 
 // POST /api/users - Criar novo usuário
 router.post('/', createUser);
