@@ -54,6 +54,9 @@
       "email_required": "Email é obrigatório",
       "password_required": "Senha é obrigatória",
       "email_exists": "Este email já está em uso"
+    },
+    "delete": {
+      "error": "Erro ao deletar usuário"
     }
   }
 }

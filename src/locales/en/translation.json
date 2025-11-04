@@ -54,6 +54,9 @@
       "email_required": "Email is required",
       "password_required": "Password is required",
       "email_exists": "This email is already in use"
+    },
+    "delete": {
+      "error": "Error deleting user"
     }
   }
 }
