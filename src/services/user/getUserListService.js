@@ -2,26 +2,14 @@ import AbstractService from '../abstractService.js';
 import UserRepository from '../../repositories/userRepository.js';
 
 export class GetUserListService extends AbstractService {
-  constructor(Repository = UserRepository) {
+  constructor(Repository) {
     super(Repository);
   }
 
   async execute() {
-    const users = await this.repository.selectMany({
-      select: {
-        id: true,
-        nome: true,
-        sobrenome: true,
-        email: true,
-        telefone: true,
-        resetarSenha: true,
-        permissao: true,
-        dataCriacao: true,
-        dataAtualizacao: true
-      }
+    return await this.repository.selectMany({
+      select: this.repository.selectFields
     });
-
-    return users;
   }
 
   static async handle(Repository = UserRepository) {

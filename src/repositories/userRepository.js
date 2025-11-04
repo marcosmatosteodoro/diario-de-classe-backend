@@ -9,4 +9,19 @@ export default class UserRepository extends AbstractRepository {
   getEntity() {
     return prisma.user;
   }
+
+  getSelectFields() {
+    return {
+      id: true,
+      nome: true,
+      sobrenome: true,
+      email: true,
+      telefone: true,
+      senha: false,
+      resetarSenha: true,
+      permissao: true,
+      dataCriacao: true,
+      dataAtualizacao: true
+    };
+  }
 }

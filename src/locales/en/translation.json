@@ -39,6 +39,10 @@
       "success": "Users listed successfully",
       "error": "Error fetching users"
     },
+    "get": {
+      "not_found": "User not found",
+      "error": "Error fetching user"
+    },
     "create": {
       "success": "User created successfully",
       "error": "Error creating user",

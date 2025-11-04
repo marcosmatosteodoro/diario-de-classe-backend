@@ -39,6 +39,10 @@
       "success": "Usuários listados com sucesso",
       "error": "Erro ao buscar usuários"
     },
+    "get": {
+      "not_found": "Usuário não encontrado",
+      "error": "Erro ao buscar usuário"
+    },
     "create": {
       "success": "Usuário criado com sucesso",
       "error": "Erro ao criar usuário",
