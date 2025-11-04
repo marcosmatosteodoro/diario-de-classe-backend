@@ -2,7 +2,7 @@ import AbstractService from '../abstractService.js';
 import UserRepository from '../../repositories/userRepository.js';
 
 export class GetUserService extends AbstractService {
-  constructor(Repository = UserRepository, id) {
+  constructor(Repository, id) {
     super(Repository);
     this.id = id;
   }
