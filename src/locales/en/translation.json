@@ -21,7 +21,11 @@
     "required": "Required field",
     "invalid_format": "Invalid format",
     "min_length": "Must have at least {{count}} characters",
-    "max_length": "Cannot have more than {{count}} characters"
+    "max_length": "Cannot have more than {{count}} characters",
+    "id": {
+      "required": "ID is required",
+      "invalid": "ID must be a valid identifier"
+    }
   },
   "common": {
     "success": "Success",

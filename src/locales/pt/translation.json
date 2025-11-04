@@ -21,7 +21,11 @@
     "required": "Campo obrigatório",
     "invalid_format": "Formato inválido",
     "min_length": "Deve ter pelo menos {{count}} caracteres",
-    "max_length": "Não pode ter mais de {{count}} caracteres"
+    "max_length": "Não pode ter mais de {{count}} caracteres",
+    "id": {
+      "required": "ID é obrigatório",
+      "invalid": "ID deve ser um identificador válido"
+    }
   },
   "common": {
     "success": "Sucesso",

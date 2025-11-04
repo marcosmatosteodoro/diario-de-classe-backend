@@ -8,7 +8,8 @@ export class GetUserController extends AbstractController {
 
   async execute() {
     try {
-      const id = this.req.params.id;
+      // Usa o ID validado pelo middleware se disponível, senão usa o parâmetro original
+      const id = this.req.validatedId || this.req.params.id;
       const user = await GetUserService.handle(id);
 
       if (!user) {
