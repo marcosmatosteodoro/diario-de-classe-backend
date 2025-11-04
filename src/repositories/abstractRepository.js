@@ -5,6 +5,7 @@
 export default class AbstractRepository {
   constructor() {
     this.entity = this.getEntity();
+    this.selectFields = this.getSelectFields();
   }
 
   /**
@@ -13,6 +14,14 @@ export default class AbstractRepository {
    */
   getEntity() {
     throw new Error('Método getEntity() deve ser implementado na subclasse');
+  }
+
+  /**
+   * Retorna os campos padrão para seleção em consultas
+   * @returns {Object} Objeto com campos padrão para select
+   */
+  getSelectFields() {
+    throw new Error('Método getSelectFields() deve ser implementado na subclasse');
   }
 
   /**

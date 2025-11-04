@@ -55,6 +55,17 @@ describe('GetUserService - Método execute()', () => {
     class MockRepository {
       constructor() {
         this.selectOneCalls = [];
+        this.selectFields = {
+          id: true,
+          nome: true,
+          sobrenome: true,
+          email: true,
+          telefone: true,
+          resetarSenha: true,
+          permissao: true,
+          dataCriacao: true,
+          dataAtualizacao: true
+        };
       }
 
       async selectOne(params) {
@@ -74,17 +85,7 @@ describe('GetUserService - Método execute()', () => {
     expect(service.repository.selectOneCalls).toHaveLength(1);
     expect(service.repository.selectOneCalls[0]).toEqual({
       where: { id: 1 },
-      select: {
-        id: true,
-        nome: true,
-        sobrenome: true,
-        email: true,
-        telefone: true,
-        resetarSenha: true,
-        permissao: true,
-        dataCriacao: true,
-        dataAtualizacao: true
-      }
+      select: service.repository.selectFields
     });
   });
 
@@ -215,6 +216,17 @@ describe('GetUserService - Validação de campos selecionados', () => {
     class MockRepository {
       constructor() {
         this.selectOneCalls = [];
+        this.selectFields = {
+          id: true,
+          nome: true,
+          sobrenome: true,
+          email: true,
+          telefone: true,
+          resetarSenha: true,
+          permissao: true,
+          dataCriacao: true,
+          dataAtualizacao: true
+        };
       }
 
       async selectOne(params) {
@@ -248,6 +260,17 @@ describe('GetUserService - Validação de campos selecionados', () => {
     class MockRepository {
       constructor() {
         this.selectOneCalls = [];
+        this.selectFields = {
+          id: true,
+          nome: true,
+          sobrenome: true,
+          email: true,
+          telefone: true,
+          resetarSenha: true,
+          permissao: true,
+          dataCriacao: true,
+          dataAtualizacao: true
+        };
       }
 
       async selectOne(params) {

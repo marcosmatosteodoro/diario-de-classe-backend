@@ -18,6 +18,16 @@ describe('UserRepository', () => {
       expect(userRepository.getEntity()).toBeDefined();
     });
 
+    test('deve ter método getSelectFields', () => {
+      expect(typeof userRepository.getSelectFields).toBe('function');
+      expect(userRepository.getSelectFields()).toBeDefined();
+    });
+
+    test('deve ter propriedade selectFields definida', () => {
+      expect(userRepository.selectFields).toBeDefined();
+      expect(typeof userRepository.selectFields).toBe('object');
+    });
+
     test('deve herdar de AbstractRepository', () => {
       expect(typeof userRepository.selectMany).toBe('function');
       expect(typeof userRepository.selectOne).toBe('function');
@@ -71,6 +81,28 @@ describe('UserRepository', () => {
 
     test('getEntity deve retornar a mesma entidade que entity', () => {
       expect(userRepository.getEntity()).toBe(userRepository.entity);
+    });
+
+    test('getSelectFields deve retornar os mesmos campos que selectFields', () => {
+      expect(userRepository.getSelectFields()).toEqual(userRepository.selectFields);
+    });
+
+    test('selectFields deve conter campos corretos e excluir senha', () => {
+      const fields = userRepository.selectFields;
+
+      // Verifica campos que devem estar presentes
+      expect(fields.id).toBe(true);
+      expect(fields.nome).toBe(true);
+      expect(fields.sobrenome).toBe(true);
+      expect(fields.email).toBe(true);
+      expect(fields.telefone).toBe(true);
+      expect(fields.resetarSenha).toBe(true);
+      expect(fields.permissao).toBe(true);
+      expect(fields.dataCriacao).toBe(true);
+      expect(fields.dataAtualizacao).toBe(true);
+
+      // Verifica que senha é excluída por segurança
+      expect(fields.senha).toBe(false);
     });
 
     test('deve ter todos os métodos CRUD disponíveis', () => {

@@ -8,17 +8,7 @@ export class GetUserListService extends AbstractService {
 
   async execute() {
     return await this.repository.selectMany({
-      select: {
-        id: true,
-        nome: true,
-        sobrenome: true,
-        email: true,
-        telefone: true,
-        resetarSenha: true,
-        permissao: true,
-        dataCriacao: true,
-        dataAtualizacao: true
-      }
+      select: this.repository.selectFields
     });
   }
 
