@@ -7,7 +7,7 @@ export class GetUserListService extends AbstractService {
   }
 
   async execute() {
-    const users = await this.repository.selectMany({
+    return await this.repository.selectMany({
       select: {
         id: true,
         nome: true,
@@ -20,8 +20,6 @@ export class GetUserListService extends AbstractService {
         dataAtualizacao: true
       }
     });
-
-    return users;
   }
 
   static async handle(Repository = UserRepository) {
