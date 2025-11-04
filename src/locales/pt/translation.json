@@ -21,7 +21,11 @@
     "required": "Campo obrigatório",
     "invalid_format": "Formato inválido",
     "min_length": "Deve ter pelo menos {{count}} caracteres",
-    "max_length": "Não pode ter mais de {{count}} caracteres"
+    "max_length": "Não pode ter mais de {{count}} caracteres",
+    "id": {
+      "required": "ID é obrigatório",
+      "invalid": "ID deve ser um identificador válido"
+    }
   },
   "common": {
     "success": "Sucesso",
@@ -50,6 +54,9 @@
       "email_required": "Email é obrigatório",
       "password_required": "Senha é obrigatória",
       "email_exists": "Este email já está em uso"
+    },
+    "delete": {
+      "error": "Erro ao deletar usuário"
     }
   }
 }

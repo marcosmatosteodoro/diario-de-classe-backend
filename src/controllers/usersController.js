@@ -5,38 +5,6 @@ import prisma from '../db/prisma.js';
  */
 
 /**
- * Lista todos os usuários
- * @param {Object} req - Request object
- * @param {Object} res - Response object
- */
-export const listUsers = async (req, res) => {
-  try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        email: true,
-        dataCriacao: true,
-        dataAtualizacao: true
-        // Não retornamos a senha por segurança
-      }
-    });
-
-    return res.status(200).json({
-      message: req.t('users.list.success'),
-      data: users,
-      count: users.length,
-      language: req.language || 'pt'
-    });
-  } catch (error) {
-    console.error('Erro ao buscar usuários:', error);
-    return res.status(500).json({
-      message: req.t('users.list.error'),
-      error: error.message
-    });
-  }
-};
-
-/**
  * Cria um novo usuário
  * @param {Object} req - Request object
  * @param {Object} res - Response object

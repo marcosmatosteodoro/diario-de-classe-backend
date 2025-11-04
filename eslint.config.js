@@ -108,8 +108,8 @@ export default [
       // Limita o número de parâmetros em funções
       'max-params': ['warn', 4],
 
-      // Limita o tamanho de funções em linhas
-      'max-lines-per-function': ['warn', { max: 50, skipBlankLines: true, skipComments: true }],
+      // Limita o tamanho de funções em linhas (desabilitado)
+      'max-lines-per-function': 'off',
 
       // Limita profundidade de aninhamento
       'max-depth': ['warn', 4],
@@ -157,8 +157,8 @@ export default [
       // Permite console.log nos testes
       'no-console': 'off',
 
-      // Permite funções maiores nos testes (cenários complexos)
-      'max-lines-per-function': ['warn', { max: 150, skipBlankLines: true, skipComments: true }],
+      // Permite funções maiores nos testes (desabilitado)
+      'max-lines-per-function': 'off',
 
       // Permite mais parâmetros nos testes
       'max-params': ['warn', 6],

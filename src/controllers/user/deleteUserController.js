@@ -1,14 +1,14 @@
 import AbstractController from '../abstractController.js';
 import { GetUserService } from '../../services/user/getUserService.js';
+import { DeleteUserService } from '../../services/user/deleteUserService.js';
 
-export class GetUserController extends AbstractController {
+export class DeleteUserController extends AbstractController {
   constructor(req, res) {
     super(req, res);
   }
 
   async execute() {
     try {
-      // Usa o ID validado pelo middleware se disponível, senão usa o parâmetro original
       const id = this.req.validatedId || this.req.params.id;
       const user = await GetUserService.handle(id);
 
@@ -18,14 +18,16 @@ export class GetUserController extends AbstractController {
         });
       }
 
-      return this.res.status(200).json(user);
+      await DeleteUserService.handle(id);
+
+      return this.res.status(204).json();
     } catch (error) {
-      return this.handleError(error, 'users.get.error');
+      return this.handleError(error, 'users.delete.error');
     }
   }
 
   static async handle(req, res) {
-    const controller = new GetUserController(req, res);
+    const controller = new DeleteUserController(req, res);
     await controller.execute();
   }
 }
