@@ -1,4 +1,62 @@
+import { BaseValidateEntity } from '../utilities/baseValidateEntity.js';
 import { ValidateData } from '../utilities/validateData.js';
+
+class ValidateUpdateUser extends BaseValidateEntity {
+  constructor(req, res, next) {
+    super(req, res, next);
+  }
+
+  getDataForFilter() {
+    return ['nome', 'sobrenome', 'email', 'telefone', 'senha', 'resetarSenha', 'permissao'];
+  }
+
+  getDataValidations(filteredData) {
+    const { nome, sobrenome, email, telefone, senha, resetarSenha, permissao } = filteredData;
+
+    return {
+      // Validar campo nome
+      nome: ValidateData.optional()
+        .isString()
+        .minCharacters(3)
+        .maxCharacters(200)
+        .validate(nome, 'nome'),
+
+      // Validar campo sobrenome
+      sobrenome: ValidateData.optional()
+        .isString()
+        .minCharacters(3)
+        .maxCharacters(200)
+        .validate(sobrenome, 'sobrenome'),
+
+      // Validar campo email
+      email: ValidateData.optional().isEmail().maxCharacters(200).validate(email, 'email'),
+
+      // Validar campo telefone
+      telefone: ValidateData.optional()
+        .isString()
+        .minCharacters(10)
+        .maxCharacters(11)
+        .validate(telefone, 'telefone'),
+
+      // Validar campo senha
+      senha: ValidateData.optional()
+        .isString()
+        .minCharacters(6)
+        .maxCharacters(200)
+        // .isPassword()
+        .validate(senha, 'senha'),
+
+      // Validar campo resetarSenha
+      resetarSenha: ValidateData.optional().isBoolean().validate(resetarSenha, 'resetarSenha'),
+
+      // Validar campo permissao
+      permissao: ValidateData.optional()
+        .isString()
+        .isEnum(['member', 'admin'])
+        .validate(permissao, 'permissao')
+    };
+  }
+}
 
 /**
  * Middleware para validar dados de criação de usuário
@@ -8,94 +66,8 @@ import { ValidateData } from '../utilities/validateData.js';
  * @param {Object} res - Response object
  * @param {Function} next - Next middleware function
  */
+
 export const validateUpdateUser = (req, res, next) => {
-  try {
-    if (!req.body) {
-      return res.status(400).json({
-        message: req.t('validation.noData')
-      });
-    }
-
-    const { nome, sobrenome, email, telefone, senha, resetarSenha, permissao } = req.body;
-
-    // Validar campo nome
-    const nomeValidation = ValidateData.optional()
-      .isString()
-      .minCharacters(3)
-      .maxCharacters(200)
-      .validate(nome, 'nome');
-
-    // Validar campo sobrenome
-    const sobrenomeValidation = ValidateData.optional()
-      .isString()
-      .minCharacters(3)
-      .maxCharacters(200)
-      .validate(sobrenome, 'sobrenome');
-
-    // Validar campo email
-    const emailValidation = ValidateData.optional()
-      .isEmail()
-      .maxCharacters(200)
-      .validate(email, 'email');
-
-    // Validar campo telefone
-    const telefoneValidation = ValidateData.optional()
-      .isString()
-      .minCharacters(10)
-      .maxCharacters(11)
-      .validate(telefone, 'telefone');
-
-    // Validar campo senha
-    const senhaValidation = ValidateData.optional()
-      .isString()
-      .minCharacters(6)
-      .maxCharacters(200)
-      // .isPassword()
-      .validate(senha, 'senha');
-
-    // Validar campo resetarSenha
-    const resetarSenhaValidation = ValidateData.optional()
-      .isBoolean()
-      .validate(resetarSenha, 'resetarSenha');
-
-    // Validar campo permissao
-    const permissaoValidation = ValidateData.optional()
-      .isString()
-      .isEnum(['member', 'admin'])
-      .validate(permissao, 'permissao');
-
-    // Se há erros de validação
-    if (
-      !nomeValidation.isValid ||
-      !sobrenomeValidation.isValid ||
-      !emailValidation.isValid ||
-      !telefoneValidation.isValid ||
-      !senhaValidation.isValid ||
-      !resetarSenhaValidation.isValid ||
-      !permissaoValidation.isValid
-    ) {
-      return res.status(422).json({
-        message: req.t ? req.t('validation.error') : 'Erro de validação',
-        errors: [
-          ...nomeValidation.errors,
-          ...sobrenomeValidation.errors,
-          ...emailValidation.errors,
-          ...telefoneValidation.errors,
-          ...senhaValidation.errors,
-          ...resetarSenhaValidation.errors,
-          ...permissaoValidation.errors
-        ]
-      });
-    }
-
-    req.validatedData = { nome };
-
-    // Se validação passou, continua para próximo middleware
-    return next();
-  } catch (error) {
-    return res.status(500).json({
-      message: req.t ? req.t('error.internal') : 'Erro interno do servidor',
-      error: error.message
-    });
-  }
+  const validateUpdateUser = new ValidateUpdateUser(req, res, next);
+  return validateUpdateUser.handle();
 };

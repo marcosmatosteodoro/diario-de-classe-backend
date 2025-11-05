@@ -416,7 +416,9 @@ describe('validateUpdateUser middleware', () => {
     test('deve definir req.validatedData com nome quando validação passa', () => {
       mockReq.body = { nome: 'João Silva' };
 
-      validateUpdateUser(mockReq, mockRes, callNext);
+      validateUpdateUser(mockReq, mockRes, () => {
+        mockNext.call();
+      });
 
       expect(mockReq.validatedData).toBeDefined();
       expect(mockReq.validatedData.nome).toBe('João Silva');
