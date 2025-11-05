@@ -8,9 +8,8 @@ export class CreateUserService extends AbstractService {
   }
 
   async execute() {
-    return await this.repository.create({
-      data: {
-        id: this.data.id,
+    return await this.repository.create(
+      {
         nome: this.data.nome,
         sobrenome: this.data.sobrenome,
         email: this.data.email,
@@ -19,8 +18,10 @@ export class CreateUserService extends AbstractService {
         resetarSenha: this.data.resetarSenha,
         permissao: this.data.permissao
       },
-      select: this.repository.selectFields
-    });
+      {
+        select: this.repository.selectFields
+      }
+    );
   }
 
   static async handle(data, Repository = UserRepository) {

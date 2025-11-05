@@ -57,7 +57,6 @@ function testExecuteMethod() {
 
   test('deve chamar repository.create com parâmetros corretos', async () => {
     const mockData = {
-      id: 1,
       nome: 'João',
       sobrenome: 'Silva',
       email: 'joao@email.com',
@@ -83,8 +82,8 @@ function testExecuteMethod() {
         };
       }
 
-      async create(params) {
-        this.createCalls.push(params);
+      async create(data, options) {
+        this.createCalls.push({ data, options });
         return {
           id: 1,
           nome: 'João',
@@ -100,7 +99,7 @@ function testExecuteMethod() {
     expect(service.repository.createCalls).toHaveLength(1);
     expect(service.repository.createCalls[0]).toEqual({
       data: mockData,
-      select: service.repository.selectFields
+      options: { select: service.repository.selectFields }
     });
   });
 
@@ -285,8 +284,8 @@ function testCreationScenarios() {
         this.selectFields = {};
       }
 
-      async create(params) {
-        return { ...params.data, id: 1, dataCriacao: '2024-01-01' };
+      async create(data, _options) {
+        return { ...data, id: 1, dataCriacao: '2024-01-01' };
       }
     }
 
@@ -310,8 +309,8 @@ function testCreationScenarios() {
         this.selectFields = {};
       }
 
-      async create(params) {
-        return { ...params.data, id: 1 };
+      async create(data, _options) {
+        return { ...data, id: 1 };
       }
     }
 
