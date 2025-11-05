@@ -4,6 +4,7 @@ import { GetUserListController } from '../controllers/user/getUserListController
 import { GetUserController } from '../controllers/user/getUserController.js';
 import { DeleteUserController } from '../controllers/user/deleteUserController.js';
 import { validateId } from '../middlewares/validateId.js';
+import { validateCreateUser } from '../middlewares/validateCreateUser.js';
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.get('/', GetUserListController.handle);
 router.get('/:id', validateId, GetUserController.handle);
 
 // POST /api/users - Criar novo usuário
-router.post('/', createUser);
+router.post('/', validateCreateUser, createUser);
 
 // DELETE /api/users/:id - Deletar usuário por ID
 router.delete('/:id', validateId, DeleteUserController.handle);
