@@ -8,9 +8,7 @@ export class DeleteUserService extends AbstractService {
   }
 
   async execute() {
-    return await this.repository.delete({
-      where: { id: this.id }
-    });
+    return await this.repository.delete({ id: this.id });
   }
 
   static async handle(id, Repository = UserRepository) {

@@ -45,8 +45,8 @@ describe('DeleteUserService - Método execute()', () => {
         this.deleteCalls = [];
       }
 
-      async delete(params) {
-        this.deleteCalls.push(params);
+      async delete(where, options) {
+        this.deleteCalls.push({ where, options });
         return {
           id: 1,
           nome: 'João',
@@ -60,7 +60,8 @@ describe('DeleteUserService - Método execute()', () => {
 
     expect(service.repository.deleteCalls).toHaveLength(1);
     expect(service.repository.deleteCalls[0]).toEqual({
-      where: { id: 1 }
+      where: { id: 1 },
+      options: undefined
     });
   });
 
@@ -103,8 +104,8 @@ describe('DeleteUserService - Método execute()', () => {
         this.deleteCalls = [];
       }
 
-      async delete(params) {
-        this.deleteCalls.push(params);
+      async delete(where, options) {
+        this.deleteCalls.push({ where, options });
         return {};
       }
     }
@@ -124,8 +125,8 @@ describe('DeleteUserService - Método execute()', () => {
           this.deleteCalls = [];
         }
 
-        async delete(params) {
-          this.deleteCalls.push(params);
+        async delete(where, options) {
+          this.deleteCalls.push({ where, options });
           return { id: testId };
         }
       }
@@ -183,9 +184,9 @@ describe('DeleteUserService - Método estático handle()', () => {
         this.deleteCalls = [];
       }
 
-      async delete(params) {
-        this.deleteCalls.push(params);
-        return { id: params.where.id };
+      async delete(where, options) {
+        this.deleteCalls.push({ where, options });
+        return { id: where.id };
       }
     }
 
@@ -307,8 +308,8 @@ describe('DeleteUserService - Operações de delete', () => {
         this.deleteCalls = [];
       }
 
-      async delete(params) {
-        this.deleteCalls.push(params);
+      async delete(where, options) {
+        this.deleteCalls.push({ where, options });
         return { id: 1 };
       }
     }
@@ -318,7 +319,8 @@ describe('DeleteUserService - Operações de delete', () => {
 
     const deleteCall = service.repository.deleteCalls[0];
     expect(deleteCall).toEqual({
-      where: { id: 1 }
+      where: { id: 1 },
+      options: undefined
     });
     expect(deleteCall.select).toBeUndefined();
   });
@@ -329,9 +331,9 @@ describe('DeleteUserService - Operações de delete', () => {
         this.deleteCalls = [];
       }
 
-      async delete(params) {
-        this.deleteCalls.push(params);
-        return { id: params.where.id };
+      async delete(where, options) {
+        this.deleteCalls.push({ where, options });
+        return { id: where.id };
       }
     }
 
@@ -339,7 +341,7 @@ describe('DeleteUserService - Operações de delete', () => {
     await service.execute();
 
     const deleteCall = service.repository.deleteCalls[0];
-    expect(Object.keys(deleteCall)).toEqual(['where']);
+    expect(Object.keys(deleteCall)).toEqual(['where', 'options']);
     expect(deleteCall.where).toEqual({ id: 456 });
   });
 });

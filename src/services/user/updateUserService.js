@@ -22,9 +22,7 @@ export class UpdateUserService extends AbstractService {
     // remover campos undefined
     Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
 
-    return await this.repository.update({
-      where: { id: this.id },
-      data,
+    return await this.repository.update({ id: this.id }, data, {
       select: this.repository.selectFields
     });
   }

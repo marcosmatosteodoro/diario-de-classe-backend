@@ -77,8 +77,8 @@ function describeExecuteMethod() {
           };
         }
 
-        async update(params) {
-          this.updateCalls.push(params);
+        async update(where, data, options) {
+          this.updateCalls.push({ where, data, options });
           return {
             id: 1,
             nome: 'João',
@@ -95,7 +95,7 @@ function describeExecuteMethod() {
       expect(service.repository.updateCalls[0]).toEqual({
         where: { id: 1 },
         data: mockData,
-        select: service.repository.selectFields
+        options: { select: service.repository.selectFields }
       });
     });
 
@@ -156,8 +156,8 @@ function describeExecuteMethod() {
           this.selectFields = {};
         }
 
-        async update(params) {
-          this.updateCalls.push(params);
+        async update(where, data, options) {
+          this.updateCalls.push({ where, data, options });
           return {};
         }
       }
@@ -319,8 +319,8 @@ function describeUpdateScenarios() {
           this.selectFields = {};
         }
 
-        async update(params) {
-          return { ...params.data, id: params.where.id, dataAtualizacao: '2024-01-01' };
+        async update(where, data, _options) {
+          return { ...data, id: where.id, dataAtualizacao: '2024-01-01' };
         }
       }
 
@@ -342,8 +342,8 @@ function describeUpdateScenarios() {
           this.selectFields = {};
         }
 
-        async update(params) {
-          return { id: params.where.id, nome: params.data.nome };
+        async update(where, data, _options) {
+          return { id: where.id, nome: data.nome };
         }
       }
 

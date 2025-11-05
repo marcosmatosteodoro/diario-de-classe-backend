@@ -18,6 +18,8 @@
     }
   },
   "validation": {
+    "error": "Erro de validação",
+    "noData": "Nenhum dado fornecido na requisição",
     "required": "Campo obrigatório",
     "invalid_format": "Formato inválido",
     "min_length": "Deve ter pelo menos {{count}} caracteres",
@@ -26,6 +28,9 @@
       "required": "ID é obrigatório",
       "invalid": "ID deve ser um identificador válido"
     }
+  },
+  "error": {
+    "internal": "Erro interno do servidor"
   },
   "common": {
     "success": "Sucesso",
