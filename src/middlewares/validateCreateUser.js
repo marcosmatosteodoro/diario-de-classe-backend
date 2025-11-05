@@ -33,7 +33,10 @@ export const validateCreateUser = (req, res, next) => {
       .validate(sobrenome, 'sobrenome');
 
     // Validar campo email
-    const emailValidation = ValidateData.require().isEmail().validate(email, 'email');
+    const emailValidation = ValidateData.require()
+      .isEmail()
+      .maxCharacters(200)
+      .validate(email, 'email');
 
     // Validar campo telefone
     const telefoneValidation = ValidateData.optional()
