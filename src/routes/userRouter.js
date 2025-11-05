@@ -10,19 +10,19 @@ import { validateUpdateUser } from '../middlewares/validateUpdateUser.js';
 
 const router = express.Router();
 
-// GET /api/users - Buscar todos os usuários
+// GET /api/professores - Buscar todos os professores
 router.get('/', GetUserListController.handle);
 
-// GET /api/users/:id - Buscar usuário por ID
+// GET /api/professores/:id - Buscar professor por ID
 router.get('/:id', validateId, GetUserController.handle);
 
-// POST /api/users - Criar novo usuário
+// POST /api/professores - Criar novo professor
 router.post('/', validateCreateUser, CreateUserController.handle);
 
-// PUT /api/users/:id - Atualizar usuário por ID
+// PUT /api/professores/:id - Atualizar professor por ID
 router.put('/:id', validateId, validateUpdateUser, UpdateUserController.handle);
 
-// DELETE /api/users/:id - Deletar usuário por ID
+// DELETE /api/professores/:id - Deletar professor por ID
 router.delete('/:id', validateId, DeleteUserController.handle);
 
 export default router;
