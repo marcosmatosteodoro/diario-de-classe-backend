@@ -19,6 +19,7 @@
   },
   "validation": {
     "error": "Validation error",
+    "noData": "No data provided in request",
     "required": "Required field",
     "invalid_format": "Invalid format",
     "min_length": "Must have at least {{count}} characters",

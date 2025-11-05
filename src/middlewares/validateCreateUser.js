@@ -10,6 +10,12 @@ import { ValidateData } from '../utilities/validateData.js';
  */
 export const validateCreateUser = (req, res, next) => {
   try {
+    if (!req.body) {
+      return res.status(400).json({
+        message: req.t('validation.noData')
+      });
+    }
+
     const { nome, sobrenome, email, telefone, senha, resetarSenha, permissao } = req.body;
 
     // Validar campo nome
