@@ -8,7 +8,7 @@ import { ValidateData } from '../utilities/validateData.js';
  * @param {Object} res - Response object
  * @param {Function} next - Next middleware function
  */
-export const validateCreateUser = (req, res, next) => {
+export const validateUpdateUser = (req, res, next) => {
   try {
     if (!req.body) {
       return res.status(400).json({
@@ -19,21 +19,21 @@ export const validateCreateUser = (req, res, next) => {
     const { nome, sobrenome, email, telefone, senha, resetarSenha, permissao } = req.body;
 
     // Validar campo nome
-    const nomeValidation = ValidateData.require()
+    const nomeValidation = ValidateData.optional()
       .isString()
       .minCharacters(3)
       .maxCharacters(200)
       .validate(nome, 'nome');
 
     // Validar campo sobrenome
-    const sobrenomeValidation = ValidateData.require()
+    const sobrenomeValidation = ValidateData.optional()
       .isString()
       .minCharacters(3)
       .maxCharacters(200)
       .validate(sobrenome, 'sobrenome');
 
     // Validar campo email
-    const emailValidation = ValidateData.require()
+    const emailValidation = ValidateData.optional()
       .isEmail()
       .maxCharacters(200)
       .validate(email, 'email');
@@ -46,7 +46,7 @@ export const validateCreateUser = (req, res, next) => {
       .validate(telefone, 'telefone');
 
     // Validar campo senha
-    const senhaValidation = ValidateData.require()
+    const senhaValidation = ValidateData.optional()
       .isString()
       .minCharacters(6)
       .maxCharacters(200)
