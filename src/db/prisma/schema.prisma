@@ -30,3 +30,16 @@ model User {
 
   @@map("users")
 }
+
+model Aluno {
+  id              String   @id @default(cuid())
+  nome            String // máximo 255 caracteres
+  sobrenome       String // máximo 255 caracteres
+  email           String   @unique // máximo 255 caracteres
+  telefone        String? // máximo 11 caracteres
+  criador         String? // ID do usuário que criou o aluno
+  dataCriacao     DateTime @default(now())
+  dataAtualizacao DateTime @updatedAt
+
+  @@map("alunos")
+}
