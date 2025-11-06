@@ -2,7 +2,7 @@ import express from 'express';
 // Controladores
 import { GetAlunoListController } from '../controllers/aluno/getAlunoListController.js';
 import { GetAlunoController } from '../controllers/aluno/getAlunoController.js';
-// import { DeleteAlunoController } from '../controllers/aluno/deleteAlunoController.js';
+import { DeleteAlunoController } from '../controllers/aluno/deleteAlunoController.js';
 // import { CreateAlunoController } from '../controllers/aluno/createAlunoController.js';
 // import { UpdateAlunoController } from '../controllers/aluno/updateAlunoController.js';
 // Middlewares de validação
@@ -25,7 +25,7 @@ router.get('/:id', validateId, GetAlunoController.handle);
 // // PUT /api/alunos/:id - Atualizar aluno por ID
 // router.put('/:id', validateId, validateUpdateAluno, UpdateAlunoController.handle);
 
-// // DELETE /api/alunos/:id - Deletar aluno por ID
-// router.delete('/:id', validateId, DeleteAlunoController.handle);
+// DELETE /api/alunos/:id - Deletar aluno por ID
+router.delete('/:id', validateId, DeleteAlunoController.handle);
 
 export default router;
