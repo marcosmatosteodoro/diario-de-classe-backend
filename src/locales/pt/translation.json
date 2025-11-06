@@ -63,5 +63,29 @@
     "delete": {
       "error": "Erro ao deletar usuário"
     }
+  },
+  "alunos": {
+    "list": {
+      "success": "Alunos listados com sucesso",
+      "error": "Erro ao buscar alunos"
+    },
+    "get": {
+      "not_found": "Aluno não encontrado",
+      "error": "Erro ao buscar aluno"
+    },
+    "create": {
+      "success": "Aluno criado com sucesso",
+      "error": "Erro ao criar aluno",
+      "validation": "Dados inválidos fornecidos",
+      "email_exists": "Este email já está em uso"
+    },
+    "update": {
+      "success": "Aluno atualizado com sucesso",
+      "error": "Erro ao atualizar aluno"
+    },
+    "delete": {
+      "success": "Aluno excluído com sucesso",
+      "error": "Erro ao excluir aluno"
+    }
   }
 }

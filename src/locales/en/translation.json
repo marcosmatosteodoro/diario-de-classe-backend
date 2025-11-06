@@ -63,5 +63,29 @@
     "delete": {
       "error": "Error deleting user"
     }
+  },
+  "alunos": {
+    "list": {
+      "success": "Students listed successfully",
+      "error": "Error fetching students"
+    },
+    "get": {
+      "not_found": "Student not found",
+      "error": "Error fetching student"
+    },
+    "create": {
+      "success": "Student created successfully",
+      "error": "Error creating student",
+      "validation": "Invalid data provided",
+      "email_exists": "This email is already in use"
+    },
+    "update": {
+      "success": "Student updated successfully",
+      "error": "Error updating student"
+    },
+    "delete": {
+      "success": "Student deleted successfully",
+      "error": "Error deleting student"
+    }
   }
 }
