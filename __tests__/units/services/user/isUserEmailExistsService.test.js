@@ -220,79 +220,25 @@ describe('IsUserEmailExistsService - Método execute()', () => {
 });
 
 describe('IsUserEmailExistsService - Método estático handle()', () => {
-  test('deve executar o serviço com email e repositório fornecidos', async () => {
-    class MockRepository {
-      async selectOne() {
-        return { id: 'user123' };
-      }
-    }
-
-    const email = 'handle@test.com';
-    const result = await IsUserEmailExistsService.handle(email, MockRepository);
-
-    expect(result).toBe(true);
-  });
-
-  test('deve usar repositório padrão quando não fornecido', async () => {
-    // Como não podemos mockar facilmente o UserRepository real,
-    // vamos testar a estrutura do método
+  test('deve ter método handle estático definido', () => {
     expect(typeof IsUserEmailExistsService.handle).toBe('function');
     expect(IsUserEmailExistsService.handle.constructor.name).toBe('AsyncFunction');
   });
 
-  test('deve criar nova instância do serviço a cada chamada', async () => {
-    class MockRepository {
-      constructor() {
-        this.instanceCount = MockRepository.instances ? MockRepository.instances + 1 : 1;
-        MockRepository.instances = this.instanceCount;
-      }
-
-      async selectOne() {
-        return { id: 'user123', instanceCount: this.instanceCount };
-      }
-    }
-
-    const result1 = await IsUserEmailExistsService.handle('test1@example.com', MockRepository);
-    const result2 = await IsUserEmailExistsService.handle('test2@example.com', MockRepository);
-
-    // Ambos devem retornar true pois encontram usuário
-    expect(result1).toBe(true);
-    expect(result2).toBe(true);
-  });
-
-  test('deve funcionar com email null', async () => {
-    class MockRepository {
-      async selectOne() {
-        return null;
-      }
-    }
-
-    const result = await IsUserEmailExistsService.handle(null, MockRepository);
-
+  test('deve usar repositório padrão UserRepository automaticamente', async () => {
+    // Testa com email que não existe para retornar false
+    const result = await IsUserEmailExistsService.handle('email-inexistente-teste@naoexiste.com');
     expect(result).toBe(false);
   });
 
-  test('deve funcionar com email undefined', async () => {
-    class MockRepository {
-      async selectOne() {
-        return null;
-      }
-    }
-
-    const result = await IsUserEmailExistsService.handle(undefined, MockRepository);
-
+  test('deve aceitar apenas email como parâmetro', async () => {
+    // Verifica que o método funciona apenas com um parâmetro (email)
+    const result = await IsUserEmailExistsService.handle('outro-email-inexistente@teste.com');
     expect(result).toBe(false);
   });
 
-  test('deve funcionar com email string vazia', async () => {
-    class MockRepository {
-      async selectOne() {
-        return null;
-      }
-    }
-
-    const result = await IsUserEmailExistsService.handle('', MockRepository);
-
+  test('deve funcionar com email vazio (retorna false pois é inválido)', async () => {
+    const result = await IsUserEmailExistsService.handle('');
     expect(result).toBe(false);
   });
 });

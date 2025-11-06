@@ -24,7 +24,8 @@ export class CreateUserService extends AbstractService {
     );
   }
 
-  static async handle(data, Repository = UserRepository) {
+  static async handle(data) {
+    const Repository = UserRepository;
     const service = new CreateUserService(Repository, data);
     return await service.execute();
   }

@@ -11,7 +11,8 @@ export class DeleteUserService extends AbstractService {
     return await this.repository.delete({ id: this.id });
   }
 
-  static async handle(id, Repository = UserRepository) {
+  static async handle(id) {
+    const Repository = UserRepository;
     const service = new DeleteUserService(Repository, id);
     return await service.execute();
   }

@@ -2,7 +2,7 @@ import AbstractService from '../abstractService.js';
 import UserRepository from '../../repositories/userRepository.js';
 
 export class GetUserListService extends AbstractService {
-  constructor({ where, Repository }) {
+  constructor(Repository, where) {
     super(Repository);
     this.where = where;
   }
@@ -14,8 +14,9 @@ export class GetUserListService extends AbstractService {
     });
   }
 
-  static async handle(where = {}, Repository = UserRepository) {
-    const service = new GetUserListService({ where, Repository });
+  static async handle(where = {}) {
+    const Repository = UserRepository;
+    const service = new GetUserListService(Repository, where);
     return await service.execute();
   }
 }

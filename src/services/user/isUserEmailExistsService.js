@@ -16,7 +16,8 @@ export class IsUserEmailExistsService extends AbstractService {
     return Boolean(user);
   }
 
-  static async handle(email, Repository = UserRepository) {
+  static async handle(email) {
+    const Repository = UserRepository;
     const service = new IsUserEmailExistsService(Repository, email);
     return await service.execute();
   }
