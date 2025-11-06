@@ -12,28 +12,24 @@ describe('CreateUserService', () => {
 });
 
 function testInicializacao() {
-  test('deve criar uma instância com repositório e dados', () => {
-    const mockData = {
-      nome: 'João',
-      email: 'joao@email.com'
-    };
-    const service = new CreateUserService(UserRepository, mockData);
+  it('deve ser instanciado corretamente', () => {
+    class MockRepository {}
+    const mockData = { nome: 'João', sobrenome: 'Silva' };
+    const service = new CreateUserService(MockRepository, mockData);
 
-    expect(service).toBeInstanceOf(CreateUserService);
-    expect(service).toBeInstanceOf(AbstractService);
-    expect(service.repository).toBeInstanceOf(UserRepository);
+    expect(service.repository).toBeInstanceOf(MockRepository);
     expect(service.data).toBe(mockData);
   });
 
   test('deve herdar de AbstractService', () => {
-    const mockData = { nome: 'João' };
+    const mockData = { nome: 'João', sobrenome: 'Silva' };
     const service = new CreateUserService(UserRepository, mockData);
 
     expect(service).toBeInstanceOf(AbstractService);
   });
 
   test('deve ter método execute implementado', () => {
-    const mockData = { nome: 'João' };
+    const mockData = { nome: 'João', sobrenome: 'Silva' };
     const service = new CreateUserService(UserRepository, mockData);
 
     expect(service.execute).toBeDefined();
@@ -48,7 +44,7 @@ function testInicializacao() {
 
 function testExecuteMethod() {
   test('deve existir e ser uma função assíncrona', () => {
-    const mockData = { nome: 'João' };
+    const mockData = { nome: 'João', sobrenome: 'Silva' };
     const service = new CreateUserService(UserRepository, mockData);
 
     expect(typeof service.execute).toBe('function');
@@ -87,7 +83,6 @@ function testExecuteMethod() {
         return {
           id: 1,
           nome: 'João',
-          sobrenome: 'Silva',
           email: 'joao@email.com'
         };
       }
@@ -133,7 +128,7 @@ function testExecuteMethod() {
   });
 
   test('deve propagar erro quando repository falha', async () => {
-    const mockData = { nome: 'João' };
+    const mockData = { nome: 'João', sobrenome: 'Silva' };
     const mockError = new Error('Erro de banco de dados');
 
     class MockRepository {
@@ -156,7 +151,12 @@ function testStaticHandleMethod() {
   test('deve executar o serviço com repositório e dados fornecidos', async () => {
     const mockData = {
       nome: 'João',
-      email: 'joao@email.com'
+      sobrenome: 'Silva',
+      email: `joao.${Date.now()}@email.com`,
+      telefone: '11999999999',
+      senha: 'senha123',
+      resetarSenha: false,
+      permissao: 'member'
     };
 
     class MockRepository {
@@ -165,13 +165,14 @@ function testStaticHandleMethod() {
       }
 
       async create() {
-        return { id: 1, nome: 'João' };
+        return { id: 1, nome: 'João', sobrenome: 'Silva' };
       }
     }
 
     const result = await CreateUserService.handle(mockData, MockRepository);
 
-    expect(result).toEqual({ id: 1, nome: 'João' });
+    expect(result).toMatchObject({ nome: 'João', sobrenome: 'Silva' });
+    expect(result.id).toBeDefined();
   });
 
   test('deve usar repositório padrão quando não fornecido', async () => {
@@ -182,8 +183,25 @@ function testStaticHandleMethod() {
   });
 
   test('deve criar nova instância do serviço a cada chamada', async () => {
-    const mockData1 = { nome: 'João' };
-    const mockData2 = { nome: 'Maria' };
+    const timestamp = Date.now();
+    const mockData1 = {
+      nome: 'João',
+      sobrenome: 'Silva',
+      email: `joao.${timestamp}@example.com`,
+      telefone: '11999999999',
+      senha: 'senha123',
+      resetarSenha: false,
+      permissao: 'member'
+    };
+    const mockData2 = {
+      nome: 'Maria',
+      sobrenome: 'Santos',
+      email: `maria.${timestamp + 1}@example.com`,
+      telefone: '11888888888',
+      senha: 'senha456',
+      resetarSenha: false,
+      permissao: 'member'
+    };
 
     class MockRepository {
       constructor() {
@@ -193,7 +211,11 @@ function testStaticHandleMethod() {
       }
 
       async create() {
-        return { id: this.instanceCount, nome: this.instanceCount === 0 ? 'João' : 'Maria' };
+        return {
+          id: this.instanceCount,
+          nome: this.instanceCount === 0 ? 'João' : 'Maria',
+          sobrenome: this.instanceCount === 0 ? 'Silva' : 'Santos'
+        };
       }
     }
 
@@ -207,7 +229,7 @@ function testStaticHandleMethod() {
 
 function testAbstractServiceIntegration() {
   test('deve implementar método execute() abstrato', () => {
-    const mockData = { nome: 'João' };
+    const mockData = { nome: 'João', sobrenome: 'Silva' };
     const service = new CreateUserService(UserRepository, mockData);
 
     expect(service.execute).toBeDefined();
@@ -220,7 +242,7 @@ function testAbstractServiceIntegration() {
   });
 
   test('deve ter acesso ao repository através da classe pai', () => {
-    const mockData = { nome: 'João' };
+    const mockData = { nome: 'João', sobrenome: 'Silva' };
     const service = new CreateUserService(UserRepository, mockData);
 
     expect(service.repository).toBeDefined();
@@ -237,7 +259,6 @@ function testDataValidation() {
   test('deve armazenar dados fornecidos corretamente', () => {
     const mockData = {
       nome: 'João',
-      sobrenome: 'Silva',
       email: 'joao@email.com',
       telefone: '11999999999',
       senha: 'senha123',
@@ -271,7 +292,6 @@ function testCreationScenarios() {
     const mockData = {
       id: 1,
       nome: 'João',
-      sobrenome: 'Silva',
       email: 'joao@email.com',
       telefone: '11999999999',
       senha: 'senha123',

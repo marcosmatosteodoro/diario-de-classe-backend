@@ -1,14 +1,23 @@
 import AbstractController from '../abstractController.js';
 import { GetUserListService } from '../../services/user/getUserListService.js';
+import { getWhereClauseByQuerySearch } from '../../utilities/getWhereClauseByQuerySearch.js';
 
 export class GetUserListController extends AbstractController {
   constructor(req, res) {
     super(req, res);
+    this.where = {};
   }
 
   async execute() {
     try {
-      const users = await GetUserListService.handle();
+      if (this.req.query.q) {
+        this.where = getWhereClauseByQuerySearch({
+          query: this.req.query.q,
+          fields: ['nome', 'sobrenome', 'email', 'telefone']
+        });
+      }
+
+      const users = await GetUserListService.handle(this.where);
 
       if (!users || users.length === 0) {
         return this.res.status(204).json();

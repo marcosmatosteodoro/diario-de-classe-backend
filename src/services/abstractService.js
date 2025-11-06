@@ -25,10 +25,9 @@ export default class AbstractService {
 
   /**
    * Método estático para executar o serviço de forma conveniente
-   * @param {Function} _Repository - Classe do repository a ser utilizado
    * @returns {Promise<any>} Resultado da execução do serviço
    */
-  static async handle(_Repository) {
+  static async handle() {
     throw new Error('Método handle() deve ser implementado na subclasse');
   }
 }

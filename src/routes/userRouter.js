@@ -9,11 +9,12 @@ import { UpdateUserController } from '../controllers/user/updateUserController.j
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateUser } from '../middlewares/validateCreateUser.js';
 import { validateUpdateUser } from '../middlewares/validateUpdateUser.js';
+import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 
 const router = express.Router();
 
 // GET /api/professores - Buscar todos os professores
-router.get('/', GetUserListController.handle);
+router.get('/', validateSearchQuery, GetUserListController.handle);
 
 // GET /api/professores/:id - Buscar professor por ID
 router.get('/:id', validateId, GetUserController.handle);
