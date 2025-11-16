@@ -1,6 +1,6 @@
-import { GetConfiguracaoListService } from '../../../../src/services/configuracao/getConfiguracaoService.js';
+import { GetConfiguracaoService } from '../../../../src/services/configuracao/getConfiguracaoService.js';
 
-describe('GetConfiguracaoListService (unit)', () => {
+describe('GetConfiguracaoService (unit)', () => {
   test('execute calls repository.selectMany with select and where and returns result', async () => {
     const where = { tolerancia: 5 };
 
@@ -15,7 +15,7 @@ describe('GetConfiguracaoListService (unit)', () => {
       }
     }
 
-    const service = new GetConfiguracaoListService(MockRepository, where);
+    const service = new GetConfiguracaoService(MockRepository, where);
     const result = await service.execute();
 
     expect(result).toEqual([{ id: 'cfg-1', tolerancia: 5 }]);
@@ -33,12 +33,12 @@ describe('GetConfiguracaoListService (unit)', () => {
       }
     }
 
-    const service = new GetConfiguracaoListService(MockRepository, {});
+    const service = new GetConfiguracaoService(MockRepository, {});
     await expect(service.execute()).rejects.toThrow('select-fail');
   });
 
   test('static handle exists and is async', () => {
-    expect(typeof GetConfiguracaoListService.handle).toBe('function');
-    expect(GetConfiguracaoListService.handle.constructor.name).toBe('AsyncFunction');
+    expect(typeof GetConfiguracaoService.handle).toBe('function');
+    expect(GetConfiguracaoService.handle.constructor.name).toBe('AsyncFunction');
   });
 });
