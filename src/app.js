@@ -16,6 +16,10 @@ import ErrorHandler from './middlewares/error-handler.js';
 import cleanRequest from './middlewares/cleanRequest.js';
 import i18nMiddleware from './middlewares/i18n.js';
 
+import { InitialSetting } from './InitialSetting.js';
+
+InitialSetting.handle();
+
 const app = express();
 
 if (!Constants.isProduction) {
