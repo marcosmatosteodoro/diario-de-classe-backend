@@ -16,6 +16,16 @@ enum Permissao {
   admin
 }
 
+enum DiaDaSemana {
+  SEGUNDA
+  TERCA
+  QUARTA
+  QUINTA
+  SEXTA
+  SABADO
+  DOMINGO
+}
+
 model User {
   id              String    @id @default(cuid())
   nome            String // máximo 255 caracteres
@@ -28,7 +38,24 @@ model User {
   dataCriacao     DateTime  @default(now())
   dataAtualizacao DateTime  @updatedAt
 
+  // Relacionamento com DisponibilidadeProfessor
+  disponibilidades DisponibilidadeProfessor[]
+
   @@map("users")
+}
+
+model DisponibilidadeProfessor {
+  id          String      @id @default(cuid())
+  diaDaSemana DiaDaSemana
+  horaInicial String
+  horaFinal   String
+  ativo       Boolean     @default(true)
+  userId      String
+
+  // Relacionamento com User
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("disponibilidades_professor")
 }
 
 model Aluno {
@@ -42,4 +69,29 @@ model Aluno {
   dataAtualizacao DateTime @updatedAt
 
   @@map("alunos")
+}
+
+model Configuracao {
+  id                  String @id @default(cuid())
+  duracaoDaAula       Int
+  tolerancia          Int
+  diasDeFuncionamento String // ID do DiaDeFuncionamento
+
+  // Relacionamento
+  diaDeFuncionamento DiaDeFuncionamento @relation(fields: [diasDeFuncionamento], references: [id])
+
+  @@map("configuracoes")
+}
+
+model DiaDeFuncionamento {
+  id          String      @id @default(cuid())
+  diaDaSemana DiaDaSemana
+  horaInicial String
+  horaFinal   String
+  ativo       Boolean     @default(true)
+
+  // Relacionamento com Configuracao
+  configuracao Configuracao[]
+
+  @@map("dias_funcionamento")
 }
