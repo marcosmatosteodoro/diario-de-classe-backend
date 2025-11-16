@@ -1,7 +1,7 @@
 import AbstractService from '../abstractService.js';
 import ConfiguracaoRepository from '../../repositories/configuracaoRepository.js';
 
-export class GetConfiguracaoListService extends AbstractService {
+export class GetConfiguracaoService extends AbstractService {
   constructor(Repository, where) {
     super(Repository);
     this.where = where;
@@ -16,7 +16,7 @@ export class GetConfiguracaoListService extends AbstractService {
 
   static async handle(where = {}) {
     const Repository = ConfiguracaoRepository;
-    const service = new GetConfiguracaoListService(Repository, where);
+    const service = new GetConfiguracaoService(Repository, where);
     return await service.execute();
   }
 }
