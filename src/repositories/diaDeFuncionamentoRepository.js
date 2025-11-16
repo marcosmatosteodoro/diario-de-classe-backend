@@ -16,7 +16,8 @@ export default class DiaDeFuncionamentoRepository extends AbstractRepository {
       diaDaSemana: true,
       horaInicial: true,
       horaFinal: true,
-      ativo: true
+      ativo: true,
+      configuracaoId: true
     };
   }
 }

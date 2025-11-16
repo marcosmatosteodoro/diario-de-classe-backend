@@ -12,6 +12,9 @@ describe('GetDiaDeFuncionamentoService - Inicialização', () => {
     expect(service).toBeInstanceOf(AbstractService);
     expect(service.repository).toBeInstanceOf(DiaDeFuncionamentoRepository);
     expect(service.id).toBe('ddf-1');
+    // repository foi atualizado para expor configuracaoId
+    expect(service.repository.selectFields).toBeDefined();
+    expect(service.repository.selectFields.configuracaoId).toBe(true);
   });
 
   test('deve criar uma instância com repositório customizado e id', () => {
@@ -58,7 +61,8 @@ describe('GetDiaDeFuncionamentoService - Método execute()', () => {
           diaDaSemana: true,
           horaInicial: true,
           horaFinal: true,
-          ativo: true
+          ativo: true,
+          configuracaoId: true
         };
       }
 
@@ -123,7 +127,13 @@ describe('GetDiaDeFuncionamentoService - Método execute()', () => {
 
     class MockRepository {
       constructor() {
-        this.selectFields = { id: true, diaDaSemana: true, horaInicial: true, horaFinal: true };
+        this.selectFields = {
+          id: true,
+          diaDaSemana: true,
+          horaInicial: true,
+          horaFinal: true,
+          configuracaoId: true
+        };
       }
 
       async selectOne() {
@@ -193,7 +203,8 @@ describe('GetDiaDeFuncionamentoService - Validação de campos selecionados', ()
           diaDaSemana: true,
           horaInicial: true,
           horaFinal: true,
-          ativo: true
+          ativo: true,
+          configuracaoId: true
         };
       }
 
@@ -207,7 +218,14 @@ describe('GetDiaDeFuncionamentoService - Validação de campos selecionados', ()
     await service.execute();
 
     const selectCall = service.repository.selectOneCalls[0];
-    const expectedFields = ['id', 'diaDaSemana', 'horaInicial', 'horaFinal', 'ativo'];
+    const expectedFields = [
+      'id',
+      'diaDaSemana',
+      'horaInicial',
+      'horaFinal',
+      'ativo',
+      'configuracaoId'
+    ];
 
     expectedFields.forEach(field => {
       expect(selectCall.select[field]).toBe(true);
@@ -223,7 +241,8 @@ describe('GetDiaDeFuncionamentoService - Validação de campos selecionados', ()
           diaDaSemana: true,
           horaInicial: true,
           horaFinal: true,
-          ativo: true
+          ativo: true,
+          configuracaoId: true
         };
       }
 

@@ -95,9 +95,10 @@ describe('DiaDeFuncionamentoRepository', () => {
       expect(fields.horaInicial).toBe(true);
       expect(fields.horaFinal).toBe(true);
       expect(fields.ativo).toBe(true);
+      expect(fields.configuracaoId).toBe(true);
 
-      // Espera 5 campos expostos
-      expect(Object.keys(fields)).toHaveLength(5);
+      // Espera 6 campos expostos
+      expect(Object.keys(fields)).toHaveLength(6);
     });
 
     test('deve ter todos os métodos CRUD disponíveis', () => {

@@ -13,7 +13,8 @@ export class UpdateDiaDeFuncionamentoService extends AbstractService {
       diaDaSemana: this.data.diaDaSemana,
       horaInicial: this.data.horaInicial,
       horaFinal: this.data.horaFinal,
-      ativo: this.data.ativo
+      ativo: this.data.ativo,
+      configuracaoId: this.data.configuracaoId
     };
 
     // remover campos undefined

@@ -72,7 +72,8 @@ function testExecuteMethod() {
           diaDaSemana: true,
           horaInicial: true,
           horaFinal: true,
-          ativo: true
+          ativo: true,
+          configuracaoId: true
         };
       }
 
@@ -91,7 +92,8 @@ function testExecuteMethod() {
         diaDaSemana: mockData.diaDaSemana,
         horaInicial: mockData.horaInicial,
         horaFinal: mockData.horaFinal,
-        ativo: mockData.ativo
+        ativo: mockData.ativo,
+        configuracaoId: mockData.configuracaoId
       },
       options: { select: service.repository.selectFields }
     });

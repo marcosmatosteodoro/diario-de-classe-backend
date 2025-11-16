@@ -84,7 +84,8 @@ function describeExecuteMethod() {
             diaDaSemana: true,
             horaInicial: true,
             horaFinal: true,
-            ativo: true
+            ativo: true,
+            configuracaoId: true
           };
         }
 
@@ -118,7 +119,14 @@ function describeExecuteMethod() {
 
       class MockRepository {
         constructor() {
-          this.selectFields = {};
+          this.selectFields = {
+            id: true,
+            diaDaSemana: true,
+            horaInicial: true,
+            horaFinal: true,
+            ativo: true,
+            configuracaoId: true
+          };
         }
 
         async update() {
@@ -138,7 +146,14 @@ function describeExecuteMethod() {
 
       class MockRepository {
         constructor() {
-          this.selectFields = {};
+          this.selectFields = {
+            id: true,
+            diaDaSemana: true,
+            horaInicial: true,
+            horaFinal: true,
+            ativo: true,
+            configuracaoId: true
+          };
         }
 
         async update() {
@@ -157,7 +172,14 @@ function describeExecuteMethod() {
       class MockRepository {
         constructor() {
           this.updateCalls = [];
-          this.selectFields = {};
+          this.selectFields = {
+            id: true,
+            diaDaSemana: true,
+            horaInicial: true,
+            horaFinal: true,
+            ativo: true,
+            configuracaoId: true
+          };
         }
 
         async update(where, data, options) {
@@ -292,7 +314,14 @@ function describeUpdateScenarios() {
 
       class MockRepository {
         constructor() {
-          this.selectFields = {};
+          this.selectFields = {
+            id: true,
+            diaDaSemana: true,
+            horaInicial: true,
+            horaFinal: true,
+            ativo: true,
+            configuracaoId: true
+          };
         }
 
         async update(where, data, _options) {
@@ -313,7 +342,14 @@ function describeUpdateScenarios() {
 
       class MockRepository {
         constructor() {
-          this.selectFields = {};
+          this.selectFields = {
+            id: true,
+            diaDaSemana: true,
+            horaInicial: true,
+            horaFinal: true,
+            ativo: true,
+            configuracaoId: true
+          };
         }
 
         async update(where, data, _options) {

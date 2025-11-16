@@ -13,6 +13,9 @@ describe('IsDiaDeFuncionamentoDayExistsService - Inicialização', () => {
     expect(service).toBeInstanceOf(AbstractService);
     expect(service.repository).toBeInstanceOf(DiaDeFuncionamentoRepository);
     expect(service.diaDaSemana).toBe(dia);
+    // repository foi atualizado para expor configuracaoId
+    expect(service.repository.selectFields).toBeDefined();
+    expect(service.repository.selectFields.configuracaoId).toBe(true);
   });
 
   test('deve criar uma instância com repositório customizado e diaDaSemana', () => {
@@ -227,6 +230,8 @@ describe('IsDiaDeFuncionamentoDayExistsService - Integração com AbstractServic
 
     expect(service.repository).toBeDefined();
     expect(service.repository).toBeInstanceOf(DiaDeFuncionamentoRepository);
+    expect(service.repository.selectFields).toBeDefined();
+    expect(service.repository.selectFields.configuracaoId).toBe(true);
   });
 
   test('deve ser uma subclasse de AbstractService', () => {

@@ -65,7 +65,8 @@ describe('GetDiaDeFuncionamentoListService', () => {
             diaDaSemana: true,
             horaInicial: true,
             horaFinal: true,
-            ativo: true
+            ativo: true,
+            configuracaoId: true
           };
         }
       }
@@ -107,7 +108,8 @@ describe('GetDiaDeFuncionamentoListService', () => {
             diaDaSemana: true,
             horaInicial: true,
             horaFinal: true,
-            ativo: true
+            ativo: true,
+            configuracaoId: true
           };
         }
 
@@ -151,7 +153,8 @@ describe('GetDiaDeFuncionamentoListService', () => {
             diaDaSemana: true,
             horaInicial: true,
             horaFinal: true,
-            ativo: true
+            ativo: true,
+            configuracaoId: true
           };
         }
 
@@ -205,7 +208,8 @@ describe('GetDiaDeFuncionamentoListService', () => {
             diaDaSemana: true,
             horaInicial: true,
             horaFinal: true,
-            ativo: true
+            ativo: true,
+            configuracaoId: true
           };
         }
 
