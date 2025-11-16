@@ -72,13 +72,11 @@ model Aluno {
 }
 
 model Configuracao {
-  id                  String @id @default(cuid())
+  id                  String               @id @default(cuid())
   duracaoDaAula       Int
   tolerancia          Int
-  diasDeFuncionamento String // ID do DiaDeFuncionamento
-
-  // Relacionamento
-  diaDeFuncionamento DiaDeFuncionamento @relation(fields: [diasDeFuncionamento], references: [id])
+  // One Configuracao can have many DiaDeFuncionamento
+  diasDeFuncionamento DiaDeFuncionamento[]
 
   @@map("configuracoes")
 }
@@ -90,8 +88,9 @@ model DiaDeFuncionamento {
   horaFinal   String
   ativo       Boolean     @default(true)
 
-  // Relacionamento com Configuracao
-  configuracao Configuracao[]
+  // Foreign key to Configuracao (many DiaDeFuncionamento belong to one Configuracao)
+  configuracaoId String
+  configuracao   Configuracao @relation(fields: [configuracaoId], references: [id], onDelete: Cascade)
 
   @@map("dias_funcionamento")
 }
