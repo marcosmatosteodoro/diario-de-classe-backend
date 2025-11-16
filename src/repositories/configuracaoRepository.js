@@ -16,15 +16,6 @@ export default class ConfiguracaoRepository extends AbstractRepository {
       duracaoDaAula: true,
       tolerancia: true,
       diasDeFuncionamento: true
-      // diaDeFuncionamento: {
-      //   select: {
-      //     id: true,
-      //     diaDaSemana: true,
-      //     horaInicial: true,
-      //     horaFinal: true,
-      //     ativo: true
-      //   }
-      // }
     };
   }
 }
