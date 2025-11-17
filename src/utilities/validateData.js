@@ -326,6 +326,33 @@ export class ValidateData {
   }
 
   /**
+   * Valida se o valor é um array
+   * @returns {ValidateData}
+   */
+  static isArray() {
+    const instance = new ValidateData();
+    return instance.isArray();
+  }
+
+  /**
+   * Valida se o valor é um array (método de instância)
+   * @returns {ValidateData}
+   */
+  isArray() {
+    this.validations.push({
+      type: 'array',
+      validate: value => {
+        if (value === null || value === undefined || value === '') {
+          return !this.isRequired;
+        }
+        return Array.isArray(value);
+      },
+      message: 'Deve ser um array'
+    });
+    return this;
+  }
+
+  /**
    * Executa todas as validações configuradas
    * @param {any} value - Valor a ser validado
    * @param {string} fieldName - Nome do campo (para mensagens de erro)
