@@ -268,6 +268,64 @@ export class ValidateData {
   }
 
   /**
+   * Valida se o valor é um número positivo (> 0)
+   * @returns {ValidateData}
+   */
+  static isPositive() {
+    const instance = new ValidateData();
+    return instance.isPositive();
+  }
+
+  /**
+   * Valida se o valor é um número positivo (> 0) (método de instância)
+   * @returns {ValidateData}
+   */
+  isPositive() {
+    this.validations.push({
+      type: 'positive',
+      validate: value => {
+        if (value === null || value === undefined || value === '') {
+          return !this.isRequired;
+        }
+        // allow numeric strings as numbers
+        const num = Number(value);
+        return !isNaN(num) && num > 0;
+      },
+      message: 'Deve ser um número positivo'
+    });
+    return this;
+  }
+
+  /**
+   * Valida se o valor é diferente de zero
+   * @returns {ValidateData}
+   */
+  static notZero() {
+    const instance = new ValidateData();
+    return instance.notZero();
+  }
+
+  /**
+   * Valida se o valor é diferente de zero (método de instância)
+   * @returns {ValidateData}
+   */
+  notZero() {
+    this.validations.push({
+      type: 'notZero',
+      validate: value => {
+        if (value === null || value === undefined || value === '') {
+          return !this.isRequired;
+        }
+        const num = Number(value);
+        if (isNaN(num)) return false;
+        return num !== 0;
+      },
+      message: 'Não pode ser zero'
+    });
+    return this;
+  }
+
+  /**
    * Executa todas as validações configuradas
    * @param {any} value - Valor a ser validado
    * @param {string} fieldName - Nome do campo (para mensagens de erro)
