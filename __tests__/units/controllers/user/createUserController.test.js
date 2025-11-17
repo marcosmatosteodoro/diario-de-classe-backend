@@ -1,5 +1,8 @@
 import { CreateUserController } from '../../../../src/controllers/user/createUserController.js';
 import AbstractController from '../../../../src/controllers/abstractController.js';
+import * as IsUserEmailExistsService from '../../../../src/services/user/isUserEmailExistsService.js';
+import * as CreateUserService from '../../../../src/services/user/createUserService.js';
+import * as CreateDisponibilidadeProfessorService from '../../../../src/services/disponibilidadeProfessor/createDisponibilidadeProfessorService.js';
 
 describe('CreateUserController', () => {
   let controller, mockReq, mockRes;
@@ -210,6 +213,72 @@ describe('CreateUserController', () => {
 
       mockRes.status(409);
       expect(mockRes.statusCode).toBe(409);
+    });
+  });
+
+  describe('Execute behavior', () => {
+    let originalIsEmailHandle;
+    let originalCreateUserHandle;
+    let originalCreateDisponibilidadeHandle;
+
+    afterEach(() => {
+      if (originalIsEmailHandle !== undefined) {
+        IsUserEmailExistsService.IsUserEmailExistsService.handle = originalIsEmailHandle;
+      }
+      if (originalCreateUserHandle !== undefined) {
+        CreateUserService.CreateUserService.handle = originalCreateUserHandle;
+      }
+      if (originalCreateDisponibilidadeHandle !== undefined) {
+        CreateDisponibilidadeProfessorService.CreateDisponibilidadeProfessorService.handle =
+          originalCreateDisponibilidadeHandle;
+      }
+    });
+
+    test('returns 409 when email already exists', async () => {
+      // mock IsUserEmailExistsService.handle to true
+      originalIsEmailHandle = IsUserEmailExistsService.IsUserEmailExistsService.handle;
+      IsUserEmailExistsService.IsUserEmailExistsService.handle = async () => true;
+
+      const controllerExec = new CreateUserController(mockReq, mockRes);
+      await controllerExec.execute();
+
+      expect(mockRes.statusCode).toBe(409);
+      expect(mockRes.data).toEqual({ message: 'Este email já está em uso' });
+    });
+
+    test('creates user and disponibilidades and returns 201', async () => {
+      // mock IsUserEmailExistsService.handle -> false
+      originalIsEmailHandle = IsUserEmailExistsService.IsUserEmailExistsService.handle;
+      IsUserEmailExistsService.IsUserEmailExistsService.handle = async () => false;
+
+      // mock CreateUserService.handle -> returns user with empty disponibilidades
+      originalCreateUserHandle = CreateUserService.CreateUserService.handle;
+      CreateUserService.CreateUserService.handle = async body => ({
+        id: 'new-user-id',
+        ...body,
+        disponibilidades: []
+      });
+
+      // mock CreateDisponibilidadeProfessorService.handle -> returns disponibilidade object
+      originalCreateDisponibilidadeHandle =
+        CreateDisponibilidadeProfessorService.CreateDisponibilidadeProfessorService.handle;
+      let seq = 0;
+      CreateDisponibilidadeProfessorService.CreateDisponibilidadeProfessorService.handle =
+        async dispon => {
+          seq += 1;
+          return { id: `d-${seq}`, ...dispon };
+        };
+
+      const controllerExec = new CreateUserController(mockReq, mockRes);
+      await controllerExec.execute();
+
+      expect(mockRes.statusCode).toBe(201);
+      expect(mockRes.data).toBeDefined();
+      expect(Array.isArray(mockRes.data.disponibilidades)).toBe(true);
+      // diasAtivos (5) + diasInativos (2) = 7
+      expect(mockRes.data.disponibilidades.length).toBe(7);
+      // verify each disponibilidade has userId set to new-user-id
+      expect(mockRes.data.disponibilidades.every(d => d.userId === 'new-user-id')).toBe(true);
     });
   });
 });
