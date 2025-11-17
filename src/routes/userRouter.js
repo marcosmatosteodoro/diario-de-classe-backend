@@ -10,6 +10,10 @@ import { validateId } from '../middlewares/validateId.js';
 import { validateCreateUser } from '../middlewares/user/validateCreateUser.js';
 import { validateUpdateUser } from '../middlewares/user/validateUpdateUser.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
+// Routers
+import disponibilidadeProfessorRouter from './disponibilidadeProfessorRouter.js';
+
+const disponibilidadeProfessorController = disponibilidadeProfessorRouter;
 
 const router = express.Router();
 
@@ -27,5 +31,8 @@ router.put('/:id', validateId, validateUpdateUser, UpdateUserController.handle);
 
 // DELETE /api/professores/:id - Deletar professor por ID
 router.delete('/:id', validateId, DeleteUserController.handle);
+
+// Rotas de disponibilidade do professor
+router.use('/:id/disponibilidade', validateId, disponibilidadeProfessorController);
 
 export default router;
