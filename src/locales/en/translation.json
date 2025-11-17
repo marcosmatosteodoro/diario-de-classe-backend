@@ -87,5 +87,16 @@
       "success": "Student deleted successfully",
       "error": "Error deleting student"
     }
+  },
+  "configuracaos": {
+    "list": {
+      "error": "Error fetching configurations"
+    },
+    "get": {
+      "not_found": "Configuration not found"
+    },
+    "update": {
+      "error": "Error updating configuration"
+    }
   }
 }

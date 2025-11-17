@@ -87,5 +87,16 @@
       "success": "Aluno excluído com sucesso",
       "error": "Erro ao excluir aluno"
     }
+  },
+  "configuracaos": {
+    "list": {
+      "error": "Erro ao buscar configurações"
+    },
+    "get": {
+      "not_found": "Configuração não encontrada"
+    },
+    "update": {
+      "error": "Erro ao atualizar configuração"
+    }
   }
 }
