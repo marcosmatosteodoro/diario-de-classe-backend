@@ -7,8 +7,8 @@ import { CreateUserController } from '../controllers/user/createUserController.j
 import { UpdateUserController } from '../controllers/user/updateUserController.js';
 // Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
-import { validateCreateUser } from '../middlewares/validateCreateUser.js';
-import { validateUpdateUser } from '../middlewares/validateUpdateUser.js';
+import { validateCreateUser } from '../middlewares/user/validateCreateUser.js';
+import { validateUpdateUser } from '../middlewares/user/validateUpdateUser.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 
 const router = express.Router();

@@ -1,5 +1,5 @@
-import { BaseValidateEntity } from '../utilities/baseValidateEntity.js';
-import { ValidateData } from '../utilities/validateData.js';
+import { BaseValidateEntity } from '../../utilities/baseValidateEntity.js';
+import { ValidateData } from '../../utilities/validateData.js';
 
 class ValidateUpdateUser extends BaseValidateEntity {
   constructor(req, res, next) {

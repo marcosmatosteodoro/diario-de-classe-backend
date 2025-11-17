@@ -1,4 +1,4 @@
-import { validateUpdateUser } from '../../../src/middlewares/validateUpdateUser.js';
+import { validateUpdateUser } from '../../../../src/middlewares/user/validateUpdateUser.js';
 
 describe('validateUpdateUser middleware', () => {
   let mockReq, mockRes, mockNext;
