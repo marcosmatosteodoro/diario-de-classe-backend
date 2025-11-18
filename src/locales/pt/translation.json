@@ -25,6 +25,7 @@
     "min_length": "Deve ter pelo menos {{count}} caracteres",
     "max_length": "Não pode ter mais de {{count}} caracteres",
     "no_credentials": "Credenciais não fornecidas",
+    "refresh_token_required": "Refresh token é obrigatório",
     "id": {
       "required": "ID é obrigatório",
       "invalid": "ID deve ser um identificador válido"
@@ -34,6 +35,14 @@
     "login": {
       "unauthorized": "Email ou senha inválidos",
       "error": "Erro ao fazer login"
+    },
+    "logout": {
+      "success": "Logout realizado com sucesso",
+      "error": "Erro ao fazer logout"
+    },
+    "refresh": {
+      "unauthorized": "Refresh token inválido ou expirado",
+      "error": "Erro ao renovar token"
     }
   },
   "error": {
