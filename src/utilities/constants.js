@@ -18,6 +18,14 @@ export default class Constants {
 
   static port = process.env.PORT;
 
+  static jwtSecret = process.env.JWT_SECRET_TOKEN || 'dev-secret';
+
+  static jwtRefreshSecret = process.env.JWT_REFRESH_TOKEN || `${Constants.jwtSecret}-refresh`;
+
+  static accessExp = Number(process.env.JWT_EXP_SECONDS) || 60 * 60 * 1; // 1h
+
+  static refreshExp = Number(process.env.JWT_REFRESH_EXP_SECONDS) || 60 * 60 * 24 * 7; // 7d
+
   /* Database */
   // static database = {
   //   host: process.env.DATABASE_HOST,

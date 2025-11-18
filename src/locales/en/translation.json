@@ -24,9 +24,16 @@
     "invalid_format": "Invalid format",
     "min_length": "Must have at least {{count}} characters",
     "max_length": "Cannot have more than {{count}} characters",
+    "no_credentials": "Credentials not provided",
     "id": {
       "required": "ID is required",
       "invalid": "ID must be a valid identifier"
+    }
+  },
+  "auth": {
+    "login": {
+      "unauthorized": "Invalid email or password",
+      "error": "Login error"
     }
   },
   "error": {
