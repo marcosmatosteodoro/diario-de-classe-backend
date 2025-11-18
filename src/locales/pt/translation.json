@@ -24,9 +24,16 @@
     "invalid_format": "Formato inválido",
     "min_length": "Deve ter pelo menos {{count}} caracteres",
     "max_length": "Não pode ter mais de {{count}} caracteres",
+    "no_credentials": "Credenciais não fornecidas",
     "id": {
       "required": "ID é obrigatório",
       "invalid": "ID deve ser um identificador válido"
+    }
+  },
+  "auth": {
+    "login": {
+      "unauthorized": "Email ou senha inválidos",
+      "error": "Erro ao fazer login"
     }
   },
   "error": {
