@@ -1,7 +1,7 @@
 import express from 'express';
 import { LoginController } from '../controllers/auth/loginController.js';
 import { LogoutController } from '../controllers/auth/logoutController.js';
-// import { RefreshTokenController } from '../controllers/auth/refreshTokenController.js';
+import { RefreshTokenController } from '../controllers/auth/refreshTokenController.js';
 
 const router = express.Router();
 
@@ -12,6 +12,6 @@ router.post('/login', LoginController.handle);
 router.post('/logout', LogoutController.handle);
 
 // POST /auth/refresh-token
-// router.post('/refresh-token', RefreshTokenController.handle);
+router.post('/refresh-token', RefreshTokenController.handle);
 
 export default router;
