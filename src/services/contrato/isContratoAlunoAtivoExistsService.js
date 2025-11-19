@@ -2,26 +2,26 @@ import AbstractService from '../abstractService.js';
 import ContratoRepository from '../../repositories/contratoRepository.js';
 
 export class IsContratoAlunoAtivoExistsService extends AbstractService {
-  constructor(Repository, idAluno) {
+  constructor(Repository, idDoAluno) {
     super(Repository);
-    this.idAluno = idAluno;
+    this.idDoAluno = idDoAluno;
   }
 
   async execute() {
-    const contrato = await this.repository.selectOne({
+    const contrato = await this.repository.selectMany({
       where: {
-        idAluno: this.idAluno,
+        idDoAluno: this.idDoAluno,
         status: 'ATIVO'
       },
       select: { id: true }
     });
 
-    return Boolean(contrato);
+    return contrato && contrato.length > 0;
   }
 
-  static async handle(idAluno) {
+  static async handle(idDoAluno) {
     const Repository = ContratoRepository;
-    const service = new IsContratoAlunoAtivoExistsService(Repository, idAluno);
+    const service = new IsContratoAlunoAtivoExistsService(Repository, idDoAluno);
     return await service.execute();
   }
 }
