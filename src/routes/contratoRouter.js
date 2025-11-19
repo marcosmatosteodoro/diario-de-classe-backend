@@ -9,12 +9,11 @@ import { GetContratoListController } from '../controllers/contrato/getContratoLi
 // import { validateId } from '../middlewares/validateId.js';
 // import { validateCreateContrato } from '../middlewares/contrato/validateCreateContrato.js';
 // import { validateUpdateContrato } from '../middlewares/contrato/validateUpdateContrato.js';
-import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 
 const router = express.Router();
 
 // GET /api/contratos - Buscar todos os contratos
-router.get('/', validateSearchQuery, GetContratoListController.handle);
+router.get('/', GetContratoListController.handle);
 
 // // GET /api/contratos/:id - Buscar contrato por ID
 // router.get('/:id', validateId, GetContratoController.handle);

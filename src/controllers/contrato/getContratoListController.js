@@ -1,6 +1,5 @@
 import AbstractController from '../abstractController.js';
 import { GetContratoListService } from '../../services/contrato/getContratoListService.js';
-import { getWhereClauseByQuerySearch } from '../../utilities/getWhereClauseByQuerySearch.js';
 
 export class GetContratoListController extends AbstractController {
   constructor(req, res) {
@@ -10,13 +9,6 @@ export class GetContratoListController extends AbstractController {
 
   async execute() {
     try {
-      if (this.req.query.q) {
-        this.where = getWhereClauseByQuerySearch({
-          query: this.req.query.q,
-          fields: ['idDoAluno', 'dataDeInicio', 'dataDeTermino', 'status']
-        });
-      }
-
       const contratos = await GetContratoListService.handle(this.where);
 
       if (!contratos || contratos.length === 0) {
