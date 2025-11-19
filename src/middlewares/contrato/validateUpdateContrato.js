@@ -23,8 +23,20 @@ class ValidateUpdateContrato extends BaseValidateEntity {
       dataDeTermino: ValidateData.require()
         .isString()
         .isDate()
+        .custom(
+          this.dataDeTerminoIsAfterDataDeInicio.bind(dataDeInicio, dataDeTermino),
+          'dataDeTermino deve ser posterior a dataDeInicio'
+        )
         .validate(dataDeTermino, 'dataDeTermino')
     };
+  }
+
+  dataDeTerminoIsAfterDataDeInicio(dataDeInicio, dataDeTermino) {
+    if (!dataDeInicio || !dataDeTermino) return true;
+
+    const inicio = new Date(dataDeInicio);
+    const termino = new Date(dataDeTermino);
+    return termino > inicio;
   }
 }
 
