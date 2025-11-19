@@ -26,6 +26,13 @@ enum DiaDaSemana {
   DOMINGO
 }
 
+enum StatusContrato {
+  PENDENTE
+  ATIVO
+  INATIVO
+  CANCELADO
+}
+
 model User {
   id              String    @id @default(cuid())
   nome            String // máximo 255 caracteres
@@ -68,6 +75,11 @@ model Aluno {
   dataCriacao     DateTime @default(now())
   dataAtualizacao DateTime @updatedAt
 
+  // Relacionamento com Contrato
+  contratoes Contrato[]
+  // Relacionamento com DiaAula
+  diaAulas   DiaAula[]
+
   @@map("alunos")
 }
 
@@ -75,22 +87,59 @@ model Configuracao {
   id                  String               @id @default(cuid())
   duracaoDaAula       Int
   tolerancia          Int
-  // One Configuracao can have many DiaDeFuncionamento
+  // Relacionamento com DiaDeFuncionamento
   diasDeFuncionamento DiaDeFuncionamento[]
 
   @@map("configuracoes")
 }
 
 model DiaDeFuncionamento {
-  id          String      @id @default(cuid())
-  diaDaSemana DiaDaSemana
-  horaInicial String
-  horaFinal   String
-  ativo       Boolean     @default(true)
-
-  // Foreign key to Configuracao (many DiaDeFuncionamento belong to one Configuracao)
+  id             String      @id @default(cuid())
+  diaDaSemana    DiaDaSemana
+  horaInicial    String
+  horaFinal      String
+  ativo          Boolean     @default(true)
   configuracaoId String
-  configuracao   Configuracao @relation(fields: [configuracaoId], references: [id], onDelete: Cascade)
+
+  // Relacionamento com Configuracao
+  configuracao Configuracao @relation(fields: [configuracaoId], references: [id], onDelete: Cascade)
 
   @@map("dias_funcionamento")
+}
+
+model Contrato {
+  id                   String         @id @default(cuid())
+  idDoAluno            String
+  dataDeInicio         DateTime
+  dataDeTermino        DateTime
+  status               StatusContrato
+  totalAulas           Int // Sistema preenche automático
+  totalAulasFeitas     Int // Sistema preenche automático
+  totalReposicoes      Int // Sistema preenche automático
+  totalFaltas          Int // Sistema preenche automático
+  totalAulasCanceladas Int // Sistema preenche automático
+
+  // Relacionamento com Aluno
+  aluno    Aluno     @relation(fields: [idDoAluno], references: [id], onDelete: Cascade)
+  // Relacionamento com DiaAula
+  diaAulas DiaAula[]
+
+  @@map("contratos")
+}
+
+model DiaAula {
+  id                String      @id @default(cuid())
+  idAluno           String
+  idContrato        String
+  diaDaSemana       DiaDaSemana
+  quantidadeDeAulas Int
+  horaDeInicio      String
+  horaDeFim         String // Sistema preenche automático
+
+  // Relacionamento com Aluno
+  aluno    Aluno    @relation(fields: [idAluno], references: [id], onDelete: Cascade)
+  // Relacionamento com Contrato
+  contrato Contrato @relation(fields: [idContrato], references: [id], onDelete: Cascade)
+
+  @@map("dias_aula")
 }
