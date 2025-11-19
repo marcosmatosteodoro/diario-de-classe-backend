@@ -11,8 +11,8 @@ export class CreateContratoService extends AbstractService {
     return await this.repository.create(
       {
         idDoAluno: this.data.idDoAluno,
-        dataDeInicio: this.data.dataDeInicio,
-        dataDeTermino: this.data.dataDeTermino,
+        dataDeInicio: this.data.dataDeInicio || null,
+        dataDeTermino: this.data.dataDeTermino || null,
         status: 'PENDENTE',
         totalAulas: 0,
         totalAulasFeitas: 0,
