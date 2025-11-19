@@ -117,8 +117,8 @@ model DiaDeFuncionamento {
 model Contrato {
   id                   String         @id @default(cuid())
   idDoAluno            String
-  dataDeInicio         DateTime
-  dataDeTermino        DateTime
+  dataDeInicio         DateTime?
+  dataDeTermino        DateTime?
   status               StatusContrato
   totalAulas           Int // Sistema preenche automático
   totalAulasFeitas     Int // Sistema preenche automático
