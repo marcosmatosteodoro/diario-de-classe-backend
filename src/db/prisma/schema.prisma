@@ -52,12 +52,14 @@ model User {
 }
 
 model DisponibilidadeProfessor {
-  id          String      @id @default(cuid())
-  diaDaSemana DiaDaSemana
-  horaInicial String
-  horaFinal   String
-  ativo       Boolean     @default(true)
-  userId      String
+  id              String      @id @default(cuid())
+  diaDaSemana     DiaDaSemana
+  horaInicial     String
+  horaFinal       String
+  ativo           Boolean     @default(true)
+  userId          String
+  dataCriacao     DateTime    @default(now())
+  dataAtualizacao DateTime    @updatedAt
 
   // Relacionamento com User
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -84,9 +86,12 @@ model Aluno {
 }
 
 model Configuracao {
-  id                  String               @id @default(cuid())
-  duracaoDaAula       Int
-  tolerancia          Int
+  id              String   @id @default(cuid())
+  duracaoDaAula   Int
+  tolerancia      Int
+  dataCriacao     DateTime @default(now())
+  dataAtualizacao DateTime @updatedAt
+
   // Relacionamento com DiaDeFuncionamento
   diasDeFuncionamento DiaDeFuncionamento[]
 
@@ -94,12 +99,14 @@ model Configuracao {
 }
 
 model DiaDeFuncionamento {
-  id             String      @id @default(cuid())
-  diaDaSemana    DiaDaSemana
-  horaInicial    String
-  horaFinal      String
-  ativo          Boolean     @default(true)
-  configuracaoId String
+  id              String      @id @default(cuid())
+  diaDaSemana     DiaDaSemana
+  horaInicial     String
+  horaFinal       String
+  ativo           Boolean     @default(true)
+  configuracaoId  String
+  dataCriacao     DateTime    @default(now())
+  dataAtualizacao DateTime    @updatedAt
 
   // Relacionamento com Configuracao
   configuracao Configuracao @relation(fields: [configuracaoId], references: [id], onDelete: Cascade)
@@ -118,6 +125,8 @@ model Contrato {
   totalReposicoes      Int // Sistema preenche automático
   totalFaltas          Int // Sistema preenche automático
   totalAulasCanceladas Int // Sistema preenche automático
+  dataCriacao          DateTime       @default(now())
+  dataAtualizacao      DateTime       @updatedAt
 
   // Relacionamento com Aluno
   aluno    Aluno     @relation(fields: [idDoAluno], references: [id], onDelete: Cascade)
@@ -135,6 +144,8 @@ model DiaAula {
   quantidadeDeAulas Int
   horaDeInicio      String
   horaDeFim         String // Sistema preenche automático
+  dataCriacao       DateTime    @default(now())
+  dataAtualizacao   DateTime    @updatedAt
 
   // Relacionamento com Aluno
   aluno    Aluno    @relation(fields: [idAluno], references: [id], onDelete: Cascade)
