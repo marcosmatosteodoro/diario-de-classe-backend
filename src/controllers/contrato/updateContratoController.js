@@ -1,7 +1,6 @@
 import AbstractController from '../abstractController.js';
 import { GetContratoService } from '../../services/contrato/getContratoService.js';
 import { UpdateContratoService } from '../../services/contrato/updateContratoService.js';
-import { IsContratoEmailExistsService } from '../../services/contrato/isContratoEmailExistsService.js';
 
 export class UpdateContratoController extends AbstractController {
   constructor(req, res) {
@@ -16,15 +15,6 @@ export class UpdateContratoController extends AbstractController {
       if (!contrato) {
         return this.res.status(404).json({
           message: this.req.t('contratos.get.not_found')
-        });
-      }
-
-      if (
-        contrato.email !== this.req.body.email &&
-        (await IsContratoEmailExistsService.handle(this.req.body.email))
-      ) {
-        return this.res.status(409).json({
-          message: this.req.t('contratos.create.email_exists')
         });
       }
 
