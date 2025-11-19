@@ -10,14 +10,10 @@ export class LoginController extends AbstractController {
     try {
       const { email, senha } = this.req.body || {};
 
-      if (!email || !senha) {
-        return this.res.status(400).json({ message: 'validation.no_credentials' });
-      }
-
       const token = await LoginService.handle(email, senha);
 
       if (!token) {
-        return this.res.status(401).json('auth.login.unauthorized');
+        return this.res.status(401).json({ message: 'auth.login.unauthorized' });
       }
 
       return this.res.status(200).json(token);

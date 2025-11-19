@@ -29,24 +29,24 @@ describe('LogoutController', () => {
     LogoutService.handle = originalLogoutServiceHandle;
   });
 
-  test('should return 422 when refreshToken is not provided', async () => {
+  test('should return 400 when refreshToken is not provided', async () => {
     mockReq.body = {};
 
     const controller = new LogoutController(mockReq, mockRes);
     await controller.execute();
 
-    expect(mockRes.statusCode).toBe(422);
-    expect(mockRes.jsonData).toEqual({ message: 'validation.refresh_token_required' });
+    expect(mockRes.statusCode).toBe(400);
+    expect(mockRes.jsonData).toEqual({ message: 'auth.logout.error' });
   });
 
-  test('should return 422 when body is null or undefined', async () => {
+  test('should return 400 when body is null or undefined', async () => {
     mockReq.body = null;
 
     const controller = new LogoutController(mockReq, mockRes);
     await controller.execute();
 
-    expect(mockRes.statusCode).toBe(422);
-    expect(mockRes.jsonData).toEqual({ message: 'validation.refresh_token_required' });
+    expect(mockRes.statusCode).toBe(400);
+    expect(mockRes.jsonData).toEqual({ message: 'auth.logout.error' });
   });
 
   test('should return 400 when LogoutService returns null', async () => {
@@ -150,8 +150,8 @@ describe('LogoutController', () => {
     const controller = new LogoutController(mockReq, mockRes);
     await controller.execute();
 
-    expect(serviceCalled).toBe(false);
-    expect(mockRes.statusCode).toBe(422);
+    expect(serviceCalled).toBe(true);
+    expect(mockRes.statusCode).toBe(400);
   });
 
   test('should handle missing request body gracefully', async () => {
@@ -160,7 +160,7 @@ describe('LogoutController', () => {
     const controller = new LogoutController(mockReq, mockRes);
     await controller.execute();
 
-    expect(mockRes.statusCode).toBe(422);
-    expect(mockRes.jsonData).toEqual({ message: 'validation.refresh_token_required' });
+    expect(mockRes.statusCode).toBe(400);
+    expect(mockRes.jsonData).toEqual({ message: 'auth.logout.error' });
   });
 });

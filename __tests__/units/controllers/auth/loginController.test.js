@@ -29,44 +29,44 @@ describe('LoginController', () => {
     LoginService.handle = originalLoginServiceHandle;
   });
 
-  test('should return 400 when email is not provided', async () => {
+  test('should return 401 when email is not provided', async () => {
     mockReq.body = { senha: 'password123' };
 
     const controller = new LoginController(mockReq, mockRes);
     await controller.execute();
 
-    expect(mockRes.statusCode).toBe(400);
-    expect(mockRes.jsonData).toEqual({ message: 'validation.no_credentials' });
+    expect(mockRes.statusCode).toBe(401);
+    expect(mockRes.jsonData).toEqual({ message: 'auth.login.unauthorized' });
   });
 
-  test('should return 400 when senha is not provided', async () => {
+  test('should return 401 when senha is not provided', async () => {
     mockReq.body = { email: 'test@example.com' };
 
     const controller = new LoginController(mockReq, mockRes);
     await controller.execute();
 
-    expect(mockRes.statusCode).toBe(400);
-    expect(mockRes.jsonData).toEqual({ message: 'validation.no_credentials' });
+    expect(mockRes.statusCode).toBe(401);
+    expect(mockRes.jsonData).toEqual({ message: 'auth.login.unauthorized' });
   });
 
-  test('should return 400 when both email and senha are not provided', async () => {
+  test('should return 401 when both email and senha are not provided', async () => {
     mockReq.body = {};
 
     const controller = new LoginController(mockReq, mockRes);
     await controller.execute();
 
-    expect(mockRes.statusCode).toBe(400);
-    expect(mockRes.jsonData).toEqual({ message: 'validation.no_credentials' });
+    expect(mockRes.statusCode).toBe(401);
+    expect(mockRes.jsonData).toEqual({ message: 'auth.login.unauthorized' });
   });
 
-  test('should return 400 when body is null or undefined', async () => {
+  test('should return 401 when body is null or undefined', async () => {
     mockReq.body = null;
 
     const controller = new LoginController(mockReq, mockRes);
     await controller.execute();
 
-    expect(mockRes.statusCode).toBe(400);
-    expect(mockRes.jsonData).toEqual({ message: 'validation.no_credentials' });
+    expect(mockRes.statusCode).toBe(401);
+    expect(mockRes.jsonData).toEqual({ message: 'auth.login.unauthorized' });
   });
 
   test('should return 401 when LoginService returns null', async () => {
@@ -77,7 +77,7 @@ describe('LoginController', () => {
     await controller.execute();
 
     expect(mockRes.statusCode).toBe(401);
-    expect(mockRes.jsonData).toBe('auth.login.unauthorized');
+    expect(mockRes.jsonData).toEqual({ message: 'auth.login.unauthorized' });
   });
 
   test('should return 200 with token when credentials are valid', async () => {
@@ -206,8 +206,8 @@ describe('LoginController', () => {
     const controller = new LoginController(mockReq, mockRes);
     await controller.execute();
 
-    expect(loginServiceCalled).toBe(false);
-    expect(mockRes.statusCode).toBe(400);
+    expect(loginServiceCalled).toBe(true);
+    expect(mockRes.statusCode).toBe(401);
   });
 
   test('should handle missing request body gracefully', async () => {
@@ -216,7 +216,7 @@ describe('LoginController', () => {
     const controller = new LoginController(mockReq, mockRes);
     await controller.execute();
 
-    expect(mockRes.statusCode).toBe(400);
-    expect(mockRes.jsonData).toEqual({ message: 'validation.no_credentials' });
+    expect(mockRes.statusCode).toBe(401);
+    expect(mockRes.jsonData).toEqual({ message: 'auth.login.unauthorized' });
   });
 });

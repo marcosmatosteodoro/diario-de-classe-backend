@@ -10,10 +10,6 @@ export class LogoutController extends AbstractController {
     try {
       const { refreshToken } = this.req.body || {};
 
-      if (!refreshToken) {
-        return this.res.status(422).json({ message: 'validation.refresh_token_required' });
-      }
-
       const result = await LogoutService.handle(refreshToken);
 
       if (!result) {

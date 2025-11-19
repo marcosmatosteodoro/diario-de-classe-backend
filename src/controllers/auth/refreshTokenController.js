@@ -10,10 +10,6 @@ export class RefreshTokenController extends AbstractController {
     try {
       const { refreshToken } = this.req.body || {};
 
-      if (!refreshToken) {
-        return this.res.status(400).json({ message: 'validation.refresh_token_required' });
-      }
-
       const token = await RefreshTokenService.handle(refreshToken);
 
       if (!token) {
