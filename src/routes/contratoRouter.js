@@ -2,7 +2,7 @@ import express from 'express';
 // Controladores
 import { GetContratoListController } from '../controllers/contrato/getContratoListController.js';
 import { GetContratoController } from '../controllers/contrato/getContratoController.js';
-// import { DeleteContratoController } from '../controllers/contrato/deleteContratoController.js';
+import { DeleteContratoController } from '../controllers/contrato/deleteContratoController.js';
 // import { CreateContratoController } from '../controllers/contrato/createContratoController.js';
 // import { UpdateContratoController } from '../controllers/contrato/updateContratoController.js';
 // Middlewares de validação
@@ -25,6 +25,6 @@ router.get('/:id', validateId, GetContratoController.handle);
 // router.put('/:id', validateId, validateUpdateContrato, UpdateContratoController.handle);
 
 // // DELETE /api/contratos/:id - Deletar contrato por ID
-// router.delete('/:id', validateId, DeleteContratoController.handle);
+router.delete('/:id', validateId, DeleteContratoController.handle);
 
 export default router;
