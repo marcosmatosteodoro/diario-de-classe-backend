@@ -1,12 +1,12 @@
 import express from 'express';
 // Controladores
 import { GetContratoListController } from '../controllers/contrato/getContratoListController.js';
-// import { GetContratoController } from '../controllers/contrato/getContratoController.js';
+import { GetContratoController } from '../controllers/contrato/getContratoController.js';
 // import { DeleteContratoController } from '../controllers/contrato/deleteContratoController.js';
 // import { CreateContratoController } from '../controllers/contrato/createContratoController.js';
 // import { UpdateContratoController } from '../controllers/contrato/updateContratoController.js';
 // Middlewares de validação
-// import { validateId } from '../middlewares/validateId.js';
+import { validateId } from '../middlewares/validateId.js';
 // import { validateCreateContrato } from '../middlewares/contrato/validateCreateContrato.js';
 // import { validateUpdateContrato } from '../middlewares/contrato/validateUpdateContrato.js';
 
@@ -16,7 +16,7 @@ const router = express.Router();
 router.get('/', GetContratoListController.handle);
 
 // // GET /api/contratos/:id - Buscar contrato por ID
-// router.get('/:id', validateId, GetContratoController.handle);
+router.get('/:id', validateId, GetContratoController.handle);
 
 // // POST /api/contratos - Criar novo contrato
 // router.post('/', validateCreateContrato, CreateContratoController.handle);

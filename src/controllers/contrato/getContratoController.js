@@ -8,7 +8,6 @@ export class GetContratoController extends AbstractController {
 
   async execute() {
     try {
-      // Usa o ID validado pelo middleware se disponível, senão usa o parâmetro original
       const id = this.req.validatedId || this.req.params.id;
       const contrato = await GetContratoService.handle(id);
 
