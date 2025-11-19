@@ -1,32 +1,26 @@
 import { BaseValidateEntity } from '../../utilities/baseValidateEntity.js';
 import { ValidateData } from '../../utilities/validateData.js';
 
-class ValidateCreateContrato extends BaseValidateEntity {
+class ValidateUpdateContrato extends BaseValidateEntity {
   constructor(req, res, next) {
     super(req, res, next);
   }
 
   getDataForFilter() {
-    return ['idDoAluno', 'dataDeInicio', 'dataDeTermino'];
+    return ['dataDeInicio', 'dataDeTermino'];
   }
 
   getDataValidations(filteredData) {
-    const { idDoAluno, dataDeInicio, dataDeTermino } = filteredData;
+    const { dataDeInicio, dataDeTermino } = filteredData;
 
     return {
-      // Validar campo idDoAluno
-      idDoAluno: ValidateData.require()
-        .isString()
-        .minCharacters(6)
-        .maxCharacters(50)
-        .validate(idDoAluno, 'idDoAluno'),
       // Validar campo dataDeInicio
-      dataDeInicio: ValidateData.optional()
+      dataDeInicio: ValidateData.require()
         .isString()
         .isDate()
         .validate(dataDeInicio, 'dataDeInicio'),
       // Validar campo dataDeTermino
-      dataDeTermino: ValidateData.optional()
+      dataDeTermino: ValidateData.require()
         .isString()
         .isDate()
         .custom(
@@ -55,7 +49,7 @@ class ValidateCreateContrato extends BaseValidateEntity {
  * @param {Function} next - Next middleware function
  */
 
-export const validateCreateContrato = (req, res, next) => {
-  const validateCreateContrato = new ValidateCreateContrato(req, res, next);
-  return validateCreateContrato.handle();
+export const validateUpdateContrato = (req, res, next) => {
+  const validateUpdateContrato = new ValidateUpdateContrato(req, res, next);
+  return validateUpdateContrato.handle();
 };
