@@ -13,11 +13,14 @@ export default class DiaAulaRepository extends AbstractRepository {
   getSelectFields() {
     return {
       id: true,
+      idAluno: true,
+      idContrato: true,
       diaDaSemana: true,
-      horaInicial: true,
-      horaFinal: true,
-      ativo: true,
-      configuracaoId: true
+      quantidadeDeAulas: true,
+      horaDeInicio: true,
+      horaDeFim: true,
+      dataCriacao: true,
+      dataAtualizacao: true
     };
   }
 }
