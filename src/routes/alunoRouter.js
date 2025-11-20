@@ -10,6 +10,7 @@ import { validateId } from '../middlewares/validateId.js';
 import { validateCreateAluno } from '../middlewares/aluno/validateCreateAluno.js';
 import { validateUpdateAluno } from '../middlewares/aluno/validateUpdateAluno.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
+import { GetDiaAulaListByAlunoController } from '../controllers/diaAula/getDiaAulaListByAlunoController.js';
 
 const router = express.Router();
 
@@ -27,5 +28,8 @@ router.put('/:id', validateId, validateUpdateAluno, UpdateAlunoController.handle
 
 // DELETE /api/alunos/:id - Deletar aluno por ID
 router.delete('/:id', validateId, DeleteAlunoController.handle);
+
+// GET /api/alunos/:id/dias-aulas - Buscar dias de aulas de um aluno
+router.get('/:id/dias-aulas', validateId, GetDiaAulaListByAlunoController.handle);
 
 export default router;
