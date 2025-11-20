@@ -5,12 +5,12 @@ import { GetAlunoController } from '../controllers/aluno/getAlunoController.js';
 import { DeleteAlunoController } from '../controllers/aluno/deleteAlunoController.js';
 import { CreateAlunoController } from '../controllers/aluno/createAlunoController.js';
 import { UpdateAlunoController } from '../controllers/aluno/updateAlunoController.js';
+import { GetDiaAulaListByAlunoController } from '../controllers/diaAula/getDiaAulaListByAlunoController.js';
 // Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateAluno } from '../middlewares/aluno/validateCreateAluno.js';
 import { validateUpdateAluno } from '../middlewares/aluno/validateUpdateAluno.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
-import { GetDiaAulaListByAlunoController } from '../controllers/diaAula/getDiaAulaListByAlunoController.js';
 
 const router = express.Router();
 
