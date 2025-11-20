@@ -34,8 +34,8 @@ class ValidateCreateDiaAula extends BaseValidateEntity {
       // Validar campo quantidadeDeAulas
       quantidadeDeAulas: ValidateData.require()
         .isNumber()
-        .minValue(1)
-        .maxValue(10)
+        // .minValue(1) // TODO definir valores minimos e maximos
+        // .maxValue(10)
         .validate(quantidadeDeAulas, 'quantidadeDeAulas'),
       // Validar campo horaDeInicio
       horaDeInicio: ValidateData.require()
