@@ -3,6 +3,8 @@ import { CreateDiaAulaService } from '../../services/diaAula/createDiaAulaServic
 import { IsDiaAulaAlunoContratoExistsService } from '../../services/diaAula/isDiaAulaAlunoContratoExistsService.js';
 import { GetConfiguracaoService } from '../../services/configuracao/getConfiguracaoService.js';
 import { IsDiaAulaContratoDiaDaSemanaExistsService } from '../../services/diaAula/isDiaAulaContratoDiaDaSemanaExistsService.js';
+import { GetAlunoService } from '../../services/aluno/getAlunoService.js';
+import { GetContratoService } from '../../services/contrato/getContratoService.js';
 
 export class CreateDiaAulaController extends AbstractController {
   constructor(req, res) {
@@ -11,20 +13,25 @@ export class CreateDiaAulaController extends AbstractController {
 
   async execute() {
     try {
-      const isDiaAulaAlunoContratoExists = await IsDiaAulaAlunoContratoExistsService.handle({
-        idAluno: this.req.body.idAluno,
-        idContrato: this.req.body.idContrato
-      });
-
-      const isDiaAulaContratoDiaDaSemanaExists =
-        await IsDiaAulaContratoDiaDaSemanaExistsService.handle({
-          idAluno: this.req.body.idAluno,
-          idContrato: this.req.body.idContrato,
-          diaDaSemana: this.req.body.diaDaSemana
+      const isAlunoExists = await this.isAlunoExists(this.req.body.idAluno);
+      if (!isAlunoExists) {
+        return this.res.status(422).json({
+          message: this.req.t('diaAulas.error.aluno_not_exists')
         });
+      }
+
+      const isContratoExists = await this.isContratoExists(this.req.body.idContrato);
+      if (!isContratoExists) {
+        return this.res.status(422).json({
+          message: this.req.t('diaAulas.error.contrato_not_exists')
+        });
+      }
+
+      const isDiaAulaAlunoContratoExists = await this.isDiaAulaAlunoContratoExists();
+      const isDiaAulaContratoDiaDaSemanaExists = await this.isDiaAulaContratoDiaDaSemanaExists();
 
       if (isDiaAulaAlunoContratoExists && isDiaAulaContratoDiaDaSemanaExists) {
-        return this.res.status(409).json({
+        return this.res.status(422).json({
           message: this.req.t('diaAulas.create.aluno_contrato_dia_aula_exists')
         });
       }
@@ -47,6 +54,30 @@ export class CreateDiaAulaController extends AbstractController {
     } catch (error) {
       return this.handleError(error, 'diaAulas.create.error');
     }
+  }
+
+  async isAlunoExists(id) {
+    const aluno = await GetAlunoService.handle(id);
+    return !!aluno;
+  }
+
+  async isContratoExists(id) {
+    const contrato = await GetContratoService.handle(id);
+    return !!contrato;
+  }
+
+  async isDiaAulaAlunoContratoExists() {
+    return await IsDiaAulaAlunoContratoExistsService.handle({
+      idAluno: this.req.body.idAluno,
+      idContrato: this.req.body.idContrato
+    });
+  }
+  async isDiaAulaContratoDiaDaSemanaExists() {
+    return await IsDiaAulaContratoDiaDaSemanaExistsService.handle({
+      idAluno: this.req.body.idAluno,
+      idContrato: this.req.body.idContrato,
+      diaDaSemana: this.req.body.diaDaSemana
+    });
   }
 
   async getDuracaoDaAula() {

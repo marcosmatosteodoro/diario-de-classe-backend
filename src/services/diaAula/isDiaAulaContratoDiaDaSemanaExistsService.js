@@ -10,7 +10,7 @@ export class IsDiaAulaContratoDiaDaSemanaExistsService extends AbstractService {
   }
 
   async execute() {
-    const diaAula = await this.repository.selectOne({
+    const diaAula = await this.repository.selectMany({
       where: {
         idAluno: this.idAluno,
         idContrato: this.idContrato,
@@ -19,7 +19,7 @@ export class IsDiaAulaContratoDiaDaSemanaExistsService extends AbstractService {
       select: { id: true }
     });
 
-    return Boolean(diaAula);
+    return diaAula && diaAula.length > 0;
   }
 
   static async handle({ idAluno, idContrato, diaDaSemana }) {
