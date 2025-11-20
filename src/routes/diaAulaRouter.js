@@ -4,12 +4,12 @@ import { GetDiaAulaListController } from '../controllers/diaAula/getDiaAulaListC
 import { GetDiaAulaController } from '../controllers/diaAula/getDiaAulaController.js';
 import { DeleteDiaAulaController } from '../controllers/diaAula/deleteDiaAulaController.js';
 import { CreateDiaAulaController } from '../controllers/diaAula/createDiaAulaController.js';
-// import { UpdateDiaAulaController } from '../controllers/diaAula/updateDiaAulaController.js';
+import { UpdateDiaAulaController } from '../controllers/diaAula/updateDiaAulaController.js';
 // Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 import { validateCreateDiaAula } from '../middlewares/diaAula/validateCreateDiaAula.js.js';
-// import { validateUpdateDiaAula } from '../middlewares/diaAula/validateUpdateDiaAula.js.js';
+import { validateUpdateDiaAula } from '../middlewares/diaAula/validateUpdateDiaAula.js.js';
 
 const router = express.Router();
 
@@ -23,7 +23,7 @@ router.get('/:id', validateId, GetDiaAulaController.handle);
 router.post('/', validateCreateDiaAula, CreateDiaAulaController.handle);
 
 // PUT /api/diaAulas/:id - Atualizar diaAula por ID
-// router.put('/:id', validateId, validateUpdateDiaAula, UpdateDiaAulaController.handle);
+router.put('/:id', validateId, validateUpdateDiaAula, UpdateDiaAulaController.handle);
 
 // DELETE /api/diaAulas/:id - Deletar diaAula por ID
 router.delete('/:id', validateId, DeleteDiaAulaController.handle);

@@ -22,10 +22,10 @@ export class UpdateDiaAulaController extends AbstractController {
       }
 
       if (
-        diaAula.idAluno !== this.req.body.idAluno ||
-        diaAula.idContrato !== this.req.body.idContrato
+        (!!this.req.body.idAluno && diaAula.idAluno !== this.req.body.idAluno) ||
+        (!!this.req.body.idContrato && diaAula.idContrato !== this.req.body.idContrato)
       ) {
-        return this.res.status(409).json({
+        return this.res.status(422).json({
           message: this.req.t('diaAulas.create.you_cannot_change_aluno_contrato')
         });
       }
