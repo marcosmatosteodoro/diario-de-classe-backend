@@ -6,6 +6,7 @@ import { DeleteAlunoController } from '../controllers/aluno/deleteAlunoControlle
 import { CreateAlunoController } from '../controllers/aluno/createAlunoController.js';
 import { UpdateAlunoController } from '../controllers/aluno/updateAlunoController.js';
 import { GetDiaAulaListByAlunoController } from '../controllers/diaAula/getDiaAulaListByAlunoController.js';
+import { GetContratoByAlunoController } from '../controllers/contrato/getContratoByAlunoController.js';
 // Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateAluno } from '../middlewares/aluno/validateCreateAluno.js';
@@ -31,5 +32,8 @@ router.delete('/:id', validateId, DeleteAlunoController.handle);
 
 // GET /api/alunos/:id/dias-aulas - Buscar dias de aulas de um aluno
 router.get('/:id/dias-aulas', validateId, GetDiaAulaListByAlunoController.handle);
+
+// GET /api/alunos/:id/contrato - Buscar contrato ativo ou pendente de um aluno
+router.get('/:id/contrato', validateId, GetContratoByAlunoController.handle);
 
 export default router;
