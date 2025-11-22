@@ -16,8 +16,8 @@ export class CreateAulaController extends AbstractController {
       };
 
       if (await IsAulaExistsService.handle(ids)) {
-        return this.res.status(409).json({
-          message: this.req.t('aulas.create.email_exists')
+        return this.res.status(422).json({
+          message: this.req.t('aulas.create.ids_exists')
         });
       }
 
