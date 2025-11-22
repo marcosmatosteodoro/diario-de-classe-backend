@@ -6,6 +6,7 @@ import alunoRouters from './routes/alunoRouter.js';
 import configuracaoRouter from './routes/configuracaoRouter.js';
 import contratoRouter from './routes/contratoRouter.js';
 import diaAulaRouter from './routes/diaAulaRouter.js';
+import aulaRouter from './routes/aulaRouter.js';
 
 const authController = authRouter;
 const userController = userRoutes;
@@ -13,6 +14,7 @@ const alunoController = alunoRouters;
 const configuracaoController = configuracaoRouter;
 const contratoController = contratoRouter;
 const diaAulaController = diaAulaRouter;
+const aulaController = aulaRouter;
 
 const router = express.Router();
 
@@ -24,5 +26,6 @@ router.use('/alunos', alunoController);
 router.use('/configuracao', configuracaoController);
 router.use('/contratos', contratoController);
 router.use('/dias-aulas', diaAulaController);
+router.use('/aulas', aulaController);
 
 export default router;
