@@ -2,7 +2,7 @@ import express from 'express';
 // Controladores
 import { GetAulaListController } from '../controllers/aula/getAulaListController.js';
 import { GetAulaController } from '../controllers/aula/getAulaController.js';
-// import { DeleteAulaController } from '../controllers/aula/deleteAulaController.js';
+import { DeleteAulaController } from '../controllers/aula/deleteAulaController.js';
 // import { CreateAulaController } from '../controllers/aula/createAulaController.js';
 // import { UpdateAulaController } from '../controllers/aula/updateAulaController.js';
 // Middlewares de validação
@@ -26,6 +26,6 @@ router.get('/:id', validateId, GetAulaController.handle);
 // router.put('/:id', validateId, validateUpdateAula, UpdateAulaController.handle);
 
 // DELETE /api/aulas/:id - Deletar aula por ID
-// router.delete('/:id', validateId, DeleteAulaController.handle);
+router.delete('/:id', validateId, DeleteAulaController.handle);
 
 export default router;
