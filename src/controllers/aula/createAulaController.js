@@ -21,7 +21,12 @@ export class CreateAulaController extends AbstractController {
         });
       }
 
-      const newAula = await CreateAulaService.handle(this.req.body);
+      const data = {
+        ...this.req.body,
+        status: 'AGENDADA'
+      };
+
+      const newAula = await CreateAulaService.handle(data);
 
       return this.res.status(201).json(newAula);
     } catch (error) {
