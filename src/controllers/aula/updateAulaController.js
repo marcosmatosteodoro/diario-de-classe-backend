@@ -11,15 +11,6 @@ export class UpdateAulaController extends AbstractController {
     try {
       const id = this.req.validatedId || this.req.params.id;
       const aula = await GetAulaService.handle(id);
-      const ids = {
-        idAluno: this.req.body.idAluno,
-        idProfessor: this.req.body.idProfessor,
-        idContrato: this.req.body.idContrato
-      };
-      const isChangeSomeOfIds =
-        aula.idAluno !== ids.idAluno ||
-        aula.idProfessor !== ids.idProfessor ||
-        aula.idContrato !== ids.idContrato;
 
       if (!aula) {
         return this.res.status(404).json({
@@ -27,17 +18,35 @@ export class UpdateAulaController extends AbstractController {
         });
       }
 
-      if (isChangeSomeOfIds) {
+      if (this.isChangeSomeOfIds(aula)) {
         return this.res.status(422).json({
           message: this.req.t('aulas.update.ids_change_not_allowed')
         });
       }
+
+      this.removeStatus();
 
       const updatedAula = await UpdateAulaService.handle(id, this.req.body);
 
       return this.res.status(200).json(updatedAula);
     } catch (error) {
       return this.handleError(error, 'aulas.update.error');
+    }
+  }
+
+  isChangeSomeOfIds(aula) {
+    const isChangeAluno = this.req.body.idAluno && aula.idAluno !== this.req.body.idAluno;
+    const isChangeProfessor =
+      this.req.body.idProfessor && aula.idProfessor !== this.req.body.idProfessor;
+    const isChangeContrato =
+      this.req.body.idContrato && aula.idContrato !== this.req.body.idContrato;
+
+    return isChangeAluno || isChangeProfessor || isChangeContrato;
+  }
+
+  removeStatus() {
+    if (this.req.body.status) {
+      delete this.req.body.status;
     }
   }
 
