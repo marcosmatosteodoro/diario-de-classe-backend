@@ -7,7 +7,7 @@ import { GetAlunoService } from '../../services/aluno/getAlunoService.js';
 export class CreateContratoController extends AbstractController {
   constructor(req, res) {
     super(req, res);
-    this.idAluno = req.body.idDoAluno;
+    this.idAluno = req.body.idAluno;
   }
 
   async execute() {

@@ -7,41 +7,38 @@ class ValidateCreateContrato extends BaseValidateEntity {
   }
 
   getDataForFilter() {
-    return ['idDoAluno', 'dataDeInicio', 'dataDeTermino'];
+    return ['idAluno', 'dataInicio', 'dataTermino'];
   }
 
   getDataValidations(filteredData) {
-    const { idDoAluno, dataDeInicio, dataDeTermino } = filteredData;
+    const { idAluno, dataInicio, dataTermino } = filteredData;
 
     return {
-      // Validar campo idDoAluno
-      idDoAluno: ValidateData.require()
+      // Validar campo idAluno
+      idAluno: ValidateData.require()
         .isString()
         .minCharacters(6)
         .maxCharacters(50)
-        .validate(idDoAluno, 'idDoAluno'),
-      // Validar campo dataDeInicio
-      dataDeInicio: ValidateData.optional()
-        .isString()
-        .isDate()
-        .validate(dataDeInicio, 'dataDeInicio'),
-      // Validar campo dataDeTermino
-      dataDeTermino: ValidateData.optional()
+        .validate(idAluno, 'idAluno'),
+      // Validar campo dataInicio
+      dataInicio: ValidateData.optional().isString().isDate().validate(dataInicio, 'dataInicio'),
+      // Validar campo dataTermino
+      dataTermino: ValidateData.optional()
         .isString()
         .isDate()
         .custom(
-          this.dataDeTerminoIsAfterDataDeInicio.bind(dataDeInicio, dataDeTermino),
-          'dataDeTermino deve ser posterior a dataDeInicio'
+          this.dataTerminoIsAfterDataDeInicio.bind(dataInicio, dataTermino),
+          'dataTermino deve ser posterior a dataInicio'
         )
-        .validate(dataDeTermino, 'dataDeTermino')
+        .validate(dataTermino, 'dataTermino')
     };
   }
 
-  dataDeTerminoIsAfterDataDeInicio(dataDeInicio, dataDeTermino) {
-    if (!dataDeInicio || !dataDeTermino) return true;
+  dataTerminoIsAfterDataDeInicio(dataInicio, dataTermino) {
+    if (!dataInicio || !dataTermino) return true;
 
-    const inicio = new Date(dataDeInicio);
-    const termino = new Date(dataDeTermino);
+    const inicio = new Date(dataInicio);
+    const termino = new Date(dataTermino);
     return termino > inicio;
   }
 }

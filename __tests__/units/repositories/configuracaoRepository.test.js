@@ -91,7 +91,7 @@ describe('ConfiguracaoRepository', () => {
       const fields = configuracaoRepository.selectFields;
 
       expect(fields.id).toBe(true);
-      expect(fields.duracaoDaAula).toBe(true);
+      expect(fields.duracaoAula).toBe(true);
       expect(fields.tolerancia).toBe(true);
       expect(fields.diasDeFuncionamento).toBe(true);
 
@@ -116,7 +116,7 @@ describe('ConfiguracaoRepository', () => {
     test('campos específicos do modelo Configuracao devem estar configurados', () => {
       const fields = configuracaoRepository.getSelectFields();
 
-      expect(fields.duracaoDaAula).toBe(true);
+      expect(fields.duracaoAula).toBe(true);
       expect(fields.tolerancia).toBe(true);
       expect(fields.diasDeFuncionamento).toBe(true);
     });

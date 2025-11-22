@@ -13,7 +13,7 @@ export class GetDiaAulaListController extends AbstractController {
       if (this.req.query.q) {
         this.where = getWhereClauseByQuerySearch({
           query: this.req.query.q,
-          fields: ['diaDaSemana', 'quantidadeDeAulas', 'horaDeInicio', 'horaDeFim']
+          fields: ['diaSemana', 'quantidadeAulas', 'horaInicial', 'horaFinal']
         });
       }
 

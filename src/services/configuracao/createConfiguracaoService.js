@@ -9,7 +9,7 @@ export class CreateConfiguracaoService extends AbstractService {
 
   async execute() {
     const data = {
-      duracaoDaAula: this.data.duracaoDaAula,
+      duracaoAula: this.data.duracaoAula,
       tolerancia: this.data.tolerancia,
       diasDeFuncionamento: this.data.diasDeFuncionamento
     };

@@ -15,7 +15,7 @@ function testInicializacao() {
   it('deve ser instanciado corretamente', () => {
     class MockRepository {}
     const mockData = {
-      diaDaSemana: 'SEGUNDA',
+      diaSemana: 'SEGUNDA',
       horaInicial: '08:00',
       horaFinal: '12:00',
       ativo: true
@@ -27,14 +27,14 @@ function testInicializacao() {
   });
 
   test('deve herdar de AbstractService', () => {
-    const mockData = { diaDaSemana: 'TERCA', horaInicial: '09:00', horaFinal: '10:00' };
+    const mockData = { diaSemana: 'TERCA', horaInicial: '09:00', horaFinal: '10:00' };
     const service = new CreateDiaDeFuncionamentoService(DiaDeFuncionamentoRepository, mockData);
 
     expect(service).toBeInstanceOf(AbstractService);
   });
 
   test('deve ter método execute implementado', () => {
-    const mockData = { diaDaSemana: 'QUARTA', horaInicial: '07:00', horaFinal: '08:00' };
+    const mockData = { diaSemana: 'QUARTA', horaInicial: '07:00', horaFinal: '08:00' };
     const service = new CreateDiaDeFuncionamentoService(DiaDeFuncionamentoRepository, mockData);
 
     expect(service.execute).toBeDefined();
@@ -49,7 +49,7 @@ function testInicializacao() {
 
 function testExecuteMethod() {
   test('deve existir e ser uma função assíncrona', () => {
-    const mockData = { diaDaSemana: 'QUINTA', horaInicial: '08:00', horaFinal: '09:00' };
+    const mockData = { diaSemana: 'QUINTA', horaInicial: '08:00', horaFinal: '09:00' };
     const service = new CreateDiaDeFuncionamentoService(DiaDeFuncionamentoRepository, mockData);
 
     expect(typeof service.execute).toBe('function');
@@ -58,7 +58,7 @@ function testExecuteMethod() {
 
   test('deve chamar repository.create com parâmetros corretos', async () => {
     const mockData = {
-      diaDaSemana: 'SEXTA',
+      diaSemana: 'SEXTA',
       horaInicial: '10:00',
       horaFinal: '12:00',
       ativo: true
@@ -69,7 +69,7 @@ function testExecuteMethod() {
         this.createCalls = [];
         this.selectFields = {
           id: true,
-          diaDaSemana: true,
+          diaSemana: true,
           horaInicial: true,
           horaFinal: true,
           ativo: true,
@@ -89,7 +89,7 @@ function testExecuteMethod() {
     expect(service.repository.createCalls).toHaveLength(1);
     expect(service.repository.createCalls[0]).toEqual({
       data: {
-        diaDaSemana: mockData.diaDaSemana,
+        diaSemana: mockData.diaSemana,
         horaInicial: mockData.horaInicial,
         horaFinal: mockData.horaFinal,
         ativo: mockData.ativo,
@@ -100,7 +100,7 @@ function testExecuteMethod() {
   });
 
   test('deve retornar o registro criado', async () => {
-    const mockData = { diaDaSemana: 'SABADO', horaInicial: '14:00', horaFinal: '18:00' };
+    const mockData = { diaSemana: 'SABADO', horaInicial: '14:00', horaFinal: '18:00' };
     const mockObj = { id: 'ddf-2', ...mockData };
 
     class MockRepository {
@@ -120,7 +120,7 @@ function testExecuteMethod() {
   });
 
   test('deve propagar erro quando repository falha', async () => {
-    const mockData = { diaDaSemana: 'DOMINGO', horaInicial: '08:00', horaFinal: '09:00' };
+    const mockData = { diaSemana: 'DOMINGO', horaInicial: '08:00', horaFinal: '09:00' };
     const mockError = new Error('Erro de banco de dados');
 
     class MockRepository {
@@ -142,7 +142,7 @@ function testExecuteMethod() {
 function testStaticHandleMethod() {
   test('deve executar o serviço com dados fornecidos', async () => {
     const mockData = {
-      diaDaSemana: 'SEGUNDA',
+      diaSemana: 'SEGUNDA',
       horaInicial: '08:00',
       horaFinal: '12:00',
       ativo: true
@@ -177,8 +177,8 @@ function testStaticHandleMethod() {
   });
 
   test('deve criar nova instância do serviço a cada chamada', async () => {
-    const mockData1 = { diaDaSemana: 'TERCA', horaInicial: '08:00', horaFinal: '09:00' };
-    const mockData2 = { diaDaSemana: 'QUARTA', horaInicial: '10:00', horaFinal: '11:00' };
+    const mockData1 = { diaSemana: 'TERCA', horaInicial: '08:00', horaFinal: '09:00' };
+    const mockData2 = { diaSemana: 'QUARTA', horaInicial: '10:00', horaFinal: '11:00' };
 
     class MockRepository {
       constructor() {
@@ -209,7 +209,7 @@ function testStaticHandleMethod() {
 
 function testAbstractServiceIntegration() {
   test('deve implementar método execute() abstrato', () => {
-    const mockData = { diaDaSemana: 'QUINTA', horaInicial: '08:00', horaFinal: '09:00' };
+    const mockData = { diaSemana: 'QUINTA', horaInicial: '08:00', horaFinal: '09:00' };
     const service = new CreateDiaDeFuncionamentoService(DiaDeFuncionamentoRepository, mockData);
 
     expect(service.execute).toBeDefined();
@@ -222,7 +222,7 @@ function testAbstractServiceIntegration() {
   });
 
   test('deve ter acesso ao repository através da classe pai', () => {
-    const mockData = { diaDaSemana: 'SEXTA', horaInicial: '08:00', horaFinal: '09:00' };
+    const mockData = { diaSemana: 'SEXTA', horaInicial: '08:00', horaFinal: '09:00' };
     const service = new CreateDiaDeFuncionamentoService(DiaDeFuncionamentoRepository, mockData);
 
     expect(service.repository).toBeDefined();
@@ -240,7 +240,7 @@ function testAbstractServiceIntegration() {
 function testDataValidation() {
   test('deve armazenar dados fornecidos corretamente', () => {
     const mockData = {
-      diaDaSemana: 'SABADO',
+      diaSemana: 'SABADO',
       horaInicial: '14:00',
       horaFinal: '18:00',
       ativo: true
@@ -248,14 +248,14 @@ function testDataValidation() {
     const service = new CreateDiaDeFuncionamentoService(DiaDeFuncionamentoRepository, mockData);
 
     expect(service.data).toBe(mockData);
-    expect(service.data.diaDaSemana).toBe('SABADO');
+    expect(service.data.diaSemana).toBe('SABADO');
     expect(service.data.horaInicial).toBe('14:00');
     expect(service.data.horaFinal).toBe('18:00');
     expect(service.data.ativo).toBe(true);
   });
 
   test('deve funcionar com dados parciais', () => {
-    const mockData = { diaDaSemana: 'DOMINGO', horaInicial: '08:00', horaFinal: '09:00' };
+    const mockData = { diaSemana: 'DOMINGO', horaInicial: '08:00', horaFinal: '09:00' };
     const service = new CreateDiaDeFuncionamentoService(DiaDeFuncionamentoRepository, mockData);
 
     expect(service.data).toBe(mockData);
@@ -266,7 +266,7 @@ function testDataValidation() {
 function testCreationScenarios() {
   test('deve funcionar com dados completos', async () => {
     const mockData = {
-      diaDaSemana: 'SEGUNDA',
+      diaSemana: 'SEGUNDA',
       horaInicial: '08:00',
       horaFinal: '12:00',
       ativo: true
@@ -285,7 +285,7 @@ function testCreationScenarios() {
     const service = new CreateDiaDeFuncionamentoService(MockRepository, mockData);
     const result = await service.execute();
 
-    expect(result.diaDaSemana).toBe('SEGUNDA');
+    expect(result.diaSemana).toBe('SEGUNDA');
     expect(result.horaInicial).toBe('08:00');
     expect(result.horaFinal).toBe('12:00');
     expect(result.ativo).toBe(true);
@@ -293,7 +293,7 @@ function testCreationScenarios() {
   });
 
   test('deve funcionar com dados mínimos obrigatórios', async () => {
-    const mockData = { diaDaSemana: 'TERCA', horaInicial: '09:00', horaFinal: '10:00' };
+    const mockData = { diaSemana: 'TERCA', horaInicial: '09:00', horaFinal: '10:00' };
 
     class MockRepository {
       constructor() {
@@ -308,7 +308,7 @@ function testCreationScenarios() {
     const service = new CreateDiaDeFuncionamentoService(MockRepository, mockData);
     const result = await service.execute();
 
-    expect(result.diaDaSemana).toBe('TERCA');
+    expect(result.diaSemana).toBe('TERCA');
     expect(result.horaInicial).toBe('09:00');
     expect(result.horaFinal).toBe('10:00');
   });

@@ -2,11 +2,11 @@ import AbstractService from '../abstractService.js';
 import DiaAulaRepository from '../../repositories/diaAulaRepository.js';
 
 export class IsDiaAulaContratoDiaDaSemanaExistsService extends AbstractService {
-  constructor(Repository, { idAluno, idContrato, diaDaSemana }) {
+  constructor(Repository, { idAluno, idContrato, diaSemana }) {
     super(Repository);
     this.idAluno = idAluno;
     this.idContrato = idContrato;
-    this.diaDaSemana = diaDaSemana;
+    this.diaSemana = diaSemana;
   }
 
   async execute() {
@@ -14,7 +14,7 @@ export class IsDiaAulaContratoDiaDaSemanaExistsService extends AbstractService {
       where: {
         idAluno: this.idAluno,
         idContrato: this.idContrato,
-        diaDaSemana: this.diaDaSemana
+        diaSemana: this.diaSemana
       },
       select: { id: true }
     });
@@ -22,12 +22,12 @@ export class IsDiaAulaContratoDiaDaSemanaExistsService extends AbstractService {
     return diaAula && diaAula.length > 0;
   }
 
-  static async handle({ idAluno, idContrato, diaDaSemana }) {
+  static async handle({ idAluno, idContrato, diaSemana }) {
     const Repository = DiaAulaRepository;
     const service = new IsDiaAulaContratoDiaDaSemanaExistsService(Repository, {
       idAluno,
       idContrato,
-      diaDaSemana
+      diaSemana
     });
     return await service.execute();
   }

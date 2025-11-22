@@ -25,7 +25,7 @@ describe('InitialSetting (unit)', () => {
 
   test('isDiaDeFuncionamentoValid should validate correct array', () => {
     const inst = new InitialSetting();
-    inst.diasDeFuncionamento = inst.dias.map(d => ({ diaDaSemana: d }));
+    inst.diasDeFuncionamento = inst.dias.map(d => ({ diaSemana: d }));
 
     const valid = inst.isDiaDeFuncionamentoValid();
 

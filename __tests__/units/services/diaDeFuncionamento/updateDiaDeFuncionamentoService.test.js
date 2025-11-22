@@ -6,7 +6,7 @@ function describeInitialization() {
   describe('Inicialização', () => {
     test('deve criar uma instância válida', () => {
       const mockData = {
-        diaDaSemana: 'MONDAY',
+        diaSemana: 'MONDAY',
         horaInicial: '08:00',
         horaFinal: '12:00',
         ativo: true
@@ -25,7 +25,7 @@ function describeInitialization() {
     });
 
     test('deve herdar de AbstractService', () => {
-      const mockData = { diaDaSemana: 'MONDAY' };
+      const mockData = { diaSemana: 'MONDAY' };
       const service = new UpdateDiaDeFuncionamentoService(
         DiaDeFuncionamentoRepository,
         'df-id-1',
@@ -36,7 +36,7 @@ function describeInitialization() {
     });
 
     test('deve ter método execute implementado', () => {
-      const mockData = { diaDaSemana: 'MONDAY' };
+      const mockData = { diaSemana: 'MONDAY' };
       const service = new UpdateDiaDeFuncionamentoService(
         DiaDeFuncionamentoRepository,
         'df-id-1',
@@ -57,7 +57,7 @@ function describeInitialization() {
 function describeExecuteMethod() {
   describe('Método execute()', () => {
     test('deve existir e ser uma função assíncrona', () => {
-      const mockData = { diaDaSemana: 'MONDAY' };
+      const mockData = { diaSemana: 'MONDAY' };
       const service = new UpdateDiaDeFuncionamentoService(
         DiaDeFuncionamentoRepository,
         'df-id-1',
@@ -70,7 +70,7 @@ function describeExecuteMethod() {
 
     test('deve chamar repository.update com parâmetros corretos', async () => {
       const mockData = {
-        diaDaSemana: 'MONDAY',
+        diaSemana: 'MONDAY',
         horaInicial: '08:00',
         horaFinal: '12:00',
         ativo: true
@@ -81,7 +81,7 @@ function describeExecuteMethod() {
           this.updateCalls = [];
           this.selectFields = {
             id: true,
-            diaDaSemana: true,
+            diaSemana: true,
             horaInicial: true,
             horaFinal: true,
             ativo: true,
@@ -111,7 +111,7 @@ function describeExecuteMethod() {
 
       const mockRecord = {
         id: 1,
-        diaDaSemana: 'MONDAY',
+        diaSemana: 'MONDAY',
         horaInicial: '09:00',
         horaFinal: '12:00',
         ativo: true
@@ -121,7 +121,7 @@ function describeExecuteMethod() {
         constructor() {
           this.selectFields = {
             id: true,
-            diaDaSemana: true,
+            diaSemana: true,
             horaInicial: true,
             horaFinal: true,
             ativo: true,
@@ -148,7 +148,7 @@ function describeExecuteMethod() {
         constructor() {
           this.selectFields = {
             id: true,
-            diaDaSemana: true,
+            diaSemana: true,
             horaInicial: true,
             horaFinal: true,
             ativo: true,
@@ -174,7 +174,7 @@ function describeExecuteMethod() {
           this.updateCalls = [];
           this.selectFields = {
             id: true,
-            diaDaSemana: true,
+            diaSemana: true,
             horaInicial: true,
             horaFinal: true,
             ativo: true,
@@ -256,7 +256,7 @@ function describeParameterValidation() {
   describe('Validação de parâmetros', () => {
     test('deve armazenar id e dados fornecidos corretamente', () => {
       const mockData = {
-        diaDaSemana: 'MONDAY',
+        diaSemana: 'MONDAY',
         horaInicial: '08:00',
         horaFinal: '12:00',
         ativo: false
@@ -270,7 +270,7 @@ function describeParameterValidation() {
 
       expect(service.id).toBe(123);
       expect(service.data).toBe(mockData);
-      expect(service.data.diaDaSemana).toBe('MONDAY');
+      expect(service.data.diaSemana).toBe('MONDAY');
     });
 
     test('deve funcionar com diferentes tipos de ID', () => {
@@ -306,7 +306,7 @@ function describeUpdateScenarios() {
   describe('Diferentes cenários de atualização', () => {
     test('deve funcionar com dados completos', async () => {
       const mockData = {
-        diaDaSemana: 'MONDAY',
+        diaSemana: 'MONDAY',
         horaInicial: '08:00',
         horaFinal: '12:00',
         ativo: true
@@ -316,7 +316,7 @@ function describeUpdateScenarios() {
         constructor() {
           this.selectFields = {
             id: true,
-            diaDaSemana: true,
+            diaSemana: true,
             horaInicial: true,
             horaFinal: true,
             ativo: true,
@@ -332,7 +332,7 @@ function describeUpdateScenarios() {
       const service = new UpdateDiaDeFuncionamentoService(MockRepository, 'df-id-1', mockData);
       const result = await service.execute();
 
-      expect(result.diaDaSemana).toBe('MONDAY');
+      expect(result.diaSemana).toBe('MONDAY');
       expect(result.horaInicial).toBe('08:00');
       expect(result.id).toBe('df-id-1');
     });
@@ -344,7 +344,7 @@ function describeUpdateScenarios() {
         constructor() {
           this.selectFields = {
             id: true,
-            diaDaSemana: true,
+            diaSemana: true,
             horaInicial: true,
             horaFinal: true,
             ativo: true,

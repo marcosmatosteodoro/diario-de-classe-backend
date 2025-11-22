@@ -12,10 +12,10 @@ export class CreateDiaAulaService extends AbstractService {
       {
         idAluno: this.data.idAluno,
         idContrato: this.data.idContrato,
-        diaDaSemana: this.data.diaDaSemana,
-        quantidadeDeAulas: this.data.quantidadeDeAulas,
-        horaDeInicio: this.data.horaDeInicio,
-        horaDeFim: this.data.horaDeFim
+        diaSemana: this.data.diaSemana,
+        quantidadeAulas: this.data.quantidadeAulas,
+        horaInicial: this.data.horaInicial,
+        horaFinal: this.data.horaFinal
       },
       {
         select: this.repository.selectFields

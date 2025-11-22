@@ -7,35 +7,32 @@ class ValidateUpdateContrato extends BaseValidateEntity {
   }
 
   getDataForFilter() {
-    return ['dataDeInicio', 'dataDeTermino'];
+    return ['dataInicio', 'dataTermino'];
   }
 
   getDataValidations(filteredData) {
-    const { dataDeInicio, dataDeTermino } = filteredData;
+    const { dataInicio, dataTermino } = filteredData;
 
     return {
-      // Validar campo dataDeInicio
-      dataDeInicio: ValidateData.require()
-        .isString()
-        .isDate()
-        .validate(dataDeInicio, 'dataDeInicio'),
-      // Validar campo dataDeTermino
-      dataDeTermino: ValidateData.require()
+      // Validar campo dataInicio
+      dataInicio: ValidateData.require().isString().isDate().validate(dataInicio, 'dataInicio'),
+      // Validar campo dataTermino
+      dataTermino: ValidateData.require()
         .isString()
         .isDate()
         .custom(
-          this.dataDeTerminoIsAfterDataDeInicio.bind(dataDeInicio, dataDeTermino),
-          'dataDeTermino deve ser posterior a dataDeInicio'
+          this.dataTerminoIsAfterDataDeInicio.bind(dataInicio, dataTermino),
+          'dataTermino deve ser posterior a dataInicio'
         )
-        .validate(dataDeTermino, 'dataDeTermino')
+        .validate(dataTermino, 'dataTermino')
     };
   }
 
-  dataDeTerminoIsAfterDataDeInicio(dataDeInicio, dataDeTermino) {
-    if (!dataDeInicio || !dataDeTermino) return true;
+  dataTerminoIsAfterDataDeInicio(dataInicio, dataTermino) {
+    if (!dataInicio || !dataTermino) return true;
 
-    const inicio = new Date(dataDeInicio);
-    const termino = new Date(dataDeTermino);
+    const inicio = new Date(dataInicio);
+    const termino = new Date(dataTermino);
     return termino > inicio;
   }
 }

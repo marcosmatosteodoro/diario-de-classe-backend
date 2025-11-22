@@ -7,7 +7,7 @@ describe('IsDisponibilidadeProfessorDayExistsService', () => {
     const s = new IsDisponibilidadeProfessorDayExistsService(Repo, 'segunda', 'id1');
 
     expect(s).toBeInstanceOf(IsDisponibilidadeProfessorDayExistsService);
-    expect(s.diaDaSemana).toBe('segunda');
+    expect(s.diaSemana).toBe('segunda');
     expect(s.id).toBe('id1');
     expect(typeof s.execute).toBe('function');
   });
@@ -23,7 +23,7 @@ describe('IsDisponibilidadeProfessorDayExistsService', () => {
     );
   });
 
-  test('execute calls repository.selectOne with diaDaSemana and id and returns boolean', async () => {
+  test('execute calls repository.selectOne with diaSemana and id and returns boolean', async () => {
     let calledArgs = null;
     const mockSelectOne = async opts => {
       calledArgs = opts;
@@ -39,7 +39,7 @@ describe('IsDisponibilidadeProfessorDayExistsService', () => {
 
     expect(res).toBe(true);
     expect(calledArgs).toBeDefined();
-    expect(calledArgs.where).toEqual({ diaDaSemana: 'segunda', id: 'id1' });
+    expect(calledArgs.where).toEqual({ diaSemana: 'segunda', id: 'id1' });
     expect(calledArgs.select).toEqual({ id: true });
   });
 

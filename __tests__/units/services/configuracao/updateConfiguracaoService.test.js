@@ -3,7 +3,7 @@ import { UpdateConfiguracaoService } from '../../../../src/services/configuracao
 describe('UpdateConfiguracaoService (unit)', () => {
   test('execute calls repository.update with where, data and select, returns updated record', async () => {
     const id = 'cfg-1';
-    const payload = { duracaoDaAula: 60, tolerancia: 10 };
+    const payload = { duracaoAula: 60, tolerancia: 10 };
 
     class MockRepository {
       constructor() {
@@ -29,7 +29,7 @@ describe('UpdateConfiguracaoService (unit)', () => {
 
   test('execute removes undefined fields before update', async () => {
     const id = 'cfg-2';
-    const payload = { duracaoDaAula: undefined, tolerancia: 7 };
+    const payload = { duracaoAula: undefined, tolerancia: 7 };
 
     class MockRepository {
       constructor() {
@@ -56,7 +56,7 @@ describe('UpdateConfiguracaoService (unit)', () => {
       }
     }
 
-    const service = new UpdateConfiguracaoService(MockRepository, 'x', { duracaoDaAula: 30 });
+    const service = new UpdateConfiguracaoService(MockRepository, 'x', { duracaoAula: 30 });
     await expect(service.execute()).rejects.toThrow('update-fail');
   });
 });

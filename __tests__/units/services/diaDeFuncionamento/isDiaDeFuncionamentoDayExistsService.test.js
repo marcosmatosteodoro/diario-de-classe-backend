@@ -5,20 +5,20 @@ import AbstractService from '../../../../src/services/abstractService.js';
 describe('IsDiaDeFuncionamentoDayExistsService', () => {});
 
 describe('IsDiaDeFuncionamentoDayExistsService - Inicialização', () => {
-  test('deve criar uma instância com repositório padrão e diaDaSemana', () => {
+  test('deve criar uma instância com repositório padrão e diaSemana', () => {
     const dia = 'SEGUNDA';
     const service = new IsDiaDeFuncionamentoDayExistsService(DiaDeFuncionamentoRepository, dia);
 
     expect(service).toBeInstanceOf(IsDiaDeFuncionamentoDayExistsService);
     expect(service).toBeInstanceOf(AbstractService);
     expect(service.repository).toBeInstanceOf(DiaDeFuncionamentoRepository);
-    expect(service.diaDaSemana).toBe(dia);
+    expect(service.diaSemana).toBe(dia);
     // repository foi atualizado para expor configuracaoId
     expect(service.repository.selectFields).toBeDefined();
     expect(service.repository.selectFields.configuracaoId).toBe(true);
   });
 
-  test('deve criar uma instância com repositório customizado e diaDaSemana', () => {
+  test('deve criar uma instância com repositório customizado e diaSemana', () => {
     class MockRepository {
       constructor() {
         this.selectOne = () => Promise.resolve({});
@@ -31,39 +31,39 @@ describe('IsDiaDeFuncionamentoDayExistsService - Inicialização', () => {
     expect(service).toBeInstanceOf(IsDiaDeFuncionamentoDayExistsService);
     expect(service).toBeInstanceOf(AbstractService);
     expect(service.repository).toBeInstanceOf(MockRepository);
-    expect(service.diaDaSemana).toBe(dia);
+    expect(service.diaSemana).toBe(dia);
   });
 
   test('deve herdar de AbstractService', () => {
     expect(Object.getPrototypeOf(IsDiaDeFuncionamentoDayExistsService)).toBe(AbstractService);
   });
 
-  test('deve armazenar o diaDaSemana fornecido', () => {
+  test('deve armazenar o diaSemana fornecido', () => {
     const dia = 'QUARTA';
     const service = new IsDiaDeFuncionamentoDayExistsService(DiaDeFuncionamentoRepository, dia);
 
-    expect(service.diaDaSemana).toBe(dia);
+    expect(service.diaSemana).toBe(dia);
   });
 
-  test('deve aceitar diaDaSemana como string vazia', () => {
+  test('deve aceitar diaSemana como string vazia', () => {
     const service = new IsDiaDeFuncionamentoDayExistsService(DiaDeFuncionamentoRepository, '');
 
-    expect(service.diaDaSemana).toBe('');
+    expect(service.diaSemana).toBe('');
   });
 
-  test('deve aceitar diaDaSemana como null', () => {
+  test('deve aceitar diaSemana como null', () => {
     const service = new IsDiaDeFuncionamentoDayExistsService(DiaDeFuncionamentoRepository, null);
 
-    expect(service.diaDaSemana).toBeNull();
+    expect(service.diaSemana).toBeNull();
   });
 
-  test('deve aceitar diaDaSemana como undefined', () => {
+  test('deve aceitar diaSemana como undefined', () => {
     const service = new IsDiaDeFuncionamentoDayExistsService(
       DiaDeFuncionamentoRepository,
       undefined
     );
 
-    expect(service.diaDaSemana).toBeUndefined();
+    expect(service.diaSemana).toBeUndefined();
   });
 });
 
@@ -96,7 +96,7 @@ describe('IsDiaDeFuncionamentoDayExistsService - Método execute()', () => {
 
     expect(service.repository.selectOneCalls).toHaveLength(1);
     expect(service.repository.selectOneCalls[0]).toEqual({
-      where: { diaDaSemana: dia },
+      where: { diaSemana: dia },
       select: { id: true }
     });
   });
@@ -165,7 +165,7 @@ describe('IsDiaDeFuncionamentoDayExistsService - Método execute()', () => {
     await expect(service.execute()).rejects.toThrow('Erro no banco de dados');
   });
 
-  test('deve funcionar com diferentes formatos de diaDaSemana', async () => {
+  test('deve funcionar com diferentes formatos de diaSemana', async () => {
     class MockRepository {
       constructor() {
         this.selectOneCalls = [];
@@ -185,7 +185,7 @@ describe('IsDiaDeFuncionamentoDayExistsService - Método execute()', () => {
 
       expect(result).toBe(true);
       expect(service.repository.selectOneCalls).toContainEqual({
-        where: { diaDaSemana: dia },
+        where: { diaSemana: dia },
         select: { id: true }
       });
     }
@@ -246,7 +246,7 @@ describe('IsDiaDeFuncionamentoDayExistsService - Integração com AbstractServic
 });
 
 describe('IsDiaDeFuncionamentoDayExistsService - Validação de query do banco', () => {
-  test('deve usar where clause com diaDaSemana correto', async () => {
+  test('deve usar where clause com diaSemana correto', async () => {
     class MockRepository {
       constructor() {
         this.selectOneCalls = [];
@@ -263,7 +263,7 @@ describe('IsDiaDeFuncionamentoDayExistsService - Validação de query do banco',
     await service.execute();
 
     const selectCall = service.repository.selectOneCalls[0];
-    expect(selectCall.where).toEqual({ diaDaSemana: dia });
+    expect(selectCall.where).toEqual({ diaSemana: dia });
   });
 
   test('deve selecionar apenas o campo id', async () => {
@@ -305,7 +305,7 @@ describe('IsDiaDeFuncionamentoDayExistsService - Validação de query do banco',
 });
 
 describe('IsDiaDeFuncionamentoDayExistsService - Casos extremos', () => {
-  test('deve lidar com diaDaSemana inválido muito longo', async () => {
+  test('deve lidar com diaSemana inválido muito longo', async () => {
     class MockRepository {
       constructor() {
         this.selectOneCalls = [];
@@ -322,10 +322,10 @@ describe('IsDiaDeFuncionamentoDayExistsService - Casos extremos', () => {
     const result = await service.execute();
 
     expect(result).toBe(false);
-    expect(service.repository.selectOneCalls[0].where.diaDaSemana).toBe(longDay);
+    expect(service.repository.selectOneCalls[0].where.diaSemana).toBe(longDay);
   });
 
-  test('deve lidar com caracteres especiais no diaDaSemana', async () => {
+  test('deve lidar com caracteres especiais no diaSemana', async () => {
     class MockRepository {
       constructor() {
         this.selectOneCalls = [];
@@ -342,7 +342,7 @@ describe('IsDiaDeFuncionamentoDayExistsService - Casos extremos', () => {
     const result = await service.execute();
 
     expect(result).toBe(true);
-    expect(service.repository.selectOneCalls[0].where.diaDaSemana).toBe(specialDay);
+    expect(service.repository.selectOneCalls[0].where.diaSemana).toBe(specialDay);
   });
 });
 

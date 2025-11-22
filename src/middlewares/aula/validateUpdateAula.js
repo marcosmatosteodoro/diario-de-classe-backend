@@ -7,30 +7,30 @@ class ValidateUpdateAula extends BaseValidateEntity {
   }
 
   getDataForFilter() {
-    return ['dataAula', 'horaInicio', 'horaFim', 'tipo', 'observacao'];
+    return ['dataAula', 'horaInicial', 'horaFinal', 'tipo', 'observacao'];
   }
 
   getDataValidations(filteredData) {
-    const { dataAula, horaInicio, horaFim, tipo, observacao } = filteredData;
+    const { dataAula, horaInicial, horaFinal, tipo, observacao } = filteredData;
 
     return {
       dataAula: ValidateData.optional().isString().isDate().validate(dataAula, 'dataAula'),
-      // Validar campo horaInicio
-      horaInicio: ValidateData.optional()
+      // Validar campo horaInicial
+      horaInicial: ValidateData.optional()
         .isString()
         .minCharacters(5)
         .maxCharacters(5)
-        .validate(horaInicio, 'horaInicio'),
-      // Validar campo horaFim
-      horaFim: ValidateData.optional()
+        .validate(horaInicial, 'horaInicial'),
+      // Validar campo horaFinal
+      horaFinal: ValidateData.optional()
         .isString()
         .minCharacters(5)
         .maxCharacters(5)
         .custom(
-          () => this.horaFimIsAfterHoraInicio.bind(horaInicio, horaFim),
-          'horaFim deve ser posterior a horaInicio'
+          () => this.horaFinalIsAfterHoraInicio.bind(horaInicial, horaFinal),
+          'horaFinal deve ser posterior a horaInicial'
         )
-        .validate(horaFim, 'horaFim'),
+        .validate(horaFinal, 'horaFinal'),
       // Validar campo tipo
       tipo: ValidateData.optional()
         .isString()
@@ -45,16 +45,16 @@ class ValidateUpdateAula extends BaseValidateEntity {
     };
   }
 
-  horaFimIsAfterHoraInicio(horaInicio, horaFim) {
-    if (!horaInicio || !horaFim) return true;
+  horaFinalIsAfterHoraInicio(horaInicial, horaFinal) {
+    if (!horaInicial || !horaFinal) return true;
 
-    let horaInicial = horaInicio.replaceAll(':', '');
-    let horaFinal = horaFim.replaceAll(':', '');
+    let inicial = horaInicial.replaceAll(':', '');
+    let final = horaFinal.replaceAll(':', '');
 
-    horaInicial = parseInt(horaInicial) || 0;
-    horaFinal = parseInt(horaFinal) || 0;
+    inicial = parseInt(inicial) || 0;
+    final = parseInt(final) || 0;
 
-    return horaFinal > horaInicial;
+    return final > inicial;
   }
 }
 

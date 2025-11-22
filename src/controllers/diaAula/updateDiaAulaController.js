@@ -7,7 +7,7 @@ import { GetConfiguracaoService } from '../../services/configuracao/getConfigura
 export class UpdateDiaAulaController extends AbstractController {
   constructor(req, res) {
     super(req, res);
-    this.horaDeFim = null;
+    this.horaFinal = null;
   }
 
   async execute() {
@@ -30,12 +30,12 @@ export class UpdateDiaAulaController extends AbstractController {
         });
       }
 
-      if (diaAula.diaDaSemana !== this.req.body.diaDaSemana) {
+      if (diaAula.diaSemana !== this.req.body.diaSemana) {
         const isDiaAulaContratoDiaDaSemanaExists =
           await IsDiaAulaContratoDiaDaSemanaExistsService.handle({
             idAluno: this.req.body.idAluno,
             idContrato: this.req.body.idContrato,
-            diaDaSemana: this.req.body.diaDaSemana
+            diaSemana: this.req.body.diaSemana
           });
 
         if (isDiaAulaContratoDiaDaSemanaExists) {
@@ -46,22 +46,22 @@ export class UpdateDiaAulaController extends AbstractController {
       }
 
       if (
-        diaAula.horaDeInicio !== this.req.body.horaDeInicio ||
-        diaAula.quantidadeDeAulas !== this.req.body.quantidadeDeAulas
+        diaAula.horaInicial !== this.req.body.horaInicial ||
+        diaAula.quantidadeAulas !== this.req.body.quantidadeAulas
       ) {
-        const duracaoDaAula = await this.getDuracaoDaAula();
-        this.horaDeFim = this.getHoraDeFim({
-          duracaoDaAula,
-          horaDeInicio: this.req.body.horaDeInicio,
-          quantidadeDeAulas: this.req.body.quantidadeDeAulas
+        const duracaoAula = await this.getDuracaoDaAula();
+        this.horaFinal = this.getHoraDeFim({
+          duracaoAula,
+          horaInicial: this.req.body.horaInicial,
+          quantidadeAulas: this.req.body.quantidadeAulas
         });
       } else {
-        this.horaDeFim = diaAula.horaDeFim;
+        this.horaFinal = diaAula.horaFinal;
       }
 
       const data = {
         ...this.req.body,
-        horaDeFim: this.horaDeFim
+        horaFinal: this.horaFinal
       };
 
       const updatedDiaAula = await UpdateDiaAulaService.handle(id, data);
@@ -79,12 +79,12 @@ export class UpdateDiaAulaController extends AbstractController {
       throw new Error('Nenhuma configuração encontrada para determinar a duração da aula.');
     }
 
-    return configuracoes[0].duracaoDaAula;
+    return configuracoes[0].duracaoAula;
   }
 
-  getHoraDeFim({ duracaoDaAula, horaDeInicio, quantidadeDeAulas }) {
-    const [hours, minutes] = horaDeInicio.split(':').map(Number);
-    const totalMinutesToAdd = duracaoDaAula * quantidadeDeAulas;
+  getHoraDeFim({ duracaoAula, horaInicial, quantidadeAulas }) {
+    const [hours, minutes] = horaInicial.split(':').map(Number);
+    const totalMinutesToAdd = duracaoAula * quantidadeAulas;
 
     let endHours = hours + Math.floor((minutes + totalMinutesToAdd) / 60);
     const endMinutes = (minutes + totalMinutesToAdd) % 60;

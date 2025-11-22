@@ -58,7 +58,7 @@ describe('GetDiaDeFuncionamentoService - Método execute()', () => {
         this.selectOneCalls = [];
         this.selectFields = {
           id: true,
-          diaDaSemana: true,
+          diaSemana: true,
           horaInicial: true,
           horaFinal: true,
           ativo: true,
@@ -68,7 +68,7 @@ describe('GetDiaDeFuncionamentoService - Método execute()', () => {
 
       async selectOne(params) {
         this.selectOneCalls.push(params);
-        return { id: 'ddf-1', diaDaSemana: 'SEGUNDA' };
+        return { id: 'ddf-1', diaSemana: 'SEGUNDA' };
       }
     }
 
@@ -83,7 +83,7 @@ describe('GetDiaDeFuncionamentoService - Método execute()', () => {
   });
 
   test('deve retornar o registro encontrado', async () => {
-    const mockObj = { id: 'ddf-1', diaDaSemana: 'TERCA', horaInicial: '08:00', horaFinal: '12:00' };
+    const mockObj = { id: 'ddf-1', diaSemana: 'TERCA', horaInicial: '08:00', horaFinal: '12:00' };
 
     class MockRepository {
       async selectOne() {
@@ -123,13 +123,13 @@ describe('GetDiaDeFuncionamentoService - Método execute()', () => {
   });
 
   test('deve retornar registro com campos nulos', async () => {
-    const mockObj = { id: 'ddf-2', diaDaSemana: 'SABADO', horaInicial: null, horaFinal: null };
+    const mockObj = { id: 'ddf-2', diaSemana: 'SABADO', horaInicial: null, horaFinal: null };
 
     class MockRepository {
       constructor() {
         this.selectFields = {
           id: true,
-          diaDaSemana: true,
+          diaSemana: true,
           horaInicial: true,
           horaFinal: true,
           configuracaoId: true
@@ -200,7 +200,7 @@ describe('GetDiaDeFuncionamentoService - Validação de campos selecionados', ()
         this.selectOneCalls = [];
         this.selectFields = {
           id: true,
-          diaDaSemana: true,
+          diaSemana: true,
           horaInicial: true,
           horaFinal: true,
           ativo: true,
@@ -220,7 +220,7 @@ describe('GetDiaDeFuncionamentoService - Validação de campos selecionados', ()
     const selectCall = service.repository.selectOneCalls[0];
     const expectedFields = [
       'id',
-      'diaDaSemana',
+      'diaSemana',
       'horaInicial',
       'horaFinal',
       'ativo',
@@ -238,7 +238,7 @@ describe('GetDiaDeFuncionamentoService - Validação de campos selecionados', ()
         this.selectOneCalls = [];
         this.selectFields = {
           id: true,
-          diaDaSemana: true,
+          diaSemana: true,
           horaInicial: true,
           horaFinal: true,
           ativo: true,
@@ -266,7 +266,7 @@ describe('GetDiaDeFuncionamentoService - Validação de campos selecionados', ()
         this.selectOneCalls = [];
         this.selectFields = {
           id: true,
-          diaDaSemana: true,
+          diaSemana: true,
           horaInicial: true,
           horaFinal: true,
           ativo: true
@@ -284,7 +284,7 @@ describe('GetDiaDeFuncionamentoService - Validação de campos selecionados', ()
 
     const selectCall = service.repository.selectOneCalls[0];
 
-    expect(selectCall.select.diaDaSemana).toBe(true);
+    expect(selectCall.select.diaSemana).toBe(true);
     expect(selectCall.select.horaInicial).toBe(true);
     expect(selectCall.select.horaFinal).toBe(true);
   });

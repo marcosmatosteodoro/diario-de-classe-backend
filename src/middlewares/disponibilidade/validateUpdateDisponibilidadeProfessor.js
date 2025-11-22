@@ -17,7 +17,7 @@ class ValidateUpdateDisponibilidadeProfessor extends BaseValidateEntity {
     return {
       disponibilidades: ValidateData.require()
         .isArray()
-        .custom(this.diaDaSemanaIsValid.bind(this), 'Contém diaDaSemana inválido')
+        .custom(this.diaSemanaIsValid.bind(this), 'Contém diaSemana inválido')
         .custom(this.horaInicialIsValid.bind(this), 'Contém horaInicial inválido')
         .custom(this.horaFinalIsValid.bind(this), 'Contém horaFinal inválido')
         .custom(this.ativoIsValid.bind(this), 'Contém ativo inválido')
@@ -27,10 +27,10 @@ class ValidateUpdateDisponibilidadeProfessor extends BaseValidateEntity {
     };
   }
 
-  diaDaSemanaIsValid(diasDeFuncionamento) {
+  diaSemanaIsValid(diasDeFuncionamento) {
     if (!Array.isArray(diasDeFuncionamento)) return false;
     const diasValidos = ['SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO', 'DOMINGO'];
-    return diasDeFuncionamento.every(value => diasValidos.includes(value.diaDaSemana));
+    return diasDeFuncionamento.every(value => diasValidos.includes(value.diaSemana));
   }
 
   horaInicialIsValid(diasDeFuncionamento) {

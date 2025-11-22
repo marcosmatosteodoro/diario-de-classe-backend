@@ -10,7 +10,7 @@ export class CreateDisponibilidadeProfessorService extends AbstractService {
   async execute() {
     return await this.repository.create(
       {
-        diaDaSemana: this.data.diaDaSemana,
+        diaSemana: this.data.diaSemana,
         horaInicial: this.data.horaInicial,
         horaFinal: this.data.horaFinal,
         ativo: this.data.ativo,

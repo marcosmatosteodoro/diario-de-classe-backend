@@ -29,7 +29,7 @@ describe('GetDisponibilidadeProfessorService', () => {
 
     const MockRepo = function () {
       this.selectOne = mockSelectOne;
-      this.selectFields = { id: true, diaDaSemana: true };
+      this.selectFields = { id: true, diaSemana: true };
     };
 
     const s = new GetDisponibilidadeProfessorService(MockRepo, 'd1');
@@ -37,7 +37,7 @@ describe('GetDisponibilidadeProfessorService', () => {
 
     expect(res).toEqual({ id: 'd1' });
     expect(calledArgs).toBeDefined();
-    expect(calledArgs.select).toEqual({ id: true, diaDaSemana: true });
+    expect(calledArgs.select).toEqual({ id: true, diaSemana: true });
     expect(calledArgs.where).toEqual({ id: 'd1' });
   });
 });

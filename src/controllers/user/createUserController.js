@@ -44,7 +44,7 @@ export class CreateUserController extends AbstractController {
 
   getDisponibilidade({ dia, isAtivo, id }) {
     return {
-      diaDaSemana: dia,
+      diaSemana: dia,
       horaInicial: '08:00',
       horaFinal: '12:00',
       ativo: isAtivo,

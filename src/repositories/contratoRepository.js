@@ -13,9 +13,9 @@ export default class ContratoRepository extends AbstractRepository {
   getSelectFields() {
     return {
       id: true,
-      idDoAluno: true,
-      dataDeInicio: true,
-      dataDeTermino: true,
+      idAluno: true,
+      dataInicio: true,
+      dataTermino: true,
       status: true,
       totalAulas: true,
       totalAulasFeitas: true,

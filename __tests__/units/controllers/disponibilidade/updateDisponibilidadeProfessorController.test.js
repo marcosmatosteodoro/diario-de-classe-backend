@@ -57,8 +57,8 @@ describe('UpdateDisponibilidadeProfessorController', () => {
     UserService.GetUserService.handle = async () => ({ id: 'u1' });
 
     const updates = [
-      { id: 'd1', diaDaSemana: 'seg' },
-      { id: 'd2', diaDaSemana: 'ter' }
+      { id: 'd1', diaSemana: 'seg' },
+      { id: 'd2', diaSemana: 'ter' }
     ];
 
     req.body = updates;

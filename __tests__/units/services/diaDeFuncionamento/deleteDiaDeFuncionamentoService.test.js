@@ -47,7 +47,7 @@ describe('DeleteDiaDeFuncionamentoService - Método execute()', () => {
 
       async delete(where, options) {
         this.deleteCalls.push({ where, options });
-        return { id: '1', diaDaSemana: 'SEGUNDA' };
+        return { id: '1', diaSemana: 'SEGUNDA' };
       }
     }
 
@@ -59,7 +59,7 @@ describe('DeleteDiaDeFuncionamentoService - Método execute()', () => {
   });
 
   test('deve retornar o registro deletado', async () => {
-    const mockObj = { id: '1', diaDaSemana: 'TERCA', horaInicial: '08:00', horaFinal: '12:00' };
+    const mockObj = { id: '1', diaSemana: 'TERCA', horaInicial: '08:00', horaFinal: '12:00' };
 
     class MockRepository {
       async delete() {
@@ -195,7 +195,7 @@ describe('DeleteDiaDeFuncionamentoService - Validação de parâmetros', () => {
 
 describe('DeleteDiaDeFuncionamentoService - Diferentes cenários de deleção', () => {
   test('deve deletar registro existente', async () => {
-    const mockObj = { id: '1', diaDaSemana: 'TERCA', horaInicial: '08:00', horaFinal: '09:00' };
+    const mockObj = { id: '1', diaSemana: 'TERCA', horaInicial: '08:00', horaFinal: '09:00' };
 
     class MockRepository {
       async delete() {
@@ -210,7 +210,7 @@ describe('DeleteDiaDeFuncionamentoService - Diferentes cenários de deleção', 
   });
 
   test('deve retornar resultado da operação de delete', async () => {
-    const deleteResult = { id: '1', diaDaSemana: 'QUARTA' };
+    const deleteResult = { id: '1', diaSemana: 'QUARTA' };
 
     class MockRepository {
       async delete() {
@@ -239,7 +239,7 @@ describe('DeleteDiaDeFuncionamentoService - Diferentes cenários de deleção', 
   });
 
   test('deve deletar registro com dados nulos', async () => {
-    const mockObj = { id: '2', diaDaSemana: 'SABADO', horaInicial: null, horaFinal: null };
+    const mockObj = { id: '2', diaSemana: 'SABADO', horaInicial: null, horaFinal: null };
 
     class MockRepository {
       async delete() {
@@ -257,7 +257,7 @@ describe('DeleteDiaDeFuncionamentoService - Diferentes cenários de deleção', 
   test('deve deletar registro com todos os campos preenchidos', async () => {
     const mockObj = {
       id: '3',
-      diaDaSemana: 'QUINTA',
+      diaSemana: 'QUINTA',
       horaInicial: '08:00',
       horaFinal: '09:00',
       ativo: true
@@ -329,7 +329,7 @@ describe('DeleteDiaDeFuncionamentoService - Operações de delete', () => {
 
         async delete(where, options) {
           this.deleteCalls.push({ where, options });
-          return { id: where.id, diaDaSemana: 'Teste' };
+          return { id: where.id, diaSemana: 'Teste' };
         }
       }
 

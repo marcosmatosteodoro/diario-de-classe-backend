@@ -2,23 +2,23 @@ import AbstractService from '../abstractService.js';
 import DiaDeFuncionamentoRepository from '../../repositories/diaDeFuncionamentoRepository.js';
 
 export class IsDiaDeFuncionamentoDayExistsService extends AbstractService {
-  constructor(Repository, diaDaSemana) {
+  constructor(Repository, diaSemana) {
     super(Repository);
-    this.diaDaSemana = diaDaSemana;
+    this.diaSemana = diaSemana;
   }
 
   async execute() {
     const diaDeFuncionamento = await this.repository.selectOne({
-      where: { diaDaSemana: this.diaDaSemana },
+      where: { diaSemana: this.diaSemana },
       select: { id: true }
     });
 
     return Boolean(diaDeFuncionamento);
   }
 
-  static async handle(diaDaSemana) {
+  static async handle(diaSemana) {
     const Repository = DiaDeFuncionamentoRepository;
-    const service = new IsDiaDeFuncionamentoDayExistsService(Repository, diaDaSemana);
+    const service = new IsDiaDeFuncionamentoDayExistsService(Repository, diaSemana);
     return await service.execute();
   }
 }

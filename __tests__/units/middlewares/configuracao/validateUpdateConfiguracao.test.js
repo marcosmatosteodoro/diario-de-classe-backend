@@ -48,7 +48,7 @@ describe('validateUpdateConfiguracao middleware', () => {
   });
 
   test('should return 422 when diasDeFuncionamento is not an array', () => {
-    mockReq.body = { duracaoDaAula: 45, tolerancia: 5, diasDeFuncionamento: 'not-array' };
+    mockReq.body = { duracaoAula: 45, tolerancia: 5, diasDeFuncionamento: 'not-array' };
 
     validateUpdateConfiguracao(mockReq, mockRes, () => mockNext.call());
 
@@ -60,11 +60,11 @@ describe('validateUpdateConfiguracao middleware', () => {
 
   test('should return 422 when horaInicial has invalid format', () => {
     mockReq.body = {
-      duracaoDaAula: 45,
+      duracaoAula: 45,
       tolerancia: 5,
       diasDeFuncionamento: [
         {
-          diaDaSemana: 'SEGUNDA',
+          diaSemana: 'SEGUNDA',
           horaInicial: '8:00',
           horaFinal: '10:00',
           ativo: true,
@@ -82,11 +82,11 @@ describe('validateUpdateConfiguracao middleware', () => {
 
   test('should call next when payload is valid', () => {
     mockReq.body = {
-      duracaoDaAula: 45,
+      duracaoAula: 45,
       tolerancia: 5,
       diasDeFuncionamento: [
         {
-          diaDaSemana: 'SEGUNDA',
+          diaSemana: 'SEGUNDA',
           horaInicial: '08:00',
           horaFinal: '10:00',
           ativo: true,

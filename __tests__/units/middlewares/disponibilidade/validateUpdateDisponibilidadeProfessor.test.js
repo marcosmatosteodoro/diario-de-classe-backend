@@ -62,7 +62,7 @@ describe('validateUpdateDisponibilidadeProfessor middleware', () => {
 
   test('should return 422 when horaInicial has invalid format', () => {
     mockReq.body = [
-      { diaDaSemana: 'SEGUNDA', horaInicial: '8:00', horaFinal: '10:00', ativo: true, userId: null }
+      { diaSemana: 'SEGUNDA', horaInicial: '8:00', horaFinal: '10:00', ativo: true, userId: null }
     ];
 
     validateUpdateDisponibilidadeProfessor(mockReq, mockRes, () => mockNext.call());
@@ -72,10 +72,10 @@ describe('validateUpdateDisponibilidadeProfessor middleware', () => {
     expect(mockNext.called).toBe(false);
   });
 
-  test('should return 422 when diaDaSemana invalid', () => {
+  test('should return 422 when diaSemana invalid', () => {
     mockReq.body = [
       {
-        diaDaSemana: 'INVALID',
+        diaSemana: 'INVALID',
         horaInicial: '08:00',
         horaFinal: '10:00',
         ativo: true,
@@ -93,7 +93,7 @@ describe('validateUpdateDisponibilidadeProfessor middleware', () => {
   test('should call next when payload is valid', () => {
     mockReq.body = [
       {
-        diaDaSemana: 'SEGUNDA',
+        diaSemana: 'SEGUNDA',
         horaInicial: '08:00',
         horaFinal: '10:00',
         ativo: true,

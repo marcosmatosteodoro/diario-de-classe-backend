@@ -13,7 +13,7 @@ export default class DiaDeFuncionamentoRepository extends AbstractRepository {
   getSelectFields() {
     return {
       id: true,
-      diaDaSemana: true,
+      diaSemana: true,
       horaInicial: true,
       horaFinal: true,
       ativo: true,

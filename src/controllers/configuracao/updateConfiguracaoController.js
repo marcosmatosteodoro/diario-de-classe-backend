@@ -20,7 +20,7 @@ export class UpdateConfiguracaoController extends AbstractController {
 
       const configuracao = {
         id: configuracaoId,
-        duracaoDaAula: this.req.body.duracaoDaAula,
+        duracaoAula: this.req.body.duracaoAula,
         tolerancia: this.req.body.tolerancia
       };
       const diasDeFuncionamento = this.req.body.diasDeFuncionamento;

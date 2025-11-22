@@ -10,7 +10,7 @@ export class UpdateDiaDeFuncionamentoService extends AbstractService {
 
   async execute() {
     const data = {
-      diaDaSemana: this.data.diaDaSemana,
+      diaSemana: this.data.diaSemana,
       horaInicial: this.data.horaInicial,
       horaFinal: this.data.horaFinal,
       ativo: this.data.ativo,

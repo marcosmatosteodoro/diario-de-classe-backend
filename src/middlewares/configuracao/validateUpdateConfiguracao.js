@@ -7,19 +7,19 @@ class ValidateUpdateConfiguracao extends BaseValidateEntity {
   }
 
   getDataForFilter() {
-    return ['duracaoDaAula', 'tolerancia', 'diasDeFuncionamento'];
+    return ['duracaoAula', 'tolerancia', 'diasDeFuncionamento'];
   }
 
   getDataValidations(filteredData) {
-    const { duracaoDaAula, tolerancia, diasDeFuncionamento } = filteredData;
+    const { duracaoAula, tolerancia, diasDeFuncionamento } = filteredData;
 
     return {
-      // Validar campo duracaoDaAula
-      duracaoDaAula: ValidateData.require()
+      // Validar campo duracaoAula
+      duracaoAula: ValidateData.require()
         .isNumber()
         .isPositive()
         .notZero()
-        .validate(duracaoDaAula, 'duracaoDaAula'),
+        .validate(duracaoAula, 'duracaoAula'),
       // Validar campo tolerancia
       tolerancia: ValidateData.require()
         .isNumber()
@@ -29,7 +29,7 @@ class ValidateUpdateConfiguracao extends BaseValidateEntity {
       // Validar campo diasDeFuncionamento
       diasDeFuncionamento: ValidateData.require()
         .isArray()
-        .custom(this.diaDaSemanaIsValid.bind(this), 'Contém diaDaSemana inválido')
+        .custom(this.diaSemanaIsValid.bind(this), 'Contém diaSemana inválido')
         .custom(this.horaInicialIsValid.bind(this), 'Contém horaInicial inválido')
         .custom(this.horaFinalIsValid.bind(this), 'Contém horaFinal inválido')
         .custom(this.ativoIsValid.bind(this), 'Contém ativo inválido')
@@ -39,10 +39,10 @@ class ValidateUpdateConfiguracao extends BaseValidateEntity {
     };
   }
 
-  diaDaSemanaIsValid(diasDeFuncionamento) {
+  diaSemanaIsValid(diasDeFuncionamento) {
     if (!Array.isArray(diasDeFuncionamento)) return false;
     const diasValidos = ['SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO', 'DOMINGO'];
-    return diasDeFuncionamento.every(value => diasValidos.includes(value.diaDaSemana));
+    return diasDeFuncionamento.every(value => diasValidos.includes(value.diaSemana));
   }
 
   horaInicialIsValid(diasDeFuncionamento) {

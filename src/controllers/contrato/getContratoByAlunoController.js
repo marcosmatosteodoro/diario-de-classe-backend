@@ -10,7 +10,7 @@ export class GetContratoByAlunoController extends AbstractController {
   async execute() {
     try {
       const idAluno = this.req.validatedId || this.req.params.id;
-      this.where = { idDoAluno: idAluno, status: { in: ['ATIVO', 'PENDENTE'] } };
+      this.where = { idAluno: idAluno, status: { in: ['ATIVO', 'PENDENTE'] } };
       const contratos = await GetContratoListService.handle(this.where);
 
       if (!contratos || contratos.length === 0) {

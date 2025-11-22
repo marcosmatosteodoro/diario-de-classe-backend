@@ -4,7 +4,7 @@ import AbstractService from '../../../../src/services/abstractService.js';
 describe('UpdateDisponibilidadeProfessorService', () => {
   test('constructor and instance', () => {
     const Repo = function () {};
-    const data = { diaDaSemana: 'quarta', horaInicial: '12:00' };
+    const data = { diaSemana: 'quarta', horaInicial: '12:00' };
     const s = new UpdateDisponibilidadeProfessorService(Repo, 'id1', data);
 
     expect(s).toBeInstanceOf(UpdateDisponibilidadeProfessorService);
@@ -30,10 +30,10 @@ describe('UpdateDisponibilidadeProfessorService', () => {
 
     const MockRepo = function () {
       this.update = mockUpdate;
-      this.selectFields = { id: true, diaDaSemana: true };
+      this.selectFields = { id: true, diaSemana: true };
     };
 
-    const data = { diaDaSemana: 'quinta', horaInicial: undefined, horaFinal: '14:00' };
+    const data = { diaSemana: 'quinta', horaInicial: undefined, horaFinal: '14:00' };
     const s = new UpdateDisponibilidadeProfessorService(MockRepo, 'id2', data);
 
     const res = await s.execute();
@@ -43,7 +43,7 @@ describe('UpdateDisponibilidadeProfessorService', () => {
     expect(calledArgs).toBeDefined();
     expect(calledArgs.where).toEqual({ id: 'id2' });
     // horaInicial should be removed because it's undefined
-    expect(calledArgs.data).toEqual({ diaDaSemana: 'quinta', horaFinal: '14:00' });
-    expect(calledArgs.opts).toEqual({ select: { id: true, diaDaSemana: true } });
+    expect(calledArgs.data).toEqual({ diaSemana: 'quinta', horaFinal: '14:00' });
+    expect(calledArgs.opts).toEqual({ select: { id: true, diaSemana: true } });
   });
 });

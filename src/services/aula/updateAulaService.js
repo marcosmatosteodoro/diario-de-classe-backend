@@ -14,8 +14,8 @@ export class UpdateAulaService extends AbstractService {
       idProfessor: this.data.idProfessor,
       idContrato: this.data.idContrato,
       dataAula: this.data.dataAula,
-      horaInicio: this.data.horaInicio,
-      horaFim: this.data.horaFim,
+      horaInicial: this.data.horaInicial,
+      horaFinal: this.data.horaFinal,
       tipo: this.data.tipo,
       status: this.data.status,
       observacao: this.data.observacao

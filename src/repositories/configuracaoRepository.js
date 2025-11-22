@@ -13,7 +13,7 @@ export default class ConfiguracaoRepository extends AbstractRepository {
   getSelectFields() {
     return {
       id: true,
-      duracaoDaAula: true,
+      duracaoAula: true,
       tolerancia: true,
       diasDeFuncionamento: true
     };

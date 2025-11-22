@@ -7,11 +7,11 @@ class ValidateCreateDiaAula extends BaseValidateEntity {
   }
 
   getDataForFilter() {
-    return ['idAluno', 'idContrato', 'diaDaSemana', 'quantidadeDeAulas', 'horaDeInicio'];
+    return ['idAluno', 'idContrato', 'diaSemana', 'quantidadeAulas', 'horaInicial'];
   }
 
   getDataValidations(filteredData) {
-    const { idAluno, idContrato, diaDaSemana, quantidadeDeAulas, horaDeInicio } = filteredData;
+    const { idAluno, idContrato, diaSemana, quantidadeAulas, horaInicial } = filteredData;
 
     return {
       // Validar campo idAluno
@@ -26,23 +26,23 @@ class ValidateCreateDiaAula extends BaseValidateEntity {
         .minCharacters(6)
         .maxCharacters(50)
         .validate(idContrato, 'idContrato'),
-      // Validar campo diaDaSemana
-      diaDaSemana: ValidateData.require()
+      // Validar campo diaSemana
+      diaSemana: ValidateData.require()
         .isString()
         .isEnum(['SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO', 'DOMINGO'])
-        .validate(diaDaSemana, 'diaDaSemana'),
-      // Validar campo quantidadeDeAulas
-      quantidadeDeAulas: ValidateData.require()
+        .validate(diaSemana, 'diaSemana'),
+      // Validar campo quantidadeAulas
+      quantidadeAulas: ValidateData.require()
         .isNumber()
         // .minValue(1) // TODO definir valores minimos e maximos
         // .maxValue(10)
-        .validate(quantidadeDeAulas, 'quantidadeDeAulas'),
-      // Validar campo horaDeInicio
-      horaDeInicio: ValidateData.require()
+        .validate(quantidadeAulas, 'quantidadeAulas'),
+      // Validar campo horaInicial
+      horaInicial: ValidateData.require()
         .isString()
         .minCharacters(5)
         .maxCharacters(5)
-        .validate(horaDeInicio, 'horaDeInicio')
+        .validate(horaInicial, 'horaInicial')
     };
   }
 }

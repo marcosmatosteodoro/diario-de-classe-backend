@@ -13,7 +13,7 @@ describe('GetDiaDeFuncionamentoListService', () => {
     });
 
     test('deve aceitar where clause no construtor', () => {
-      const whereClause = { diaDaSemana: { equals: 'SEGUNDA' } };
+      const whereClause = { diaSemana: { equals: 'SEGUNDA' } };
       const service = new GetDiaDeFuncionamentoListService(
         DiaDeFuncionamentoRepository,
         whereClause
@@ -62,7 +62,7 @@ describe('GetDiaDeFuncionamentoListService', () => {
           this.selectMany = () => Promise.resolve([]);
           this.selectFields = {
             id: true,
-            diaDaSemana: true,
+            diaSemana: true,
             horaInicial: true,
             horaFinal: true,
             ativo: true,
@@ -105,7 +105,7 @@ describe('GetDiaDeFuncionamentoListService', () => {
         constructor() {
           this.selectFields = {
             id: true,
-            diaDaSemana: true,
+            diaSemana: true,
             horaInicial: true,
             horaFinal: true,
             ativo: true,
@@ -119,14 +119,14 @@ describe('GetDiaDeFuncionamentoListService', () => {
           return [
             {
               id: '1',
-              diaDaSemana: 'SEGUNDA',
+              diaSemana: 'SEGUNDA',
               horaInicial: '08:00',
               horaFinal: '12:00',
               ativo: true
             },
             {
               id: '2',
-              diaDaSemana: 'TERCA',
+              diaSemana: 'TERCA',
               horaInicial: '09:00',
               horaFinal: '10:00',
               ativo: false
@@ -139,18 +139,18 @@ describe('GetDiaDeFuncionamentoListService', () => {
       const result = await service.execute();
 
       expect(result).toHaveLength(2);
-      expect(result[0]).toHaveProperty('diaDaSemana', 'SEGUNDA');
+      expect(result[0]).toHaveProperty('diaSemana', 'SEGUNDA');
       expect(result[0]).toHaveProperty('horaInicial', '08:00');
     });
 
     test('deve executar busca com where clause específico', async () => {
-      const whereClause = { diaDaSemana: { equals: 'SEGUNDA' } };
+      const whereClause = { diaSemana: { equals: 'SEGUNDA' } };
 
       class MockRepository {
         constructor() {
           this.selectFields = {
             id: true,
-            diaDaSemana: true,
+            diaSemana: true,
             horaInicial: true,
             horaFinal: true,
             ativo: true,
@@ -164,7 +164,7 @@ describe('GetDiaDeFuncionamentoListService', () => {
           return [
             {
               id: '1',
-              diaDaSemana: 'SEGUNDA',
+              diaSemana: 'SEGUNDA',
               horaInicial: '08:00',
               horaFinal: '12:00',
               ativo: true
@@ -177,11 +177,11 @@ describe('GetDiaDeFuncionamentoListService', () => {
       const result = await service.execute();
 
       expect(result).toHaveLength(1);
-      expect(result[0]).toHaveProperty('diaDaSemana', 'SEGUNDA');
+      expect(result[0]).toHaveProperty('diaSemana', 'SEGUNDA');
     });
 
     test('deve usar selectFields do repository', async () => {
-      const customSelectFields = { id: true, diaDaSemana: true, horaInicial: true };
+      const customSelectFields = { id: true, diaSemana: true, horaInicial: true };
 
       class MockRepository {
         constructor() {
@@ -205,7 +205,7 @@ describe('GetDiaDeFuncionamentoListService', () => {
         constructor() {
           this.selectFields = {
             id: true,
-            diaDaSemana: true,
+            diaSemana: true,
             horaInicial: true,
             horaFinal: true,
             ativo: true,
@@ -219,7 +219,7 @@ describe('GetDiaDeFuncionamentoListService', () => {
           return [
             {
               id: '1',
-              diaDaSemana: 'SEGUNDA',
+              diaSemana: 'SEGUNDA',
               horaInicial: '08:00',
               horaFinal: '12:00',
               ativo: true
@@ -240,12 +240,12 @@ describe('GetDiaDeFuncionamentoListService', () => {
 
       class MockRepository {
         constructor() {
-          this.selectFields = { id: true, diaDaSemana: true, horaInicial: true };
+          this.selectFields = { id: true, diaSemana: true, horaInicial: true };
         }
 
         async selectMany({ where }) {
           expect(where).toEqual(whereClause);
-          return [{ id: '2', diaDaSemana: 'TERCA', horaInicial: '09:00' }];
+          return [{ id: '2', diaSemana: 'TERCA', horaInicial: '09:00' }];
         }
       }
 
@@ -264,13 +264,13 @@ describe('GetDiaDeFuncionamentoListService', () => {
       expect(Array.isArray(result)).toBe(true);
       if (result.length > 0) {
         expect(result[0]).toHaveProperty('id');
-        expect(result[0]).toHaveProperty('diaDaSemana');
+        expect(result[0]).toHaveProperty('diaSemana');
         expect(result[0]).toHaveProperty('horaInicial');
       }
     });
 
     test('deve executar com where clause específico', async () => {
-      const whereClause = { diaDaSemana: { equals: 'NAO_EXISTE' } };
+      const whereClause = { diaSemana: { equals: 'NAO_EXISTE' } };
 
       // O método handle normalmente usa o repository real e pode invocar Prisma
       // (que validaria enums). Aqui substituímos temporariamente o handle para usar
@@ -279,7 +279,7 @@ describe('GetDiaDeFuncionamentoListService', () => {
       GetDiaDeFuncionamentoListService.handle = async function (where) {
         class MockRepository {
           constructor() {
-            this.selectFields = { id: true, diaDaSemana: true, horaInicial: true };
+            this.selectFields = { id: true, diaSemana: true, horaInicial: true };
           }
 
           async selectMany() {
@@ -306,7 +306,7 @@ describe('GetDiaDeFuncionamentoListService', () => {
       expect(Array.isArray(result)).toBe(true);
       if (result.length > 0) {
         expect(result[0]).toHaveProperty('id');
-        expect(result[0]).toHaveProperty('diaDaSemana');
+        expect(result[0]).toHaveProperty('diaSemana');
         expect(result[0]).toHaveProperty('horaFinal');
       }
     });
@@ -372,7 +372,7 @@ describe('GetDiaDeFuncionamentoListService', () => {
 
     test('deve aceitar where clause complexo', () => {
       const complexWhere = {
-        AND: [{ diaDaSemana: { in: ['SEGUNDA', 'TERCA'] } }, { ativo: true }]
+        AND: [{ diaSemana: { in: ['SEGUNDA', 'TERCA'] } }, { ativo: true }]
       };
 
       const service = new GetDiaDeFuncionamentoListService(
@@ -385,17 +385,17 @@ describe('GetDiaDeFuncionamentoListService', () => {
   });
 
   describe('Cenários específicos do modelo', () => {
-    test('deve buscar registros por diaDaSemana', async () => {
-      const whereClause = { diaDaSemana: { equals: 'SEGUNDA' } };
+    test('deve buscar registros por diaSemana', async () => {
+      const whereClause = { diaSemana: { equals: 'SEGUNDA' } };
 
       class MockRepository {
         constructor() {
-          this.selectFields = { id: true, diaDaSemana: true, horaInicial: true };
+          this.selectFields = { id: true, diaSemana: true, horaInicial: true };
         }
 
         async selectMany({ where }) {
           expect(where).toEqual(whereClause);
-          return [{ id: '1', diaDaSemana: 'SEGUNDA', horaInicial: '08:00' }];
+          return [{ id: '1', diaSemana: 'SEGUNDA', horaInicial: '08:00' }];
         }
       }
 
@@ -403,7 +403,7 @@ describe('GetDiaDeFuncionamentoListService', () => {
       const result = await service.execute();
 
       expect(result).toHaveLength(1);
-      expect(result[0].diaDaSemana).toBe('SEGUNDA');
+      expect(result[0].diaSemana).toBe('SEGUNDA');
     });
   });
 });

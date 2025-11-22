@@ -46,7 +46,7 @@ describe('DisponibilidadeProfessorRepository', () => {
   test('selectFields deve conter campos corretos', () => {
     const f = repo.selectFields;
     expect(f.id).toBe(true);
-    expect(f.diaDaSemana).toBe(true);
+    expect(f.diaSemana).toBe(true);
     expect(f.horaInicial).toBe(true);
     expect(f.horaFinal).toBe(true);
     expect(f.ativo).toBe(true);

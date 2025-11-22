@@ -10,9 +10,9 @@ export class UpdateContratoService extends AbstractService {
 
   async execute() {
     const data = {
-      idDoAluno: this.data.idDoAluno,
-      dataDeInicio: this.data.dataDeInicio,
-      dataDeTermino: this.data.dataDeTermino,
+      idAluno: this.data.idAluno,
+      dataInicio: this.data.dataInicio,
+      dataTermino: this.data.dataTermino,
       status: this.data.status,
       totalAulas: this.data.totalAulas,
       totalAulasFeitas: this.data.totalAulasFeitas,

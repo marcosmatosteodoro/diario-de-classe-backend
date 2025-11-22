@@ -2,15 +2,15 @@ import AbstractService from '../abstractService.js';
 import ContratoRepository from '../../repositories/contratoRepository.js';
 
 export class IsContratoAlunoPendenteExistsService extends AbstractService {
-  constructor(Repository, idDoAluno) {
+  constructor(Repository, idAluno) {
     super(Repository);
-    this.idDoAluno = idDoAluno;
+    this.idAluno = idAluno;
   }
 
   async execute() {
     const contrato = await this.repository.selectMany({
       where: {
-        idDoAluno: this.idDoAluno,
+        idAluno: this.idAluno,
         status: 'PENDENTE'
       },
       select: { id: true }
@@ -19,9 +19,9 @@ export class IsContratoAlunoPendenteExistsService extends AbstractService {
     return contrato && contrato.length > 0;
   }
 
-  static async handle(idDoAluno) {
+  static async handle(idAluno) {
     const Repository = ContratoRepository;
-    const service = new IsContratoAlunoPendenteExistsService(Repository, idDoAluno);
+    const service = new IsContratoAlunoPendenteExistsService(Repository, idAluno);
     return await service.execute();
   }
 }

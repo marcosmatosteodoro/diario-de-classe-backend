@@ -5,7 +5,7 @@ describe('CreateDisponibilidadeProfessorService', () => {
   test('constructor and instance', () => {
     const Repo = function () {};
     const data = {
-      diaDaSemana: 'segunda',
+      diaSemana: 'segunda',
       horaInicial: '08:00',
       horaFinal: '09:00',
       ativo: true,
@@ -36,11 +36,11 @@ describe('CreateDisponibilidadeProfessorService', () => {
 
     const MockRepo = function () {
       this.create = mockCreate;
-      this.selectFields = { id: true, diaDaSemana: true };
+      this.selectFields = { id: true, diaSemana: true };
     };
 
     const data = {
-      diaDaSemana: 'terça',
+      diaSemana: 'terça',
       horaInicial: '10:00',
       horaFinal: '11:00',
       ativo: false,
@@ -54,12 +54,12 @@ describe('CreateDisponibilidadeProfessorService', () => {
     expect(res.id).toBe('new1');
     expect(calledArgs).toBeDefined();
     expect(calledArgs.payload).toEqual({
-      diaDaSemana: 'terça',
+      diaSemana: 'terça',
       horaInicial: '10:00',
       horaFinal: '11:00',
       ativo: false,
       userId: 'u2'
     });
-    expect(calledArgs.opts).toEqual({ select: { id: true, diaDaSemana: true } });
+    expect(calledArgs.opts).toEqual({ select: { id: true, diaSemana: true } });
   });
 });

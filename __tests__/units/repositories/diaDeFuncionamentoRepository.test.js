@@ -91,7 +91,7 @@ describe('DiaDeFuncionamentoRepository', () => {
       const fields = repo.selectFields;
 
       expect(fields.id).toBe(true);
-      expect(fields.diaDaSemana).toBe(true);
+      expect(fields.diaSemana).toBe(true);
       expect(fields.horaInicial).toBe(true);
       expect(fields.horaFinal).toBe(true);
       expect(fields.ativo).toBe(true);
@@ -118,7 +118,7 @@ describe('DiaDeFuncionamentoRepository', () => {
     test('campos específicos do modelo DiaDeFuncionamento devem estar configurados', () => {
       const fields = repo.getSelectFields();
 
-      expect(fields.diaDaSemana).toBe(true);
+      expect(fields.diaSemana).toBe(true);
       expect(fields.horaInicial).toBe(true);
       expect(fields.horaFinal).toBe(true);
       expect(fields.ativo).toBe(true);

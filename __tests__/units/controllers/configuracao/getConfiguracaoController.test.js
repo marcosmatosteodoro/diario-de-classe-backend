@@ -52,7 +52,7 @@ describe('GetConfiguracaoController', () => {
     const mockReq = {};
     const mockRes = makeRes();
 
-    const mockConfigs = [{ id: 'c1', duracaoDaAula: 40 }];
+    const mockConfigs = [{ id: 'c1', duracaoAula: 40 }];
 
     const originalHandle2 = GetConfiguracaoService.handle;
     GetConfiguracaoService.handle = async () => mockConfigs;

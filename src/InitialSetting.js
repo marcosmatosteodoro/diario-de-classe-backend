@@ -48,7 +48,7 @@ export class InitialSetting {
 
     for (const dia of dias) {
       const diaDeFuncionamento = await CreateDiaDeFuncionamentoService.handle({
-        diaDaSemana: dia,
+        diaSemana: dia,
         horaInicial: '08:00',
         horaFinal: '18:00',
         ativo: true,
@@ -67,7 +67,7 @@ export class InitialSetting {
       return false;
     }
 
-    if (this.diasDeFuncionamento.some(dia => !this.dias.includes(dia.diaDaSemana))) {
+    if (this.diasDeFuncionamento.some(dia => !this.dias.includes(dia.diaSemana))) {
       this.diaDeFuncionamentoError = 'diaInvalido';
       return false;
     }
@@ -105,7 +105,7 @@ export class InitialSetting {
 
   async createConfiguracao() {
     const newConfiguracao = await CreateConfiguracaoService.handle({
-      duracaoDaAula: 40,
+      duracaoAula: 40,
       tolerancia: 10
     });
 

@@ -51,11 +51,11 @@ describe('UpdateConfiguracaoController', () => {
   test('execute should update dias and configuracao and return 200', async () => {
     const req = {
       body: {
-        duracaoDaAula: 50,
+        duracaoAula: 50,
         tolerancia: 5,
         diasDeFuncionamento: [
-          { id: 'd1', diaDaSemana: 'SEGUNDA', horaInicial: '08:00' },
-          { id: 'd2', diaDaSemana: 'TERCA', horaInicial: '08:00' }
+          { id: 'd1', diaSemana: 'SEGUNDA', horaInicial: '08:00' },
+          { id: 'd2', diaSemana: 'TERCA', horaInicial: '08:00' }
         ]
       },
       t: key => key
@@ -89,7 +89,7 @@ describe('UpdateConfiguracaoController', () => {
 
     // verify configuracao updated and returned
     expect(res._status).toBe(200);
-    expect(res._json).toEqual({ id: 'cfg1', duracaoDaAula: 50, tolerancia: 5, updated: true });
+    expect(res._json).toEqual({ id: 'cfg1', duracaoAula: 50, tolerancia: 5, updated: true });
 
     // restore
     GetConfiguracaoService.handle = originalGet;

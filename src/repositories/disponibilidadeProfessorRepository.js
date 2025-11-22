@@ -13,7 +13,7 @@ export default class DisponibilidadeProfessorRepository extends AbstractReposito
   getSelectFields() {
     return {
       id: true,
-      diaDaSemana: true,
+      diaSemana: true,
       horaInicial: true,
       horaFinal: true,
       ativo: true,

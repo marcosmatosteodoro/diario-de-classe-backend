@@ -3,7 +3,7 @@ import { CreateConfiguracaoService } from '../../../../src/services/configuracao
 describe('CreateConfiguracaoService (unit)', () => {
   test('execute calls repository.create with cleaned data and select, returns created record', async () => {
     const input = {
-      duracaoDaAula: 45,
+      duracaoAula: 45,
       tolerancia: 5,
       diasDeFuncionamento: ['segunda', 'terca']
     };
@@ -31,7 +31,7 @@ describe('CreateConfiguracaoService (unit)', () => {
   });
 
   test('execute removes undefined fields before calling repository.create', async () => {
-    const input = { duracaoDaAula: undefined, tolerancia: 10 };
+    const input = { duracaoAula: undefined, tolerancia: 10 };
 
     class MockRepository {
       constructor() {
@@ -59,7 +59,7 @@ describe('CreateConfiguracaoService (unit)', () => {
       }
     }
 
-    const service = new CreateConfiguracaoService(MockRepository, { duracaoDaAula: 30 });
+    const service = new CreateConfiguracaoService(MockRepository, { duracaoAula: 30 });
     await expect(service.execute()).rejects.toThrow('create-fail');
   });
 });
