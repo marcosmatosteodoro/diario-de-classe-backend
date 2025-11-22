@@ -59,7 +59,7 @@ export default class AbstractRepository {
       throw new Error('Condições de busca (where) são obrigatórias');
     }
 
-    return await this.entity.findUnique({
+    return await this.entity.findFirst({
       where,
       select
     });
