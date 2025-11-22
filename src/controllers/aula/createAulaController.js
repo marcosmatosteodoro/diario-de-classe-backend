@@ -9,13 +9,7 @@ export class CreateAulaController extends AbstractController {
 
   async execute() {
     try {
-      const ids = {
-        idAluno: this.req.body.idAluno,
-        idProfessor: this.req.body.idProfessor,
-        idContrato: this.req.body.idContrato
-      };
-
-      if (await IsAulaExistsService.handle(ids)) {
+      if (await IsAulaExistsService.handle(this.req.body)) {
         return this.res.status(422).json({
           message: this.req.t('aulas.create.ids_exists')
         });
