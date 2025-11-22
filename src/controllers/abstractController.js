@@ -1,4 +1,4 @@
-import Constants from '../utilities/constants';
+import Constants from '../utilities/constants.js';
 
 /**
  * Classe abstrata para controllers

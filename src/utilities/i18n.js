@@ -3,7 +3,7 @@ import Backend from 'i18next-fs-backend';
 import middleware from 'i18next-http-middleware';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import Constants from './constants';
+import Constants from '../utilities/constants.js';
 
 // Obter __dirname em ES modules
 const __filename = fileURLToPath(import.meta.url);
