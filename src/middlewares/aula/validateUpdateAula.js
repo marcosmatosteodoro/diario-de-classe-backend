@@ -27,7 +27,7 @@ class ValidateUpdateAula extends BaseValidateEntity {
         .minCharacters(5)
         .maxCharacters(5)
         .custom(
-          this.horaFimIsAfterHoraInicio.bind(horaInicio, horaFim),
+          () => this.horaFimIsAfterHoraInicio.bind(horaInicio, horaFim),
           'horaFim deve ser posterior a horaInicio'
         )
         .validate(horaFim, 'horaFim'),
@@ -48,12 +48,13 @@ class ValidateUpdateAula extends BaseValidateEntity {
   horaFimIsAfterHoraInicio(horaInicio, horaFim) {
     if (!horaInicio || !horaFim) return true;
 
-    const [inicioHours, inicioMinutes] = horaInicio.split(':').map(Number);
-    const [fimHours, fimMinutes] = horaFim.split(':').map(Number);
+    let horaInicial = horaInicio.replaceAll(':', '');
+    let horaFinal = horaFim.replaceAll(':', '');
 
-    if (fimHours > inicioHours) return true;
-    if (fimHours === inicioHours && fimMinutes > inicioMinutes) return true;
-    return false;
+    horaInicial = parseInt(horaInicial) || 0;
+    horaFinal = parseInt(horaFinal) || 0;
+
+    return horaFinal > horaInicial;
   }
 }
 
