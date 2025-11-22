@@ -38,7 +38,6 @@ export class InitialSetting {
 
   async isDiaDeFuncionamentoExists() {
     const diasDeFuncionamento = await GetDiaDeFuncionamentoListService.handle();
-    this.log(`diasDeFuncionamento ${diasDeFuncionamento.length}`);
     this.diasDeFuncionamento = diasDeFuncionamento;
     return diasDeFuncionamento && diasDeFuncionamento.length > 0;
   }
@@ -94,7 +93,6 @@ export class InitialSetting {
 
   async isConfiguracaoExists() {
     const configuracoes = await GetConfiguracaoService.handle();
-    this.log(`configuracoes ${configuracoes.length}`);
 
     if (configuracoes && configuracoes.length > 0) {
       this.configuracoes = configuracoes;
@@ -106,8 +104,6 @@ export class InitialSetting {
   }
 
   async createConfiguracao() {
-    this.log('Criando configuração inicial padrão');
-
     const newConfiguracao = await CreateConfiguracaoService.handle({
       duracaoDaAula: 40,
       tolerancia: 10
