@@ -33,6 +33,20 @@ enum StatusContrato {
   CANCELADO
 }
 
+enum TipoAula {
+  PADRAO
+  REPOSICAO
+  OUTRA
+}
+
+enum StatusAula {
+  AGENDADA
+  EM_ANDAMENTO
+  CONCLUIDA
+  CANCELADA
+  CANCELADA_POR_FALTA
+}
+
 model User {
   id              String    @id @default(cuid())
   nome            String // máximo 255 caracteres
@@ -47,6 +61,8 @@ model User {
 
   // Relacionamento com DisponibilidadeProfessor
   disponibilidades DisponibilidadeProfessor[]
+  // Relacionamento com Aula
+  aulas            Aula[]
 
   @@map("users")
 }
@@ -81,6 +97,8 @@ model Aluno {
   contratoes Contrato[]
   // Relacionamento com DiaAula
   diaAulas   DiaAula[]
+  // Relacionamento com Aula
+  aulas      Aula[]
 
   @@map("alunos")
 }
@@ -132,6 +150,8 @@ model Contrato {
   aluno    Aluno     @relation(fields: [idDoAluno], references: [id], onDelete: Cascade)
   // Relacionamento com DiaAula
   diaAulas DiaAula[]
+  // Relacionamento com Aula
+  aulas    Aula[]
 
   @@map("contratos")
 }
@@ -153,4 +173,28 @@ model DiaAula {
   contrato Contrato @relation(fields: [idContrato], references: [id], onDelete: Cascade)
 
   @@map("dias_aula")
+}
+
+model Aula {
+  id              String     @id @default(cuid())
+  idAluno         String
+  idProfessor     String
+  idContrato      String
+  dataAula        DateTime
+  horaInicio      String
+  horaFim         String
+  tipo            TipoAula
+  status          StatusAula
+  observacao      String?
+  dataCriacao     DateTime   @default(now())
+  dataAtualizacao DateTime   @updatedAt
+
+  // Relacionamento com Aluno
+  aluno     Aluno    @relation(fields: [idAluno], references: [id], onDelete: Cascade)
+  // Relacionamento com Professor
+  professor User     @relation(fields: [idProfessor], references: [id], onDelete: Cascade)
+  // Relacionamento com Contrato
+  contrato  Contrato @relation(fields: [idContrato], references: [id], onDelete: Cascade)
+
+  @@map("aulas")
 }
