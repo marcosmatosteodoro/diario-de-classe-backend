@@ -3,11 +3,11 @@ import express from 'express';
 import { GetAulaListController } from '../controllers/aula/getAulaListController.js';
 import { GetAulaController } from '../controllers/aula/getAulaController.js';
 import { DeleteAulaController } from '../controllers/aula/deleteAulaController.js';
-// import { CreateAulaController } from '../controllers/aula/createAulaController.js';
+import { CreateAulaController } from '../controllers/aula/createAulaController.js';
 // import { UpdateAulaController } from '../controllers/aula/updateAulaController.js';
 // Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
-// import { validateCreateAula } from '../middlewares/aula/validateCreateAula.js';
+import { validateCreateAula } from '../middlewares/aula/validateCreateAula.js';
 // import { validateUpdateAula } from '../middlewares/aula/validateUpdateAula.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 
@@ -20,7 +20,7 @@ router.get('/', validateSearchQuery, GetAulaListController.handle);
 router.get('/:id', validateId, GetAulaController.handle);
 
 // POST /api/aulas - Criar novo aula
-// router.post('/', validateCreateAula, CreateAulaController.handle);
+router.post('/', validateCreateAula, CreateAulaController.handle);
 
 // PUT /api/aulas/:id - Atualizar aula por ID
 // router.put('/:id', validateId, validateUpdateAula, UpdateAulaController.handle);

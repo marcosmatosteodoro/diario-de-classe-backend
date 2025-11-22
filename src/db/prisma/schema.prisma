@@ -196,5 +196,6 @@ model Aula {
   // Relacionamento com Contrato
   contrato  Contrato @relation(fields: [idContrato], references: [id], onDelete: Cascade)
 
+  @@unique([idAluno, idProfessor, idContrato, dataAula])
   @@map("aulas")
 }
