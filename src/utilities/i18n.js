@@ -3,6 +3,7 @@ import Backend from 'i18next-fs-backend';
 import middleware from 'i18next-http-middleware';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import Constants from './constants';
 
 // Obter __dirname em ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -62,7 +63,7 @@ i18next
     },
 
     // Configurações de desenvolvimento
-    debug: process.env.NODE_ENV === 'development',
+    debug: Constants.env === 'development',
 
     // Namespace padrão
     defaultNS: 'translation',
@@ -79,7 +80,7 @@ i18next
     contextSeparator: '_',
 
     // Recarregar traduções em desenvolvimento
-    reloadOnPrerender: process.env.NODE_ENV === 'development'
+    reloadOnPrerender: Constants.env === 'development'
   });
 
 export default i18next;

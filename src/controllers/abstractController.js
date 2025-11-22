@@ -1,3 +1,5 @@
+import Constants from '../utilities/constants';
+
 /**
  * Classe abstrata para controllers
  * Define a estrutura básica que todos os controllers devem seguir
@@ -51,7 +53,7 @@ export default class AbstractController {
     };
 
     // Em ambiente de desenvolvimento, inclui stack trace
-    if (process.env.NODE_ENV === 'development') {
+    if (Constants.env === 'development') {
       errorResponse.stack = error.stack;
     }
 

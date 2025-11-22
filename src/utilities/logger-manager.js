@@ -1,3 +1,5 @@
+import Constants from './constants';
+
 export default class LoggerManager {
   static expressLogger(message) {
     console.log(`[EXPRESS] ${new Date().toISOString()} - ${message}`);
@@ -16,7 +18,7 @@ export default class LoggerManager {
   }
 
   static debug(message, meta = {}) {
-    if (process.env.NODE_ENV !== 'production') {
+    if (Constants.env !== 'production') {
       console.log(`[DEBUG] ${new Date().toISOString()} - ${message}`, meta);
     }
   }
