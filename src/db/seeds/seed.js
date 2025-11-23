@@ -46,7 +46,9 @@ export default class Seed {
     this.aulas = await AulasSeed.handle(this.params);
     this.updateParams();
 
-    this.successLog();
+    this.seeds.forEach(seed => {
+      console.log(`✅ Criado ${this[seed].length} ${seed}`);
+    });
   }
 
   updateParams() {
@@ -58,12 +60,6 @@ export default class Seed {
       diaAulas: this.diaAulas,
       aulas: this.aulas
     };
-  }
-
-  successLog() {
-    this.seeds.forEach(seed => {
-      console.log(`✅ Criado ${this[seed].length} ${seed}`);
-    });
   }
 
   static async handle() {
