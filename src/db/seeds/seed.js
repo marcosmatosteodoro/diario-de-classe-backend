@@ -3,6 +3,7 @@ import { ProfessoresSeed } from './models/professoresSeed.js';
 import { DisponibilidadeProfessorSeed } from './models/disponibilidadeProfessorSeed.js';
 import { AlunosSeed } from './models/alunosSeed.js';
 import { ContratosSeed } from './models/contratosSeed.js';
+import { DiaAulasSeed } from './models/diaAulasSeed.js';
 
 export default class Seed {
   constructor(prisma) {
@@ -239,7 +240,7 @@ export default class Seed {
     this.disponibilidadeProfessores = await DisponibilidadeProfessorSeed.handle(this.professores);
     this.alunos = await AlunosSeed.handle();
     this.contratos = await ContratosSeed.handle(this.alunos);
-    // this.diaAulas = await DiaAulasSeed.handle(this.aluno);
+    this.diaAulas = await DiaAulasSeed.handle({ alunos: this.alunos, contratos: this.contratos });
     // this.aulas = await AulasSeed.handle({});
 
     // this.diaDeFuncionamento = DiaDeFuncionamento.handle();
