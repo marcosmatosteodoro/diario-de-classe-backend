@@ -1,4 +1,4 @@
-import Constants from '../utilities/constants.js';
+import Constants from './constants.js';
 
 export default class LoggerManager {
   static expressLogger(message) {
