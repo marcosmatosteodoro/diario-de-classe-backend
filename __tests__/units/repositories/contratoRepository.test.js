@@ -1,6 +1,6 @@
 import ContratoRepository from '../../../src/repositories/contratoRepository.js';
 
-describe.skip('ContratoRepository', () => {
+describe('ContratoRepository', () => {
   let contratoRepository;
 
   beforeEach(() => {
@@ -23,7 +23,7 @@ describe.skip('ContratoRepository', () => {
       expect(contratoRepository.getSelectFields()).toBeDefined();
     });
 
-    test('deve ter propriedade selectFields definida', () => {
+    test('deve ter selectFields definido como objeto', () => {
       expect(contratoRepository.selectFields).toBeDefined();
       expect(typeof contratoRepository.selectFields).toBe('object');
     });
@@ -74,113 +74,76 @@ describe.skip('ContratoRepository', () => {
   });
 
   describe('Estrutura da classe', () => {
-    test('deve ter propriedade entity definida', () => {
-      expect(contratoRepository.entity).toBeDefined();
-      expect(contratoRepository.entity).toBeTruthy();
+    test('getEntity deve retornar prisma.contrato', () => {
+      expect(contratoRepository.getEntity()).toBeDefined();
+      expect(contratoRepository.getEntity().name).toBe('Contrato');
     });
 
-    test('getEntity deve retornar a mesma entidade que entity', () => {
-      expect(contratoRepository.getEntity()).toBe(contratoRepository.entity);
-    });
-
-    test('getSelectFields deve retornar os mesmos campos que selectFields', () => {
-      expect(contratoRepository.getSelectFields()).toEqual(contratoRepository.selectFields);
-    });
-
-    test('selectFields deve conter campos corretos para alunos', () => {
-      const fields = contratoRepository.selectFields;
-
-      // Verifica campos que devem estar presentes
-      expect(fields.id).toBe(true);
-      expect(fields.nome).toBe(true);
-      expect(fields.sobrenome).toBe(true);
-      expect(fields.email).toBe(true);
-      expect(fields.telefone).toBe(true);
-      expect(fields.criador).toBe(true);
-      expect(fields.dataCriacao).toBe(true);
-      expect(fields.dataAtualizacao).toBe(true);
-
-      // Verifica que não há campos extras (8 campos específicos do aluno)
-      expect(Object.keys(fields)).toHaveLength(8);
-    });
-
-    test('deve ter todos os métodos CRUD disponíveis', () => {
-      const methods = ['selectMany', 'selectOne', 'create', 'update', 'delete'];
-      methods.forEach(method => {
-        expect(contratoRepository[method]).toBeDefined();
-        expect(typeof contratoRepository[method]).toBe('function');
-      });
-    });
-
-    test('deve ter entity específica para alunos', () => {
-      const entity = contratoRepository.getEntity();
-      expect(entity).toBeDefined();
-      expect(entity.name).toBe('Aluno');
-    });
-
-    test('campos específicos do modelo Aluno devem estar configurados', () => {
+    test('selectFields deve conter os campos corretos', () => {
       const fields = contratoRepository.getSelectFields();
 
-      // Campos obrigatórios
-      expect(fields.nome).toBe(true);
-      expect(fields.sobrenome).toBe(true);
-      expect(fields.email).toBe(true);
+      const expectedTrueFields = [
+        'id',
+        'idAluno',
+        'dataInicio',
+        'dataTermino',
+        'status',
+        'totalAulas',
+        'totalAulasFeitas',
+        'totalReposicoes',
+        'totalFaltas',
+        'totalAulasCanceladas',
+        'dataCriacao',
+        'dataAtualizacao'
+      ];
 
-      // Campos opcionais
-      expect(fields.telefone).toBe(true);
-      expect(fields.criador).toBe(true);
+      const expectedFalseFields = ['aluno', 'diaAulas'];
 
-      // Campos de auditoria
-      expect(fields.dataCriacao).toBe(true);
-      expect(fields.dataAtualizacao).toBe(true);
+      // Campos selecionados (true)
+      expectedTrueFields.forEach(field => {
+        expect(fields[field]).toBe(true);
+      });
+
+      // Campos relacionais (false)
+      expectedFalseFields.forEach(field => {
+        expect(fields[field]).toBe(false);
+      });
+
+      // Total de campos
+      expect(Object.keys(fields)).toHaveLength(
+        expectedTrueFields.length + expectedFalseFields.length
+      );
     });
   });
 
-  describe('Validação específica do modelo Aluno', () => {
-    test('deve permitir criar aluno com dados válidos', () => {
-      const alunoData = {
-        nome: 'João',
-        sobrenome: 'Silva',
-        email: 'joao.silva@email.com',
-        telefone: '11999999999',
-        criador: null
+  describe('Validação específica do modelo Contrato', () => {
+    test('deve aceitar um contrato válido para criação', () => {
+      const contratoData = {
+        idAluno: 1,
+        dataInicio: '2025-01-01',
+        dataTermino: '2025-12-31',
+        status: 'ativo',
+        totalAulas: 40
       };
 
-      // Testa se os dados são válidos para o modelo
-      expect(alunoData.nome).toBeDefined();
-      expect(alunoData.sobrenome).toBeDefined();
-      expect(alunoData.email).toBeDefined();
-      expect(typeof alunoData.criador === 'string' || alunoData.criador === null).toBe(true);
+      expect(contratoData.idAluno).toBeDefined();
+      expect(contratoData.dataInicio).toBeDefined();
+      expect(contratoData.status).toBeDefined();
+      expect(typeof contratoData.totalAulas).toBe('number');
     });
 
-    test('deve ter criador como campo nullable', () => {
-      const fields = contratoRepository.getSelectFields();
-      expect(fields.criador).toBe(true);
-
-      // Verifica que o campo está configurado para permitir null
-      const alunoComCriadorNull = {
-        nome: 'Maria',
-        sobrenome: 'Santos',
-        email: 'maria@email.com',
-        criador: null
+    test('campos numéricos opcionais devem permitir null', () => {
+      const contrato = {
+        totalAulasFeitas: null,
+        totalReposicoes: null,
+        totalFaltas: null,
+        totalAulasCanceladas: null
       };
 
-      expect(alunoComCriadorNull.criador).toBeNull();
-    });
-
-    test('deve ter telefone como campo opcional', () => {
-      const fields = contratoRepository.getSelectFields();
-      expect(fields.telefone).toBe(true);
-
-      // Verifica que telefone pode ser null
-      const alunoSemTelefone = {
-        nome: 'Pedro',
-        sobrenome: 'Costa',
-        email: 'pedro@email.com',
-        telefone: null
-      };
-
-      expect(alunoSemTelefone.telefone).toBeNull();
+      expect(contrato.totalAulasFeitas).toBeNull();
+      expect(contrato.totalReposicoes).toBeNull();
+      expect(contrato.totalFaltas).toBeNull();
+      expect(contrato.totalAulasCanceladas).toBeNull();
     });
   });
 });
