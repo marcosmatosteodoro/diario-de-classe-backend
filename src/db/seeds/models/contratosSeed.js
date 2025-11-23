@@ -16,8 +16,14 @@ export class ContratosSeed extends BaseSeed {
     };
   }
 
-  generateMocks(alunos) {
+  generateMocks(params) {
     const models = [];
+
+    if (!params || !params.alunos || params.alunos.length === 0) {
+      throw new Error('Alunos não encontrados para gerar seeds de contratos');
+    }
+
+    const { alunos } = params;
 
     alunos.map(aluno => {
       const model = this.getDisponibilidade(aluno);
@@ -31,8 +37,8 @@ export class ContratosSeed extends BaseSeed {
     return CreateContratoService;
   }
 
-  static async handle(alunos) {
-    const contratosSeed = new ContratosSeed(alunos);
+  static async handle(params) {
+    const contratosSeed = new ContratosSeed(params);
     return await contratosSeed.execute();
   }
 }

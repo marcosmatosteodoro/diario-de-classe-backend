@@ -243,13 +243,15 @@ export default class Seed {
     this.professores = await ProfessoresSeed.handle();
 
     console.log('👥 Criando disponibilidades de professores...');
-    this.disponibilidadeProfessores = await DisponibilidadeProfessorSeed.handle(this.professores);
+    this.disponibilidadeProfessores = await DisponibilidadeProfessorSeed.handle({
+      professores: this.professores
+    });
 
     console.log('👥 Criando alunos...');
     this.alunos = await AlunosSeed.handle();
 
     console.log('👥 Criando contratos...');
-    this.contratos = await ContratosSeed.handle(this.alunos);
+    this.contratos = await ContratosSeed.handle({ alunos: this.alunos });
 
     console.log('👥 Criando dias de aulas...');
     this.diaAulas = await DiaAulasSeed.handle({ alunos: this.alunos, contratos: this.contratos });
