@@ -1,6 +1,7 @@
 import { PrismaClient } from '../generated/client/index.js';
 import { ProfessoresSeed } from './models/professoresSeed.js';
 import { DisponibilidadeProfessorSeed } from './models/disponibilidadeProfessorSeed.js';
+import { AlunosSeed } from './models/alunosSeed.js';
 
 export default class Seed {
   constructor(prisma) {
@@ -234,13 +235,14 @@ export default class Seed {
 
   async execute() {
     this.professores = await ProfessoresSeed.handle();
-    this.disponibilidadeProfessor = await DisponibilidadeProfessorSeed.handle(this.professores);
-    // this.aluno = Aluno.handle();
-    // this.configuracao = Configuracao.handle();
+    this.disponibilidadeProfessores = await DisponibilidadeProfessorSeed.handle(this.professores);
+    this.alunos = await AlunosSeed.handle();
+    // this.diaAulas = await DiaAulasSeed.handle(this.aluno);
+    // this.contratos = await ContratosSeed.handle(this.aluno);
+    // this.aulas = await AulasSeed.handle({});
+
     // this.diaDeFuncionamento = DiaDeFuncionamento.handle();
-    // this.contrato = Contrato.handle();
-    // this.diaAula = DiaAula.handle();
-    // this.aula = Aula.handle();
+    // this.configuracao = Configuracao.handle();
   }
 
   static async handle() {
