@@ -237,16 +237,36 @@ export default class Seed {
   }
 
   async execute() {
+    console.log('🌱 Iniciando seed do banco de dados...');
+
+    console.log('👥 Criando professores...');
     this.professores = await ProfessoresSeed.handle();
+
+    console.log('👥 Criando disponibilidades de professores...');
     this.disponibilidadeProfessores = await DisponibilidadeProfessorSeed.handle(this.professores);
+
+    console.log('👥 Criando alunos...');
     this.alunos = await AlunosSeed.handle();
+
+    console.log('👥 Criando contratos...');
     this.contratos = await ContratosSeed.handle(this.alunos);
+
+    console.log('👥 Criando dias de aulas...');
     this.diaAulas = await DiaAulasSeed.handle({ alunos: this.alunos, contratos: this.contratos });
+
+    console.log('👥 Criando aulas...');
     this.aulas = await AulasSeed.handle({
       alunos: this.alunos,
       contratos: this.contratos,
       professores: this.professores
     });
+
+    console.log(`✅ Criado ${this.professores.length} professores`);
+    console.log(`✅ Criado ${this.disponibilidadeProfessores.length} disponibilidadeProfessores`);
+    console.log(`✅ Criado ${this.alunos.length} alunos`);
+    console.log(`✅ Criado ${this.contratos.length} contratos`);
+    console.log(`✅ Criado ${this.diaAulas.length} diaAulas`);
+    console.log(`✅ Criado ${this.aulas.length} aulas`);
   }
 
   static async handle() {
