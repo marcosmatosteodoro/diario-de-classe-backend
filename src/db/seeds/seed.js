@@ -1,11 +1,13 @@
 import { PrismaClient } from '../generated/client/index.js';
+import { ProfessoresSeed } from './models/professoresSeed.js';
+import { DisponibilidadeProfessorSeed } from './models/disponibilidadeProfessorSeed.js';
 
 export default class Seed {
   constructor(prisma) {
     this.prisma = prisma;
   }
 
-  async execute() {
+  async executeOld() {
     const prisma = this.prisma;
 
     // Dados dos professores para seed
@@ -228,6 +230,17 @@ export default class Seed {
       console.error('❌ Erro durante o seed:', error);
       throw error;
     }
+  }
+
+  async execute() {
+    this.professores = await ProfessoresSeed.handle();
+    this.disponibilidadeProfessor = await DisponibilidadeProfessorSeed.handle(this.professores);
+    // this.aluno = Aluno.handle();
+    // this.configuracao = Configuracao.handle();
+    // this.diaDeFuncionamento = DiaDeFuncionamento.handle();
+    // this.contrato = Contrato.handle();
+    // this.diaAula = DiaAula.handle();
+    // this.aula = Aula.handle();
   }
 
   static async handle() {
