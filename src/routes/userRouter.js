@@ -5,6 +5,7 @@ import { GetUserController } from '../controllers/user/getUserController.js';
 import { DeleteUserController } from '../controllers/user/deleteUserController.js';
 import { CreateUserController } from '../controllers/user/createUserController.js';
 import { UpdateUserController } from '../controllers/user/updateUserController.js';
+import { GetAulasByProfessorController } from '../controllers/aula/getAulasByProfessorController.js';
 // Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateUser } from '../middlewares/user/validateCreateUser.js';
@@ -31,6 +32,9 @@ router.put('/:id', validateId, validateUpdateUser, UpdateUserController.handle);
 
 // DELETE /api/professores/:id - Deletar professor por ID
 router.delete('/:id', validateId, DeleteUserController.handle);
+
+// GET /api/professores - Buscar todos os professores
+router.get('/:id/aulas', validateId, GetAulasByProfessorController.handle);
 
 // Rotas de disponibilidade do professor
 router.use('/:id/disponibilidade', validateId, disponibilidadeProfessorController);
