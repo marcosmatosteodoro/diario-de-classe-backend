@@ -33,7 +33,7 @@ router.put('/:id', validateId, validateUpdateUser, UpdateUserController.handle);
 // DELETE /api/professores/:id - Deletar professor por ID
 router.delete('/:id', validateId, DeleteUserController.handle);
 
-// GET /api/professores - Buscar todos os professores
+// GET /api/professores/:id/aulas - Buscar todas as aulas do professor pelo ID
 router.get('/:id/aulas', validateId, GetAulasByProfessorController.handle);
 
 // Rotas de disponibilidade do professor
