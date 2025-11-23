@@ -4,6 +4,7 @@ import { DisponibilidadeProfessorSeed } from './models/disponibilidadeProfessorS
 import { AlunosSeed } from './models/alunosSeed.js';
 import { ContratosSeed } from './models/contratosSeed.js';
 import { DiaAulasSeed } from './models/diaAulasSeed.js';
+import { AulasSeed } from './models/aulasSeed.js';
 
 export default class Seed {
   constructor(prisma) {
@@ -241,10 +242,11 @@ export default class Seed {
     this.alunos = await AlunosSeed.handle();
     this.contratos = await ContratosSeed.handle(this.alunos);
     this.diaAulas = await DiaAulasSeed.handle({ alunos: this.alunos, contratos: this.contratos });
-    // this.aulas = await AulasSeed.handle({});
-
-    // this.diaDeFuncionamento = DiaDeFuncionamento.handle();
-    // this.configuracao = Configuracao.handle();
+    this.aulas = await AulasSeed.handle({
+      alunos: this.alunos,
+      contratos: this.contratos,
+      professores: this.professores
+    });
   }
 
   static async handle() {
