@@ -1,4 +1,4 @@
-import ExtendableError from './extendable-error.js';
+import ExtendableError from './extendableError.js';
 
 export default class UnauthorizedError extends ExtendableError {
   constructor() {
