@@ -29,7 +29,8 @@ export class LoginService extends AbstractService {
       accessToken: this.accessToken,
       refreshToken: this.refreshToken,
       tokenType: 'Bearer',
-      expiresIn: this.accessExp
+      expiresIn: this.accessExp,
+      user
     };
   }
 
