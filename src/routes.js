@@ -7,6 +7,7 @@ import configuracaoRouter from './routes/configuracaoRouter.js';
 import contratoRouter from './routes/contratoRouter.js';
 import diaAulaRouter from './routes/diaAulaRouter.js';
 import aulaRouter from './routes/aulaRouter.js';
+import isLoggedIn from './middlewares/auth/isLoggedIn.js';
 
 const authController = authRouter;
 const userController = userRoutes;
@@ -21,11 +22,11 @@ const router = express.Router();
 router.get('/', welcome);
 router.get('/health', healthCheck);
 router.use('/auth', authController);
-router.use('/professores', userController);
-router.use('/alunos', alunoController);
-router.use('/configuracao', configuracaoController);
-router.use('/contratos', contratoController);
-router.use('/dias-aulas', diaAulaController);
-router.use('/aulas', aulaController);
+router.use('/professores', isLoggedIn, userController);
+router.use('/alunos', isLoggedIn, alunoController);
+router.use('/configuracao', isLoggedIn, configuracaoController);
+router.use('/contratos', isLoggedIn, contratoController);
+router.use('/dias-aulas', isLoggedIn, diaAulaController);
+router.use('/aulas', isLoggedIn, aulaController);
 
 export default router;
