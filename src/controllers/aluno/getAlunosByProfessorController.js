@@ -23,10 +23,7 @@ export class GetAlunosByProfessorController extends AbstractController {
         return this.res.status(204).json();
       }
 
-      return this.res.status(200).json({
-        count: alunos.length,
-        data: alunos
-      });
+      return this.res.status(200).json(alunos);
     } catch (error) {
       return this.handleError(error, 'alunos.list.error');
     }
