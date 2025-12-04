@@ -89,6 +89,7 @@ model Aluno {
   sobrenome       String // máximo 255 caracteres
   email           String   @unique // máximo 255 caracteres
   telefone        String? // máximo 11 caracteres
+  material        String? // campo extenso para armazenar informações sobre material
   criador         String? // ID do usuário que criou o aluno
   dataCriacao     DateTime @default(now())
   dataAtualizacao DateTime @updatedAt
