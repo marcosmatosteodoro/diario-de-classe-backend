@@ -96,12 +96,13 @@ describe('AlunoRepository', () => {
       expect(fields.sobrenome).toBe(true);
       expect(fields.email).toBe(true);
       expect(fields.telefone).toBe(true);
+      expect(fields.material).toBe(true);
       expect(fields.criador).toBe(true);
       expect(fields.dataCriacao).toBe(true);
       expect(fields.dataAtualizacao).toBe(true);
 
-      // Verifica que não há campos extras (8 campos específicos do aluno)
-      expect(Object.keys(fields)).toHaveLength(8);
+      // Verifica que não há campos extras (9 campos específicos do aluno)
+      expect(Object.keys(fields)).toHaveLength(9);
     });
 
     test('deve ter todos os métodos CRUD disponíveis', () => {

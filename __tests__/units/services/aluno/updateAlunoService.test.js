@@ -68,6 +68,7 @@ function describeExecuteMethod() {
             sobrenome: true,
             email: true,
             telefone: true,
+            material: true,
             criador: true,
             dataCriacao: true,
             dataAtualizacao: true

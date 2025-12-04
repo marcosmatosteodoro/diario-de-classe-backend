@@ -591,6 +591,106 @@ describe('validateCreateAluno middleware', () => {
     });
   });
 
+  describe('Validação do campo material (opcional)', () => {
+    test('deve aceitar material válido', () => {
+      mockReq.body = {
+        nome: 'João',
+        sobrenome: 'Silva',
+        email: 'joao@exemplo.com',
+        material: 'Livro Básico de Inglês, Caderno de Exercícios'
+      };
+
+      validateCreateAluno(mockReq, mockRes, callNext);
+
+      expect(mockNext.called).toBe(true);
+      expect(mockRes.statusCode).toBeNull();
+    });
+
+    test('deve aceitar material extenso', () => {
+      mockReq.body = {
+        nome: 'João',
+        sobrenome: 'Silva',
+        email: 'joao@exemplo.com',
+        material: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(50)
+      };
+
+      validateCreateAluno(mockReq, mockRes, callNext);
+
+      expect(mockNext.called).toBe(true);
+      expect(mockRes.statusCode).toBeNull();
+    });
+
+    test('deve aceitar quando material não é fornecido (opcional)', () => {
+      mockReq.body = {
+        nome: 'João',
+        sobrenome: 'Silva',
+        email: 'joao@exemplo.com'
+      };
+
+      validateCreateAluno(mockReq, mockRes, callNext);
+
+      expect(mockNext.called).toBe(true);
+      expect(mockRes.statusCode).toBeNull();
+    });
+
+    test('deve aceitar material undefined (opcional)', () => {
+      mockReq.body = {
+        nome: 'João',
+        sobrenome: 'Silva',
+        email: 'joao@exemplo.com',
+        material: undefined
+      };
+
+      validateCreateAluno(mockReq, mockRes, callNext);
+
+      expect(mockNext.called).toBe(true);
+      expect(mockRes.statusCode).toBeNull();
+    });
+
+    test('deve aceitar material null (opcional)', () => {
+      mockReq.body = {
+        nome: 'João',
+        sobrenome: 'Silva',
+        email: 'joao@exemplo.com',
+        material: null
+      };
+
+      validateCreateAluno(mockReq, mockRes, callNext);
+
+      expect(mockNext.called).toBe(true);
+      expect(mockRes.statusCode).toBeNull();
+    });
+
+    test('deve aceitar material como string vazia', () => {
+      mockReq.body = {
+        nome: 'João',
+        sobrenome: 'Silva',
+        email: 'joao@exemplo.com',
+        material: ''
+      };
+
+      validateCreateAluno(mockReq, mockRes, callNext);
+
+      expect(mockNext.called).toBe(true);
+      expect(mockRes.statusCode).toBeNull();
+    });
+
+    test('deve rejeitar material que não é string', () => {
+      mockReq.body = {
+        nome: 'João',
+        sobrenome: 'Silva',
+        email: 'joao@exemplo.com',
+        material: 123
+      };
+
+      validateCreateAluno(mockReq, mockRes, callNext);
+
+      expect(mockRes.statusCode).toBe(422);
+      expect(mockRes.data.message).toBe('Erro de validação');
+      expect(mockNext.called).toBe(false);
+    });
+  });
+
   describe('Validação de múltiplos campos', () => {
     test('deve aceitar todos os campos válidos', () => {
       mockReq.body = {
@@ -598,6 +698,7 @@ describe('validateCreateAluno middleware', () => {
         sobrenome: 'Silva Santos',
         email: 'joao@escola.com',
         telefone: '11999999999',
+        material: 'Livro de Inglês Avançado',
         criador: 'professor-123'
       };
 

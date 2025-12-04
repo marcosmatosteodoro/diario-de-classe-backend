@@ -57,6 +57,7 @@ function testExecuteMethod() {
       sobrenome: 'Silva',
       email: 'joao@email.com',
       telefone: '11999999999',
+      material: 'Livro Básico de Inglês',
       criador: 'user-id-123'
     };
 
@@ -69,6 +70,7 @@ function testExecuteMethod() {
           sobrenome: true,
           email: true,
           telefone: true,
+          material: true,
           criador: true,
           dataCriacao: true,
           dataAtualizacao: true
@@ -96,6 +98,7 @@ function testExecuteMethod() {
         sobrenome: mockData.sobrenome,
         email: mockData.email,
         telefone: mockData.telefone,
+        material: mockData.material,
         criador: mockData.criador
       },
       options: { select: service.repository.selectFields }

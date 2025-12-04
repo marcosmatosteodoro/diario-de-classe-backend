@@ -14,7 +14,8 @@ export class CreateAlunoService extends AbstractService {
         sobrenome: this.data.sobrenome,
         email: this.data.email,
         telefone: this.data.telefone,
-        criador: this.data.criador
+        criador: this.data.criador,
+        material: this.data.material
       },
       {
         select: this.repository.selectFields

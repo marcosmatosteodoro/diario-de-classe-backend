@@ -7,12 +7,11 @@ class ValidateUpdateAluno extends BaseValidateEntity {
   }
 
   getDataForFilter() {
-    return ['nome', 'sobrenome', 'email', 'telefone', 'criador'];
+    return ['nome', 'sobrenome', 'email', 'telefone', 'criador', 'material'];
   }
 
   getDataValidations(filteredData) {
-    const { nome, sobrenome, email, telefone, criador } = filteredData;
-
+    const { nome, sobrenome, email, telefone, criador, material } = filteredData;
     return {
       // Validar campo nome
       nome: ValidateData.optional()
@@ -43,7 +42,9 @@ class ValidateUpdateAluno extends BaseValidateEntity {
         .isString()
         .minCharacters(6)
         .maxCharacters(50)
-        .validate(criador, 'criador')
+        .validate(criador, 'criador'),
+      // Validar campo material
+      material: ValidateData.optional().isString().validate(material, 'material')
     };
   }
 }

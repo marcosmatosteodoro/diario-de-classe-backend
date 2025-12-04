@@ -579,6 +579,88 @@ describe('validateUpdateAluno middleware', () => {
     });
   });
 
+  describe('Validação do campo material (opcional)', () => {
+    test('deve aceitar material válido', () => {
+      mockReq.body = {
+        material: 'Livro Básico de Inglês, Caderno de Exercícios'
+      };
+
+      validateUpdateAluno(mockReq, mockRes, callNext);
+
+      expect(mockNext.called).toBe(true);
+      expect(mockRes.statusCode).toBeNull();
+    });
+
+    test('deve aceitar material extenso', () => {
+      mockReq.body = {
+        material: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '.repeat(50)
+      };
+
+      validateUpdateAluno(mockReq, mockRes, callNext);
+
+      expect(mockNext.called).toBe(true);
+      expect(mockRes.statusCode).toBeNull();
+    });
+
+    test('deve aceitar quando material não é fornecido (opcional)', () => {
+      mockReq.body = {
+        nome: 'João'
+      };
+
+      validateUpdateAluno(mockReq, mockRes, callNext);
+
+      expect(mockNext.called).toBe(true);
+      expect(mockRes.statusCode).toBeNull();
+    });
+
+    test('deve aceitar material undefined (opcional)', () => {
+      mockReq.body = {
+        material: undefined,
+        nome: 'João'
+      };
+
+      validateUpdateAluno(mockReq, mockRes, callNext);
+
+      expect(mockNext.called).toBe(true);
+      expect(mockRes.statusCode).toBeNull();
+    });
+
+    test('deve aceitar material null (opcional)', () => {
+      mockReq.body = {
+        material: null,
+        nome: 'João'
+      };
+
+      validateUpdateAluno(mockReq, mockRes, callNext);
+
+      expect(mockNext.called).toBe(true);
+      expect(mockRes.statusCode).toBeNull();
+    });
+
+    test('deve aceitar material como string vazia', () => {
+      mockReq.body = {
+        material: ''
+      };
+
+      validateUpdateAluno(mockReq, mockRes, callNext);
+
+      expect(mockNext.called).toBe(true);
+      expect(mockRes.statusCode).toBeNull();
+    });
+
+    test('deve rejeitar material que não é string', () => {
+      mockReq.body = {
+        material: 123
+      };
+
+      validateUpdateAluno(mockReq, mockRes, callNext);
+
+      expect(mockRes.statusCode).toBe(422);
+      expect(mockRes.data.message).toBe('Erro de validação');
+      expect(mockNext.called).toBe(false);
+    });
+  });
+
   describe('Validação de múltiplos campos', () => {
     test('deve aceitar todos os campos válidos', () => {
       mockReq.body = {
@@ -586,6 +668,7 @@ describe('validateUpdateAluno middleware', () => {
         sobrenome: 'Silva Santos',
         email: 'joao@escola.com',
         telefone: '11999999999',
+        material: 'Livro de Inglês Avançado',
         criador: 'professor-123'
       };
 
