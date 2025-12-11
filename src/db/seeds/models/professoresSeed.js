@@ -97,6 +97,15 @@ export class ProfessoresSeed extends BaseSeed {
         senha: 'senha123',
         permissao: 'member',
         resetarSenha: false
+      },
+      {
+        nome: 'BLS Idiomas',
+        sobrenome: 'admin',
+        email: 'contato@blsrio.com.br',
+        telefone: null, // Exemplo sem telefone
+        senha: 'contato@blsrio.com.br',
+        permissao: 'admin',
+        resetarSenha: false
       }
     ];
   }
