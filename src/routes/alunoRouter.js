@@ -8,6 +8,7 @@ import { UpdateAlunoController } from '../controllers/aluno/updateAlunoControlle
 import { GetDiaAulaListByAlunoController } from '../controllers/diaAula/getDiaAulaListByAlunoController.js';
 import { GetContratoByAlunoController } from '../controllers/contrato/getContratoByAlunoController.js';
 import { GetAulasByAlunoController } from '../controllers/aula/getAulasByAlunoController.js';
+import { GetContratosByAlunoController } from '../controllers/contrato/getContratosByAlunoController.js';
 // Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateAluno } from '../middlewares/aluno/validateCreateAluno.js';
@@ -36,6 +37,9 @@ router.get('/:id/dias-aulas', validateId, GetDiaAulaListByAlunoController.handle
 
 // GET /api/alunos/:id/contrato - Buscar contrato ativo ou pendente de um aluno
 router.get('/:id/contrato', validateId, GetContratoByAlunoController.handle);
+
+// GET /api/alunos/:id/contrato - Buscar contrato ativo ou pendente de um aluno
+router.get('/:id/contratos', validateId, GetContratosByAlunoController.handle);
 
 // GET /api/alunos/:id/aulas - Buscar todas as aulas do aluno pelo ID
 router.get('/:id/aulas', validateId, GetAulasByAlunoController.handle);
