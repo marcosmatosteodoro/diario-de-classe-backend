@@ -76,6 +76,10 @@
       "password_required": "Password is required",
       "email_exists": "This email is already in use"
     },
+    "update": {
+      "success": "User updated successfully",
+      "error": "Error updating user"
+    },
     "delete": {
       "error": "Error deleting user"
     }
@@ -113,6 +117,94 @@
     },
     "update": {
       "error": "Error updating configuration"
+    }
+  },
+  "contratos": {
+    "list": {
+      "success": "Contracts listed successfully",
+      "error": "Error fetching contracts"
+    },
+    "get": {
+      "not_found": "Contract not found",
+      "error": "Error fetching contract"
+    },
+    "create": {
+      "success": "Contract created successfully",
+      "error": "Error creating contract",
+      "aluno_ativo_exists": "This student already has an active contract",
+      "aluno_pendente_exists": "This student already has a pending contract"
+    },
+    "update": {
+      "success": "Contract updated successfully",
+      "error": "Error updating contract"
+    },
+    "delete": {
+      "success": "Contract deleted successfully",
+      "error": "Error deleting contract"
+    }
+  },
+  "aulas": {
+    "list": {
+      "success": "Classes listed successfully",
+      "error": "Error fetching classes"
+    },
+    "get": {
+      "not_found": "Class not found",
+      "error": "Error fetching class"
+    },
+    "create": {
+      "success": "Class created successfully",
+      "error": "Error creating class",
+      "ids_exists": "A class with the provided IDs already exists"
+    },
+    "update": {
+      "success": "Class updated successfully",
+      "error": "Error updating class",
+      "ids_change_not_allowed": "Changing student, teacher, and class day IDs is not allowed"
+    },
+    "delete": {
+      "success": "Class deleted successfully",
+      "error": "Error deleting class"
+    }
+  },
+  "diaAulas": {
+    "list": {
+      "success": "Class days listed successfully",
+      "error": "Error fetching class days"
+    },
+    "get": {
+      "not_found": "Class day not found",
+      "error": "Error fetching class day"
+    },
+    "create": {
+      "success": "Class day created successfully",
+      "error": "Error creating class day",
+      "aluno_contrato_dia_aula_exists": "A class day already exists for this student, contract, and day",
+      "you_cannot_change_aluno_contrato": "Changing student or contract is not allowed"
+    },
+    "update": {
+      "success": "Class day updated successfully",
+      "error": "Error updating class day"
+    },
+    "delete": {
+      "success": "Class day deleted successfully",
+      "error": "Error deleting class day"
+    },
+    "error": {
+      "aluno_not_exists": "Student not found",
+      "contrato_not_exists": "Contract not found"
+    }
+  },
+  "disponibilidades": {
+    "list": {
+      "success": "Availabilities listed successfully",
+      "error": "Error fetching availabilities"
+    }
+  },
+  "disponibilidadeProfessors": {
+    "update": {
+      "success": "Teacher availability updated successfully",
+      "error": "Error updating teacher availability"
     }
   }
 }
