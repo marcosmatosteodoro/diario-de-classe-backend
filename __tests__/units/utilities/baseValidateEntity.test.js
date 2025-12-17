@@ -99,6 +99,25 @@ describe('BaseValidateEntity', () => {
       expect(validator.res).toBe(mockRes);
       expect(validator.next).toBe(callNext);
       expect(validator.dataForFilter).toEqual(['nome', 'email', 'telefone']);
+      expect(validator.isArray).toBe(false);
+    });
+
+    test('deve inicializar isArray como false por padrão', () => {
+      const validator = new TestValidateEntity(mockReq, mockRes, callNext);
+
+      expect(validator.isArray).toBe(false);
+    });
+
+    test('deve inicializar isArray como true quando passado no construtor', () => {
+      const validator = new TestValidateEntity(mockReq, mockRes, callNext, true);
+
+      expect(validator.isArray).toBe(true);
+    });
+
+    test('deve inicializar isArray como false quando explicitamente passado', () => {
+      const validator = new TestValidateEntity(mockReq, mockRes, callNext, false);
+
+      expect(validator.isArray).toBe(false);
     });
 
     test('deve ter método handle', () => {
@@ -441,6 +460,215 @@ describe('BaseValidateEntity', () => {
       expect(mockRes.statusCode).toBe(500);
       expect(mockRes.data.message).toBe('Erro interno do servidor');
       expect(mockRes.data.error).toBe('Erro interno na validação');
+    });
+  });
+
+  describe('Validação de Arrays', () => {
+    class TestValidateEntityArray extends BaseValidateEntity {
+      getDataForFilter() {
+        return ['nome', 'email'];
+      }
+
+      getDataValidations(filteredData, index) {
+        const errors = [];
+        if (!filteredData.nome || filteredData.nome.length < 3) {
+          errors.push({ field: `[${index}].nome`, message: 'Nome muito curto' });
+        }
+        if (!filteredData.email || !filteredData.email.includes('@')) {
+          errors.push({ field: `[${index}].email`, message: 'Email inválido' });
+        }
+
+        return {
+          nome: { isValid: errors.filter(e => e.field.includes('nome')).length === 0, errors: errors.filter(e => e.field.includes('nome')) },
+          email: { isValid: errors.filter(e => e.field.includes('email')).length === 0, errors: errors.filter(e => e.field.includes('email')) }
+        };
+      }
+    }
+
+    test('deve validar array corretamente quando isArray é true', () => {
+      mockReq.body = [
+        { nome: 'João', email: 'joao@teste.com', telefone: '11999999999' },
+        { nome: 'Maria', email: 'maria@teste.com', telefone: '11888888888' }
+      ];
+
+      const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
+      validator.handle();
+
+      expect(mockNext.called).toBe(true);
+      expect(mockReq.validatedData).toBeInstanceOf(Array);
+      expect(mockReq.validatedData.length).toBe(2);
+      expect(mockReq.validatedData[0]).toEqual({ nome: 'João', email: 'joao@teste.com' });
+      expect(mockReq.validatedData[1]).toEqual({ nome: 'Maria', email: 'maria@teste.com' });
+    });
+
+    test('deve retornar erro 400 quando body não é array mas isArray é true', () => {
+      mockReq.body = { nome: 'João', email: 'joao@teste.com' };
+
+      const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
+      validator.handle();
+
+      expect(mockRes.statusCode).toBe(400);
+      expect(mockRes.data.message).toBe('Erro de validação');
+      expect(mockRes.data.errors).toContain('O corpo da requisição deve ser um array');
+      expect(mockNext.called).toBe(false);
+    });
+
+    test('deve retornar erro 400 quando array está vazio', () => {
+      mockReq.body = [];
+
+      const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
+      validator.handle();
+
+      expect(mockRes.statusCode).toBe(400);
+      expect(mockRes.data.message).toBe('Erro de validação');
+      expect(mockRes.data.errors).toContain('O array não pode estar vazio');
+      expect(mockNext.called).toBe(false);
+    });
+
+    test('deve retornar erros de validação para itens do array', () => {
+      mockReq.body = [
+        { nome: 'Jo', email: 'joao@teste.com' }, // nome muito curto
+        { nome: 'Maria', email: 'email_invalido' } // email sem @
+      ];
+
+      const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
+      validator.handle();
+
+      expect(mockRes.statusCode).toBe(422);
+      expect(mockRes.data.message).toBe('Erro de validação');
+      expect(mockRes.data.errors).toBeInstanceOf(Array);
+      expect(mockRes.data.errors.length).toBeGreaterThan(0);
+      expect(mockNext.called).toBe(false);
+    });
+
+    test('deve filtrar dados de cada item do array corretamente', () => {
+      mockReq.body = [
+        { nome: 'João', email: 'joao@teste.com', telefone: '11999999999', outros: 'valor' },
+        { nome: 'Maria', email: 'maria@teste.com', outros: 'valor2' }
+      ];
+
+      const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
+      validator.handle();
+
+      expect(mockNext.called).toBe(true);
+      expect(mockReq.validatedData[0]).toEqual({ nome: 'João', email: 'joao@teste.com' });
+      expect(mockReq.validatedData[1]).toEqual({ nome: 'Maria', email: 'maria@teste.com' });
+      expect(mockReq.validatedData[0].telefone).toBeUndefined();
+      expect(mockReq.validatedData[0].outros).toBeUndefined();
+    });
+
+    test('deve processar apenas itens válidos do array', () => {
+      mockReq.body = [
+        { nome: 'João', email: 'joao@teste.com' }, // válido
+        { nome: 'Jo', email: 'maria@teste.com' }, // nome inválido
+        { nome: 'Pedro', email: 'pedro@teste.com' } // válido
+      ];
+
+      const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
+      validator.handle();
+
+      expect(mockRes.statusCode).toBe(422);
+      expect(mockNext.called).toBe(false);
+    });
+
+    test('deve passar índice correto para getDataValidations', () => {
+      const indices = [];
+      
+      class TestValidateEntityWithIndex extends BaseValidateEntity {
+        getDataForFilter() {
+          return ['nome'];
+        }
+
+        getDataValidations(filteredData, index) {
+          indices.push(index);
+          return {
+            nome: { isValid: true, errors: [] }
+          };
+        }
+      }
+
+      mockReq.body = [
+        { nome: 'João' },
+        { nome: 'Maria' },
+        { nome: 'Pedro' }
+      ];
+
+      const validator = new TestValidateEntityWithIndex(mockReq, mockRes, callNext, true);
+      validator.handle();
+
+      expect(indices).toEqual([0, 1, 2]);
+    });
+
+    test('validateBodyIsArray deve retornar isValid true para array válido', () => {
+      mockReq.body = [{ nome: 'João' }];
+      
+      const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
+      const result = validator.validateBodyIsArray();
+
+      expect(result.isValid).toBe(true);
+      expect(result.error).toBeUndefined();
+    });
+
+    test('validateBodyIsArray deve retornar isValid false para não-array', () => {
+      mockReq.body = { nome: 'João' };
+      
+      const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
+      const result = validator.validateBodyIsArray();
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toBeDefined();
+      expect(result.error.message).toBe('Erro de validação');
+      expect(result.error.errors).toContain('O corpo da requisição deve ser um array');
+    });
+
+    test('validateBodyIsArray deve retornar isValid false para array vazio', () => {
+      mockReq.body = [];
+      
+      const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
+      const result = validator.validateBodyIsArray();
+
+      expect(result.isValid).toBe(false);
+      expect(result.error).toBeDefined();
+      expect(result.error.errors).toContain('O array não pode estar vazio');
+    });
+
+    test('filterDataItem deve filtrar item individual corretamente', () => {
+      const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
+      
+      const item = { nome: 'João', email: 'joao@teste.com', telefone: '11999999999' };
+      const filtered = validator.filterDataItem(item);
+
+      expect(filtered).toEqual({ nome: 'João', email: 'joao@teste.com' });
+      expect(filtered.telefone).toBeUndefined();
+    });
+
+    test('deve usar handleArrayValidation quando isArray é true', () => {
+      mockReq.body = [
+        { nome: 'João', email: 'joao@teste.com' }
+      ];
+
+      const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
+      
+      // Verificar que handleArrayValidation foi chamado indiretamente
+      // verificando se validatedData é um array
+      validator.handle();
+
+      expect(mockNext.called).toBe(true);
+      expect(Array.isArray(mockReq.validatedData)).toBe(true);
+    });
+
+    test('deve usar handleSingleValidation quando isArray é false', () => {
+      mockReq.body = { nome: 'João', email: 'joao@teste.com' };
+
+      const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, false);
+      
+      // Verificar que handleSingleValidation foi chamado indiretamente
+      // verificando se validatedData é um objeto (não array)
+      validator.handle();
+
+      expect(mockNext.called).toBe(true);
+      expect(typeof mockReq.validatedData).toBe('object');
+      expect(Array.isArray(mockReq.validatedData)).toBe(false);
     });
   });
 
