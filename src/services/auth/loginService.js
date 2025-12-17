@@ -2,6 +2,7 @@ import AbstractService from '../abstractService.js';
 import UserRepository from '../../repositories/userRepository.js';
 import { createJwt } from '../../utilities/createJwt.js';
 import Constants from '../../utilities/constants.js';
+import { GetConfiguracaoService } from '../configuracao/getConfiguracaoService.js';
 
 export class LoginService extends AbstractService {
   constructor(Repository, email, senha) {
@@ -25,12 +26,21 @@ export class LoginService extends AbstractService {
 
     this.buildToken(user);
 
+    const configuracoes = await GetConfiguracaoService.handle();
+
+    if (!configuracoes || configuracoes.length === 0) {
+      return this.res.status(204).json();
+    }
+
+    const configuracao = configuracoes[0];
+
     return {
       accessToken: this.accessToken,
       refreshToken: this.refreshToken,
       tokenType: 'Bearer',
       expiresIn: this.accessExp,
-      user
+      user,
+      configuracao
     };
   }
 
