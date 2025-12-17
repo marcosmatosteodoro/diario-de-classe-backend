@@ -479,8 +479,14 @@ describe('BaseValidateEntity', () => {
         }
 
         return {
-          nome: { isValid: errors.filter(e => e.field.includes('nome')).length === 0, errors: errors.filter(e => e.field.includes('nome')) },
-          email: { isValid: errors.filter(e => e.field.includes('email')).length === 0, errors: errors.filter(e => e.field.includes('email')) }
+          nome: {
+            isValid: errors.filter(e => e.field.includes('nome')).length === 0,
+            errors: errors.filter(e => e.field.includes('nome'))
+          },
+          email: {
+            isValid: errors.filter(e => e.field.includes('email')).length === 0,
+            errors: errors.filter(e => e.field.includes('email'))
+          }
         };
       }
     }
@@ -573,7 +579,7 @@ describe('BaseValidateEntity', () => {
 
     test('deve passar índice correto para getDataValidations', () => {
       const indices = [];
-      
+
       class TestValidateEntityWithIndex extends BaseValidateEntity {
         getDataForFilter() {
           return ['nome'];
@@ -587,11 +593,7 @@ describe('BaseValidateEntity', () => {
         }
       }
 
-      mockReq.body = [
-        { nome: 'João' },
-        { nome: 'Maria' },
-        { nome: 'Pedro' }
-      ];
+      mockReq.body = [{ nome: 'João' }, { nome: 'Maria' }, { nome: 'Pedro' }];
 
       const validator = new TestValidateEntityWithIndex(mockReq, mockRes, callNext, true);
       validator.handle();
@@ -601,7 +603,7 @@ describe('BaseValidateEntity', () => {
 
     test('validateBodyIsArray deve retornar isValid true para array válido', () => {
       mockReq.body = [{ nome: 'João' }];
-      
+
       const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
       const result = validator.validateBodyIsArray();
 
@@ -611,7 +613,7 @@ describe('BaseValidateEntity', () => {
 
     test('validateBodyIsArray deve retornar isValid false para não-array', () => {
       mockReq.body = { nome: 'João' };
-      
+
       const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
       const result = validator.validateBodyIsArray();
 
@@ -623,7 +625,7 @@ describe('BaseValidateEntity', () => {
 
     test('validateBodyIsArray deve retornar isValid false para array vazio', () => {
       mockReq.body = [];
-      
+
       const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
       const result = validator.validateBodyIsArray();
 
@@ -634,7 +636,7 @@ describe('BaseValidateEntity', () => {
 
     test('filterDataItem deve filtrar item individual corretamente', () => {
       const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
-      
+
       const item = { nome: 'João', email: 'joao@teste.com', telefone: '11999999999' };
       const filtered = validator.filterDataItem(item);
 
@@ -643,12 +645,10 @@ describe('BaseValidateEntity', () => {
     });
 
     test('deve usar handleArrayValidation quando isArray é true', () => {
-      mockReq.body = [
-        { nome: 'João', email: 'joao@teste.com' }
-      ];
+      mockReq.body = [{ nome: 'João', email: 'joao@teste.com' }];
 
       const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, true);
-      
+
       // Verificar que handleArrayValidation foi chamado indiretamente
       // verificando se validatedData é um array
       validator.handle();
@@ -661,7 +661,7 @@ describe('BaseValidateEntity', () => {
       mockReq.body = { nome: 'João', email: 'joao@teste.com' };
 
       const validator = new TestValidateEntityArray(mockReq, mockRes, callNext, false);
-      
+
       // Verificar que handleSingleValidation foi chamado indiretamente
       // verificando se validatedData é um objeto (não array)
       validator.handle();
