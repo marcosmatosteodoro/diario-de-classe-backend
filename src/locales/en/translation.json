@@ -192,7 +192,8 @@
     },
     "error": {
       "aluno_not_exists": "Student not found",
-      "contrato_not_exists": "Contract not found"
+      "contrato_not_exists": "Contract not found",
+      "days_of_week_not_provided": "All days of the week must be provided"
     }
   },
   "disponibilidades": {

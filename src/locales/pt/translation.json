@@ -192,7 +192,8 @@
     },
     "error": {
       "aluno_not_exists": "Aluno não encontrado",
-      "contrato_not_exists": "Contrato não encontrado"
+      "contrato_not_exists": "Contrato não encontrado",
+      "days_of_week_not_provided": "Todos os dias da semana devem ser fornecidos"
     }
   },
   "disponibilidades": {
