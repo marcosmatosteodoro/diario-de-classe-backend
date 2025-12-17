@@ -6,10 +6,12 @@ import { DeleteContratoController } from '../controllers/contrato/deleteContrato
 import { CreateContratoController } from '../controllers/contrato/createContratoController.js';
 import { UpdateContratoController } from '../controllers/contrato/updateContratoController.js';
 import { GetDiaAulaListByContratoController } from '../controllers/diaAula/getDiaAulaListByContratoController.js';
+import { CreateManyDiaAulaController } from '../controllers/diaAula/createManyDiaAulaController.js';
 // Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateContrato } from '../middlewares/contrato/validateCreateContrato.js';
 import { validateUpdateContrato } from '../middlewares/contrato/validateUpdateContrato.js';
+import { validateCreateManyDiaAula } from '../middlewares/diaAula/validateCreateManyDiaAula.js';
 
 const router = express.Router();
 
@@ -30,5 +32,13 @@ router.delete('/:id', validateId, DeleteContratoController.handle);
 
 // GET /api/contratos/:id/dias-aulas - Buscar dias de aulas de um contrato
 router.get('/:id/dias-aulas', validateId, GetDiaAulaListByContratoController.handle);
+
+// POST /api/contratos/:id/dia-aulas - Criar novos dias de aulas
+router.post(
+  '/:id/dias-aulas',
+  validateId,
+  validateCreateManyDiaAula,
+  CreateManyDiaAulaController.handle
+);
 
 export default router;
