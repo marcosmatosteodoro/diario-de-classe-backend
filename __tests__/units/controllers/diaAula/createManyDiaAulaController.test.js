@@ -8,10 +8,20 @@ import { UpdateDiaAulaService } from '../../../../src/services/diaAula/updateDia
 import { DeleteDiaAulaService } from '../../../../src/services/diaAula/deleteDiaAulaService.js';
 import AbstractController from '../../../../src/controllers/abstractController.js';
 
+jest.mock('../../../../src/services/diaAula/createDiaAulaService.js');
+jest.mock('../../../../src/services/configuracao/getConfiguracaoService.js');
+jest.mock('../../../../src/services/aluno/getAlunoService.js');
+jest.mock('../../../../src/services/contrato/getContratoService.js');
+jest.mock('../../../../src/services/diaAula/getDiaAulaListService.js');
+jest.mock('../../../../src/services/diaAula/updateDiaAulaService.js');
+jest.mock('../../../../src/services/diaAula/deleteDiaAulaService.js');
+
 describe('CreateManyDiaAulaController', () => {
   let controller, mockReq, mockRes;
 
   beforeEach(() => {
+    jest.clearAllMocks();
+
     mockReq = {
       params: { id: 'contrato-123' },
       validatedId: 'contrato-123',
@@ -39,14 +49,8 @@ describe('CreateManyDiaAulaController', () => {
     };
 
     mockRes = {
-      status: function (code) {
-        this.statusCode = code;
-        return this;
-      },
-      json: function (data) {
-        this.data = data;
-        return this;
-      },
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
       statusCode: null,
       data: null
     };
@@ -152,79 +156,82 @@ describe('CreateManyDiaAulaController', () => {
 
   describe('isAlunoExists', () => {
     test('deve retornar true quando aluno existe', async () => {
-      const originalGetAluno = GetAlunoService.handle;
-      GetAlunoService.handle = async () => ({ id: 'aluno-123', nome: 'João' });
+      GetAlunoService.handle.mockResolvedValue({ id: 'aluno-123', nome: 'João' });
 
       const result = await controller.isAlunoExists('aluno-123');
-      expect(result).toBe(true);
 
-      GetAlunoService.handle = originalGetAluno;
+      expect(result).toBe(true);
+      expect(GetAlunoService.handle).toHaveBeenCalledWith('aluno-123');
     });
 
     test('deve retornar false quando aluno não existe', async () => {
-      const originalGetAluno = GetAlunoService.handle;
-      GetAlunoService.handle = async () => null;
+      GetAlunoService.handle.mockResolvedValue(null);
 
       const result = await controller.isAlunoExists('aluno-123');
-      expect(result).toBe(false);
 
-      GetAlunoService.handle = originalGetAluno;
+      expect(result).toBe(false);
+      expect(GetAlunoService.handle).toHaveBeenCalledWith('aluno-123');
+    });
+
+    test('deve retornar false quando id não é fornecido', async () => {
+      const result = await controller.isAlunoExists(null);
+
+      expect(result).toBe(false);
+      expect(GetAlunoService.handle).not.toHaveBeenCalled();
     });
   });
 
   describe('isContratoExists', () => {
     test('deve retornar true quando contrato existe', async () => {
-      const originalGetContrato = GetContratoService.handle;
-      GetContratoService.handle = async () => ({ id: 'contrato-123' });
+      GetContratoService.handle.mockResolvedValue({ id: 'contrato-123' });
 
       const result = await controller.isContratoExists('contrato-123');
-      expect(result).toBe(true);
 
-      GetContratoService.handle = originalGetContrato;
+      expect(result).toBe(true);
+      expect(GetContratoService.handle).toHaveBeenCalledWith('contrato-123');
     });
 
     test('deve retornar false quando contrato não existe', async () => {
-      const originalGetContrato = GetContratoService.handle;
-      GetContratoService.handle = async () => null;
+      GetContratoService.handle.mockResolvedValue(null);
 
       const result = await controller.isContratoExists('contrato-123');
-      expect(result).toBe(false);
 
-      GetContratoService.handle = originalGetContrato;
+      expect(result).toBe(false);
+      expect(GetContratoService.handle).toHaveBeenCalledWith('contrato-123');
+    });
+
+    test('deve retornar false quando id não é fornecido', async () => {
+      const result = await controller.isContratoExists(null);
+
+      expect(result).toBe(false);
+      expect(GetContratoService.handle).not.toHaveBeenCalled();
     });
   });
 
   describe('getDuracaoDaAula', () => {
     test('deve retornar a duração da aula da configuração', async () => {
-      const originalGetConfiguracao = GetConfiguracaoService.handle;
-      GetConfiguracaoService.handle = async () => [{ duracaoAula: 50 }];
+      GetConfiguracaoService.handle.mockResolvedValue([{ duracaoAula: 50 }]);
 
       const result = await controller.getDuracaoDaAula();
-      expect(result).toBe(50);
 
-      GetConfiguracaoService.handle = originalGetConfiguracao;
+      expect(result).toBe(50);
+      expect(GetConfiguracaoService.handle).toHaveBeenCalled();
     });
 
     test('deve lançar erro quando não há configurações', async () => {
-      const originalGetConfiguracao = GetConfiguracaoService.handle;
-      GetConfiguracaoService.handle = async () => null;
+      GetConfiguracaoService.handle.mockResolvedValue(null);
 
       await expect(controller.getDuracaoDaAula()).rejects.toThrow(
         'Nenhuma configuração encontrada para determinar a duração da aula.'
       );
-
-      GetConfiguracaoService.handle = originalGetConfiguracao;
     });
 
     test('deve lançar erro quando configurações é um array vazio', async () => {
-      const originalGetConfiguracao = GetConfiguracaoService.handle;
-      GetConfiguracaoService.handle = async () => [];
+      GetConfiguracaoService.handle.mockResolvedValue([]);
 
       await expect(controller.getDuracaoDaAula()).rejects.toThrow(
         'Nenhuma configuração encontrada para determinar a duração da aula.'
       );
-
-      GetConfiguracaoService.handle = originalGetConfiguracao;
     });
   });
 
@@ -347,45 +354,32 @@ describe('CreateManyDiaAulaController', () => {
 
   describe('execute() - Validações', () => {
     test('deve retornar 422 quando aluno não existe', async () => {
-      const originalGetAluno = GetAlunoService.handle;
-      GetAlunoService.handle = async () => null;
+      GetAlunoService.handle.mockResolvedValue(null);
 
       await controller.execute();
 
-      expect(mockRes.statusCode).toBe(422);
-      expect(mockRes.data).toEqual({
+      expect(mockRes.status).toHaveBeenCalledWith(422);
+      expect(mockRes.json).toHaveBeenCalledWith({
         message: 'Aluno não encontrado'
       });
-
-      GetAlunoService.handle = originalGetAluno;
     });
 
     test('deve retornar 422 quando contrato não existe', async () => {
-      const originalGetAluno = GetAlunoService.handle;
-      const originalGetContrato = GetContratoService.handle;
-
-      GetAlunoService.handle = async () => ({ id: 'aluno-123', nome: 'João' });
-      GetContratoService.handle = async () => null;
+      GetAlunoService.handle.mockResolvedValue({ id: 'aluno-123', nome: 'João' });
+      GetContratoService.handle.mockResolvedValue(null);
 
       await controller.execute();
 
-      expect(mockRes.statusCode).toBe(422);
-      expect(mockRes.data).toEqual({
+      expect(mockRes.status).toHaveBeenCalledWith(422);
+      expect(mockRes.json).toHaveBeenCalledWith({
         message: 'Contrato não encontrado'
       });
-
-      GetAlunoService.handle = originalGetAluno;
-      GetContratoService.handle = originalGetContrato;
     });
 
     test('deve retornar 422 quando não todos os dias da semana são fornecidos', async () => {
-      const originalGetAluno = GetAlunoService.handle;
-      const originalGetContrato = GetContratoService.handle;
+      GetAlunoService.handle.mockResolvedValue({ id: 'aluno-123', nome: 'João' });
+      GetContratoService.handle.mockResolvedValue({ id: 'contrato-123' });
 
-      GetAlunoService.handle = async () => ({ id: 'aluno-123', nome: 'João' });
-      GetContratoService.handle = async () => ({ id: 'contrato-123' });
-
-      // Remove um dia da semana
       const incompleteReq = { ...mockReq };
       incompleteReq.body = { ...mockReq.body };
       delete incompleteReq.body.DOMINGO;
@@ -393,13 +387,10 @@ describe('CreateManyDiaAulaController', () => {
       const incompleteController = new CreateManyDiaAulaController(incompleteReq, mockRes);
       await incompleteController.execute();
 
-      expect(mockRes.statusCode).toBe(422);
-      expect(mockRes.data).toEqual({
+      expect(mockRes.status).toHaveBeenCalledWith(422);
+      expect(mockRes.json).toHaveBeenCalledWith({
         message: 'Todos os dias da semana devem ser fornecidos'
       });
-
-      GetAlunoService.handle = originalGetAluno;
-      GetContratoService.handle = originalGetContrato;
     });
   });
 

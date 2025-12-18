@@ -19,8 +19,8 @@ export class CreateManyDiaAulaController extends AbstractController {
     try {
       const idContrato = this.req.validatedId || this.req.params.id;
       const idAluno = this.req.body.idAluno;
-      const isAlunoExists = await this.isAlunoExists(this.req.body.idAluno);
-      const isContratoExists = await this.isContratoExists(this.req.body.idContrato);
+      const isAlunoExists = await this.isAlunoExists(idAluno);
+      const isContratoExists = await this.isContratoExists(idContrato);
       const checkIfAllDaysOfWeekAreAvailable = this.checkIfAllDaysOfWeekAreAvailable(this.req.body);
       const contratoDiasAulas = await GetDiaAulaListService.handle({ idContrato });
       const duracaoAula = await this.getDuracaoDaAula();
@@ -79,13 +79,15 @@ export class CreateManyDiaAulaController extends AbstractController {
   }
 
   async isAlunoExists(id) {
+    if (!id) return false;
     const aluno = await GetAlunoService.handle(id);
-    return !!aluno;
+    return Boolean(aluno);
   }
 
   async isContratoExists(id) {
+    if (!id) return false;
     const contrato = await GetContratoService.handle(id);
-    return !!contrato;
+    return Boolean(contrato);
   }
 
   prepareDiasAulasData({ body, idAluno, idContrato, duracaoAula }) {
@@ -100,7 +102,7 @@ export class CreateManyDiaAulaController extends AbstractController {
         idAluno,
         idContrato,
         diaSemana,
-        quantidadeAulas: data.quantidadeAulas,
+        quantidadeAulas: parseInt(data.quantidadeAulas, 10),
         horaInicial: data.horaInicial,
         horaFinal: hotaFimCalculada
       };
