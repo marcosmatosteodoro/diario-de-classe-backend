@@ -166,6 +166,10 @@
       "success": "Aula deletada com sucesso",
       "error": "Erro ao deletar aula"
     },
+    "generate": {
+      "no_classes": "Nenhuma aula gerada para o período informado",
+      "error": "Erro ao gerar aulas"
+    },
     "error": {
       "professor_not_exists": "Professor não encontrado"
     }

@@ -166,6 +166,10 @@
       "success": "Class deleted successfully",
       "error": "Error deleting class"
     },
+    "generate": {
+      "no_classes": "No classes generated for the given period",
+      "error": "Error generating classes"
+    },
     "error": {
       "professor_not_exists": "Teacher not found"
     }

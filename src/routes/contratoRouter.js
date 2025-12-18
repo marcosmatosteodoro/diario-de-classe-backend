@@ -7,14 +7,16 @@ import { CreateContratoController } from '../controllers/contrato/createContrato
 import { UpdateContratoController } from '../controllers/contrato/updateContratoController.js';
 import { GetDiaAulaListByContratoController } from '../controllers/diaAula/getDiaAulaListByContratoController.js';
 import { CreateManyDiaAulaController } from '../controllers/diaAula/createManyDiaAulaController.js';
-// Middlewares de validação
+import { GenerateAulasByContratoController } from '../controllers/aula/generateAulasByContratoController.js';
 import { GetAulasByContratoController } from '../controllers/aula/getAulasByContratoController.js';
+import { CreateManyAulaController } from '../controllers/aula/createManyAulaController.js';
+// Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateContrato } from '../middlewares/contrato/validateCreateContrato.js';
 import { validateUpdateContrato } from '../middlewares/contrato/validateUpdateContrato.js';
 import { validateCreateManyDiaAula } from '../middlewares/diaAula/validateCreateManyDiaAula.js';
-import { CreateManyAulaController } from '../controllers/aula/createManyAulaController.js';
 import { validateCreateManyAula } from '../middlewares/aula/validateCreateManyAula.js';
+import { validateGenerateAula } from '../middlewares/aula/validateGenerateAula.js';
 
 const router = express.Router();
 
@@ -49,5 +51,13 @@ router.get('/:id/aulas', validateId, GetAulasByContratoController.handle);
 
 // POST /api/contratos/:id/aulas - Criar aulas de um contrato
 router.post('/:id/aulas', validateId, validateCreateManyAula, CreateManyAulaController.handle);
+
+// GET /api/contratos/:id/aulas/generate - Buscar aulas de um contrato
+router.get(
+  '/:id/aulas/generate',
+  validateId,
+  validateGenerateAula,
+  GenerateAulasByContratoController.handle
+);
 
 export default router;

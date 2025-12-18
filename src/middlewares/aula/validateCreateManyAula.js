@@ -7,11 +7,11 @@ class ValidateCreateManyAula extends BaseValidateEntity {
   }
 
   getDataForFilter() {
-    return ['idAluno', 'idProfessor', 'idContrato', 'aulas'];
+    return ['idAluno', 'idProfessor', 'aulas'];
   }
 
   getDataValidations(filteredData) {
-    const { idAluno, idProfessor, idContrato, aulas } = filteredData;
+    const { idAluno, idProfessor, aulas } = filteredData;
 
     return {
       // Validar campo idAluno
@@ -26,12 +26,6 @@ class ValidateCreateManyAula extends BaseValidateEntity {
         .minCharacters(6)
         .maxCharacters(50)
         .validate(idProfessor, 'idProfessor'),
-      // Validar campo criador
-      idContrato: ValidateData.require()
-        .isString()
-        .minCharacters(6)
-        .maxCharacters(50)
-        .validate(idContrato, 'idContrato'),
       // Validar campo aulas
       aulas: ValidateData.require()
         .isArray()
