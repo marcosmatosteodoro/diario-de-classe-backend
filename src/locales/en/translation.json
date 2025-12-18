@@ -165,6 +165,9 @@
     "delete": {
       "success": "Class deleted successfully",
       "error": "Error deleting class"
+    },
+    "error": {
+      "professor_not_exists": "Teacher not found"
     }
   },
   "diaAulas": {

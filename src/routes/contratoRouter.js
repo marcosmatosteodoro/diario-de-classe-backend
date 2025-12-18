@@ -13,6 +13,8 @@ import { validateId } from '../middlewares/validateId.js';
 import { validateCreateContrato } from '../middlewares/contrato/validateCreateContrato.js';
 import { validateUpdateContrato } from '../middlewares/contrato/validateUpdateContrato.js';
 import { validateCreateManyDiaAula } from '../middlewares/diaAula/validateCreateManyDiaAula.js';
+import { CreateManyAulaController } from '../controllers/aula/createManyAulaController.js';
+import { validateCreateManyAula } from '../middlewares/aula/validateCreateManyAula.js';
 
 const router = express.Router();
 
@@ -44,5 +46,8 @@ router.post(
 
 // GET /api/contratos/:id/aulas - Buscar aulas de um contrato
 router.get('/:id/aulas', validateId, GetAulasByContratoController.handle);
+
+// POST /api/contratos/:id/aulas - Criar aulas de um contrato
+router.post('/:id/aulas', validateId, validateCreateManyAula, CreateManyAulaController.handle);
 
 export default router;
