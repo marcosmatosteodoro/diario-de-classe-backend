@@ -352,7 +352,7 @@ describe('LoginService', () => {
       }
     };
 
-    // const result = await service.execute();
+    await service.execute();
 
     expect(statusCode).toBe(204);
     expect(jsonCalled).toBe(true);
@@ -384,7 +384,7 @@ describe('LoginService', () => {
       }
     };
 
-    // const result = await service.execute();
+    await service.execute();
 
     expect(statusCode).toBe(204);
     expect(jsonCalled).toBe(true);
