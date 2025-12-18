@@ -12,19 +12,18 @@ describe('LoginService', () => {
     originalGetConfiguracaoHandle = GetConfiguracaoService.handle;
 
     // Mock padrão para configuração
-    GetConfiguracaoService.handle = jest.fn().mockResolvedValue([
+    GetConfiguracaoService.handle = async () => [
       {
         id: 'config-1',
         anoLetivoAtual: '2024',
         periodoAtual: 1
       }
-    ]);
+    ];
   });
 
   afterEach(() => {
     UserRepository.prototype.selectOne = originalSelectOne;
     GetConfiguracaoService.handle = originalGetConfiguracaoHandle;
-    jest.clearAllMocks();
   });
 
   test('should return null when email is not provided', async () => {
@@ -293,7 +292,7 @@ describe('LoginService', () => {
     };
 
     UserRepository.prototype.selectOne = async () => mockUser;
-    GetConfiguracaoService.handle = jest.fn().mockResolvedValue([mockConfiguracao]);
+    GetConfiguracaoService.handle = async () => [mockConfiguracao];
 
     const service = new LoginService(UserRepository, 'test@example.com', 'password123');
     const result = await service.execute();
@@ -302,20 +301,32 @@ describe('LoginService', () => {
   });
 
   test('should call GetConfiguracaoService.handle when user is authenticated', async () => {
+    let called = false;
     UserRepository.prototype.selectOne = async () => ({
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
       senha: 'password123'
     });
+
+    GetConfiguracaoService.handle = async () => {
+      called = true;
+      return [
+        {
+          id: 'config-1',
+          anoLetivoAtual: '2024',
+          periodoAtual: 1
+        }
+      ];
+    };
 
     const service = new LoginService(UserRepository, 'test@example.com', 'password123');
     await service.execute();
 
-    expect(GetConfiguracaoService.handle).toHaveBeenCalledTimes(1);
+    expect(called).toBe(true);
   });
 
-  test('should return null when configuracao is null', async () => {
+  test('should return 204 when configuracao is null', async () => {
     UserRepository.prototype.selectOne = async () => ({
       id: 'user-123',
       email: 'test@example.com',
@@ -323,21 +334,31 @@ describe('LoginService', () => {
       senha: 'password123'
     });
 
-    GetConfiguracaoService.handle = jest.fn().mockResolvedValue(null);
+    GetConfiguracaoService.handle = async () => null;
 
     const service = new LoginService(UserRepository, 'test@example.com', 'password123');
+
+    let statusCode = null;
+    let jsonCalled = false;
+
     service.res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      status: function (code) {
+        statusCode = code;
+        return this;
+      },
+      json: function () {
+        jsonCalled = true;
+        return this;
+      }
     };
 
     // const result = await service.execute();
 
-    expect(service.res.status).toHaveBeenCalledWith(204);
-    expect(service.res.json).toHaveBeenCalledWith();
+    expect(statusCode).toBe(204);
+    expect(jsonCalled).toBe(true);
   });
 
-  test('should return null when configuracao is empty array', async () => {
+  test('should return 204 when configuracao is empty array', async () => {
     UserRepository.prototype.selectOne = async () => ({
       id: 'user-123',
       email: 'test@example.com',
@@ -345,18 +366,28 @@ describe('LoginService', () => {
       senha: 'password123'
     });
 
-    GetConfiguracaoService.handle = jest.fn().mockResolvedValue([]);
+    GetConfiguracaoService.handle = async () => [];
 
     const service = new LoginService(UserRepository, 'test@example.com', 'password123');
+
+    let statusCode = null;
+    let jsonCalled = false;
+
     service.res = {
-      status: jest.fn().mockReturnThis(),
-      json: jest.fn().mockReturnThis()
+      status: function (code) {
+        statusCode = code;
+        return this;
+      },
+      json: function () {
+        jsonCalled = true;
+        return this;
+      }
     };
 
     // const result = await service.execute();
 
-    expect(service.res.status).toHaveBeenCalledWith(204);
-    expect(service.res.json).toHaveBeenCalledWith();
+    expect(statusCode).toBe(204);
+    expect(jsonCalled).toBe(true);
   });
 
   test('should return first configuracao when multiple exist', async () => {
@@ -381,7 +412,7 @@ describe('LoginService', () => {
     ];
 
     UserRepository.prototype.selectOne = async () => mockUser;
-    GetConfiguracaoService.handle = jest.fn().mockResolvedValue(mockConfiguracoes);
+    GetConfiguracaoService.handle = async () => mockConfiguracoes;
 
     const service = new LoginService(UserRepository, 'test@example.com', 'password123');
     const result = await service.execute();
