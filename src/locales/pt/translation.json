@@ -141,6 +141,16 @@
     "delete": {
       "success": "Contrato deletado com sucesso",
       "error": "Erro ao deletar contrato"
+    },
+    "validate": {
+      "professores_not_exists": "Um ou mais professores vinculados às aulas não foram encontrados",
+      "aluno_not_exists": "Aluno vinculado ao contrato não foi encontrado",
+      "invalid_dates": "Datas de início ou término do contrato estão inválidas",
+      "no_classes": "Contrato não possui aulas cadastradas",
+      "contrato_actived": "Contrato já está ativo",
+      "contrato_canceled_confirmation_required": "Contrato cancelado. É necessário confirmação para reativá-lo",
+      "contrato_inativo_confirmation_required": "Contrato inativo. É necessário confirmação para ativá-lo",
+      "error": "Erro ao validar contrato"
     }
   },
   "aulas": {

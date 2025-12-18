@@ -10,6 +10,7 @@ import { CreateManyDiaAulaController } from '../controllers/diaAula/createManyDi
 import { GenerateAulasByContratoController } from '../controllers/aula/generateAulasByContratoController.js';
 import { GetAulasByContratoController } from '../controllers/aula/getAulasByContratoController.js';
 import { CreateManyAulaController } from '../controllers/aula/createManyAulaController.js';
+import { ValidateContratoController } from '../controllers/contrato/validateContratoController.js';
 // Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateContrato } from '../middlewares/contrato/validateCreateContrato.js';
@@ -59,5 +60,8 @@ router.get(
   validateGenerateAula,
   GenerateAulasByContratoController.handle
 );
+
+// GET /api/contratos/:id/validate - Faz a validação do contrato
+router.get('/:id/validate', validateId, ValidateContratoController.handle);
 
 export default router;

@@ -141,6 +141,16 @@
     "delete": {
       "success": "Contract deleted successfully",
       "error": "Error deleting contract"
+    },
+    "validate": {
+      "professores_not_exists": "One or more teachers linked to the classes were not found",
+      "aluno_not_exists": "Student linked to the contract was not found",
+      "invalid_dates": "Contract start or end dates are invalid",
+      "no_classes": "Contract has no registered classes",
+      "contrato_actived": "Contract is already active",
+      "contrato_canceled_confirmation_required": "Contract canceled. Confirmation is required to reactivate it",
+      "contrato_inativo_confirmation_required": "Contract inactive. Confirmation is required to activate it",
+      "error": "Error validating contract"
     }
   },
   "aulas": {

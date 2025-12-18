@@ -28,4 +28,23 @@ export default class ContratoRepository extends AbstractRepository {
       diaAulas: false
     };
   }
+
+  getSelectFieldsWithRelations() {
+    return {
+      id: true,
+      idAluno: true,
+      dataInicio: true,
+      dataTermino: true,
+      status: true,
+      totalAulas: true,
+      totalAulasFeitas: true,
+      totalReposicoes: true,
+      totalFaltas: true,
+      totalAulasCanceladas: true,
+      dataCriacao: true,
+      dataAtualizacao: true,
+      aluno: true,
+      diaAulas: true
+    };
+  }
 }
