@@ -18,7 +18,11 @@ export class UpdateContratoController extends AbstractController {
         });
       }
 
-      const updatedContrato = await UpdateContratoService.handle(id, this.req.body);
+      const data = this.req.body;
+      if (data.dataInicio) data.dataInicio = new Date(data.dataInicio);
+      if (data.dataTermino) data.dataTermino = new Date(data.dataTermino);
+
+      const updatedContrato = await UpdateContratoService.handle(id, data);
 
       return this.res.status(200).json(updatedContrato);
     } catch (error) {

@@ -32,7 +32,11 @@ export class CreateContratoController extends AbstractController {
         });
       }
 
-      const newContrato = await CreateContratoService.handle(this.req.body);
+      const data = this.req.body;
+      if (data.dataInicio) data.dataInicio = new Date(data.dataInicio);
+      if (data.dataTermino) data.dataTermino = new Date(data.dataTermino);
+
+      const newContrato = await CreateContratoService.handle(data);
 
       return this.res.status(201).json(newContrato);
     } catch (error) {

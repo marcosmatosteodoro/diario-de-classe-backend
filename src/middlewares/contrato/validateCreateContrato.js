@@ -27,7 +27,7 @@ class ValidateCreateContrato extends BaseValidateEntity {
         .isString()
         .isDate()
         .custom(
-          this.dataTerminoIsAfterDataDeInicio.bind(dataInicio, dataTermino),
+          this.dataTerminoIsAfterDataDeInicio.bind(this, dataInicio, dataTermino),
           'dataTermino deve ser posterior a dataInicio'
         )
         .validate(dataTermino, 'dataTermino')
