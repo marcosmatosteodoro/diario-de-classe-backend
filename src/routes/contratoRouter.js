@@ -8,6 +8,7 @@ import { UpdateContratoController } from '../controllers/contrato/updateContrato
 import { GetDiaAulaListByContratoController } from '../controllers/diaAula/getDiaAulaListByContratoController.js';
 import { CreateManyDiaAulaController } from '../controllers/diaAula/createManyDiaAulaController.js';
 // Middlewares de validação
+import { GetAulasByContratoController } from '../controllers/aula/getAulasByContratoController.js';
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateContrato } from '../middlewares/contrato/validateCreateContrato.js';
 import { validateUpdateContrato } from '../middlewares/contrato/validateUpdateContrato.js';
@@ -40,5 +41,8 @@ router.post(
   validateCreateManyDiaAula,
   CreateManyDiaAulaController.handle
 );
+
+// GET /api/contratos/:id/aulas - Buscar aulas de um contrato
+router.get('/:id/aulas', validateId, GetAulasByContratoController.handle);
 
 export default router;
