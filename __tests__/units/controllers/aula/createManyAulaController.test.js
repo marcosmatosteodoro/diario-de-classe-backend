@@ -389,7 +389,9 @@ describe('CreateManyAulaController', () => {
       await controller.execute();
 
       expect(mockRes.statusCode).toBe(201);
-      expect(Array.isArray(mockRes.data)).toBe(true);
+      expect(mockRes.data).toHaveProperty('count');
+      expect(mockRes.data).toHaveProperty('aulas');
+      expect(Array.isArray(mockRes.data.aulas)).toBe(true);
     });
 
     test('deve chamar CreateAulaService para cada aula nova', async () => {
@@ -573,7 +575,11 @@ describe('CreateManyAulaController', () => {
 
       expect(mockRes.statusCode).toBe(201);
       expect(createCount).toBe(2);
-      expect(Array.isArray(mockRes.data)).toBe(true);
+      expect(mockRes.data).toHaveProperty('count');
+      expect(mockRes.data).toHaveProperty('aulas');
+      expect(mockRes.data.count).toBe(2);
+      expect(Array.isArray(mockRes.data.aulas)).toBe(true);
+      expect(mockRes.data.aulas.length).toBe(2);
     });
 
     test('deve processar criação, atualização e exclusão juntos', async () => {

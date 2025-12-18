@@ -43,45 +43,53 @@ export class CreateManyAulaController extends AbstractController {
       }
 
       // Delete // Update
-      aulasExisted.forEach(async aulaEx => {
-        const aulaExisted = aulas.find(aula => aula.dataAula === aulaEx.dataAula);
-        const isAulaStillExists = aulaExisted || null;
-        if (!isAulaStillExists) {
-          await DeleteAulaService.handle(aulaEx.id);
-        } else {
-          const data = this.aulaPrepareData({
-            idAluno,
-            idProfessor,
-            idContrato,
-            aula: aulaExisted
-          });
-          const result = await UpdateAulaService.handle({
-            id: aulaEx.id,
-            ...data
-          });
+      await Promise.all(
+        aulasExisted.map(async aulaEx => {
+          const aulaExisted = aulas.find(aula => aula.dataAula === aulaEx.dataAula);
+          const isAulaStillExists = aulaExisted || null;
+          if (!isAulaStillExists) {
+            await DeleteAulaService.handle(aulaEx.id);
+          } else {
+            const data = this.aulaPrepareData({
+              idAluno,
+              idProfessor,
+              idContrato,
+              aula: aulaExisted
+            });
+            const result = await UpdateAulaService.handle({
+              id: aulaEx.id,
+              ...data
+            });
 
-          this.aulasData.push(result);
-        }
-      });
+            this.aulasData.push(result);
+          }
+        })
+      );
+
       // Create
-      aulas.forEach(async aula => {
-        const isAulaExist = aulasExisted.find(aulaEx => aulaEx.dataAula === aula.dataAula);
-        if (!isAulaExist) {
-          const data = this.aulaPrepareData({
-            idAluno,
-            idProfessor,
-            idContrato,
-            aula
-          });
-          const result = await CreateAulaService.handle(data);
+      await Promise.all(
+        aulas.map(async aula => {
+          const isAulaExist = aulasExisted.find(aulaEx => aulaEx.dataAula === aula.dataAula);
+          if (!isAulaExist) {
+            const data = this.aulaPrepareData({
+              idAluno,
+              idProfessor,
+              idContrato,
+              aula
+            });
+            const result = await CreateAulaService.handle(data);
 
-          this.aulasData.push(result);
-        }
-      });
+            this.aulasData.push(result);
+          }
+        })
+      );
 
       this.sortAulasByDate();
 
-      return this.res.status(201).json(this.aulasData);
+      return this.res.status(201).json({
+        count: this.aulasData.length,
+        aulas: this.aulasData
+      });
     } catch (error) {
       return this.handleError(error, 'aulas.create.error');
     }
