@@ -54,7 +54,7 @@ router.get('/:id/aulas', validateId, GetAulasByContratoController.handle);
 router.post('/:id/aulas', validateId, validateCreateManyAula, CreateManyAulaController.handle);
 
 // GET /api/contratos/:id/aulas/generate - Buscar aulas de um contrato
-router.get(
+router.post(
   '/:id/aulas/generate',
   validateId,
   validateGenerateAula,
