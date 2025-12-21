@@ -26,4 +26,24 @@ export default class AulaRepository extends AbstractRepository {
       dataAtualizacao: true
     };
   }
+
+  getSelectFieldsWithRelations() {
+    return {
+      id: true,
+      idAluno: true,
+      idProfessor: true,
+      idContrato: true,
+      dataAula: true,
+      horaInicial: true,
+      horaFinal: true,
+      tipo: true,
+      status: true,
+      observacao: true,
+      aluno: true,
+      professor: true,
+      contrato: true,
+      dataCriacao: true,
+      dataAtualizacao: true
+    };
+  }
 }

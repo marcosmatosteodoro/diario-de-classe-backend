@@ -74,6 +74,33 @@ describe('AulaRepository', () => {
   });
 
   describe('Estrutura dos campos', () => {
+    test('getSelectFieldsWithRelations deve conter os campos corretos e relações', () => {
+      const fields = aulaRepository.getSelectFieldsWithRelations();
+
+      const expectedFields = [
+        'id',
+        'idAluno',
+        'idProfessor',
+        'idContrato',
+        'dataAula',
+        'horaInicial',
+        'horaFinal',
+        'tipo',
+        'status',
+        'observacao',
+        'aluno',
+        'professor',
+        'contrato',
+        'dataCriacao',
+        'dataAtualizacao'
+      ];
+
+      expectedFields.forEach(key => {
+        expect(fields[key]).toBe(true);
+      });
+
+      expect(Object.keys(fields)).toHaveLength(expectedFields.length);
+    });
     test('getEntity deve retornar a entidade prisma.aula', () => {
       expect(aulaRepository.getEntity()).toBeDefined();
       expect(aulaRepository.getEntity().name).toBe('Aula');
