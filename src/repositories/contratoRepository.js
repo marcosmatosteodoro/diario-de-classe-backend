@@ -44,7 +44,8 @@ export default class ContratoRepository extends AbstractRepository {
       dataCriacao: true,
       dataAtualizacao: true,
       aluno: true,
-      diaAulas: true
+      diaAulas: true,
+      aulas: true
     };
   }
 }

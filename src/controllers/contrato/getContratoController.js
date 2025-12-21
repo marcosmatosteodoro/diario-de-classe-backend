@@ -9,7 +9,8 @@ export class GetContratoController extends AbstractController {
   async execute() {
     try {
       const id = this.req.validatedId || this.req.params.id;
-      const contrato = await GetContratoService.handle(id);
+      const params = this.req.query || {};
+      const contrato = await GetContratoService.handle(id, params);
 
       if (!contrato) {
         return this.res.status(404).json({
