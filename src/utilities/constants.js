@@ -22,9 +22,9 @@ export default class Constants {
 
   static jwtRefreshSecret = process.env.JWT_REFRESH_TOKEN || `${Constants.jwtSecret}-refresh`;
 
-  static accessExp = Number(process.env.JWT_EXP_SECONDS) || 60 * 60 * 1; // 1h
+  static accessExp = Number(process.env.JWT_EXP_SECONDS) || 60 * 60 * 24 * 7; // 7d
 
-  static refreshExp = Number(process.env.JWT_REFRESH_EXP_SECONDS) || 60 * 60 * 24 * 7; // 7d
+  static refreshExp = Number(process.env.JWT_REFRESH_EXP_SECONDS) || 60 * 60 * 24 * 30; // 30d
 
   /* Database */
   // static database = {
