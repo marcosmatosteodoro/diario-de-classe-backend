@@ -13,7 +13,7 @@ export class LogoutController extends AbstractController {
       const result = await LogoutService.handle(refreshToken);
 
       if (!result) {
-        return this.res.status(400).json({ message: 'auth.logout.error' });
+        return this.res.status(400).json({ message: this.req.t('auth.logout.error') });
       }
 
       return this.res.status(204).json();

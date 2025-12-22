@@ -13,7 +13,7 @@ export class LoginController extends AbstractController {
       const response = await LoginService.handle(email, senha);
 
       if (!response) {
-        return this.res.status(401).json({ message: 'auth.login.unauthorized' });
+        return this.res.status(401).json({ message: this.req.t('auth.login.unauthorized') });
       }
 
       return this.res.status(200).json(response);

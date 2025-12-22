@@ -13,7 +13,7 @@ export class RefreshTokenController extends AbstractController {
       const token = await RefreshTokenService.handle(refreshToken);
 
       if (!token) {
-        return this.res.status(401).json({ message: 'auth.refresh.unauthorized' });
+        return this.res.status(401).json({ message: this.req.t('auth.refresh.unauthorized') });
       }
 
       return this.res.status(200).json(token);
