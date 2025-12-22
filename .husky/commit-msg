@@ -3,6 +3,18 @@
 # Lê a mensagem do commit
 commit_msg=$(cat "$1")
 
+# Permite mensagens de merge automáticas do Git
+if echo "$commit_msg" | grep -qE "^Merge (branch|pull request)"; then
+    echo "✅ Merge commit detected - skipping validation"
+    exit 0
+fi
+
+# Permite commits de merge manuais
+if echo "$commit_msg" | grep -qE "^Merge"; then
+    echo "✅ Merge commit detected - skipping validation"
+    exit 0
+fi
+
 # Padrão para Conventional Commits
 # Exemplo: feat: add new feature
 # Tipos válidos: feat, fix, docs, style, refactor, test, chore

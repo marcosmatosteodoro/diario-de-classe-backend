@@ -7,13 +7,44 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 enum Permissao {
   member
   admin
+}
+
+enum DiaDaSemana {
+  SEGUNDA
+  TERCA
+  QUARTA
+  QUINTA
+  SEXTA
+  SABADO
+  DOMINGO
+}
+
+enum StatusContrato {
+  PENDENTE
+  ATIVO
+  INATIVO
+  CANCELADO
+}
+
+enum TipoAula {
+  PADRAO
+  REPOSICAO
+  OUTRA
+}
+
+enum StatusAula {
+  AGENDADA
+  EM_ANDAMENTO
+  CONCLUIDA
+  CANCELADA
+  CANCELADA_POR_FALTA
 }
 
 model User {
@@ -28,5 +59,144 @@ model User {
   dataCriacao     DateTime  @default(now())
   dataAtualizacao DateTime  @updatedAt
 
+  // Relacionamento com DisponibilidadeProfessor
+  disponibilidades DisponibilidadeProfessor[]
+  // Relacionamento com Aula
+  aulas            Aula[]
+
   @@map("users")
+}
+
+model DisponibilidadeProfessor {
+  id              String      @id @default(cuid())
+  diaSemana       DiaDaSemana
+  horaInicial     String
+  horaFinal       String
+  ativo           Boolean     @default(true)
+  userId          String
+  dataCriacao     DateTime    @default(now())
+  dataAtualizacao DateTime    @updatedAt
+
+  // Relacionamento com User
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("disponibilidades_professor")
+}
+
+model Aluno {
+  id              String   @id @default(cuid())
+  nome            String // máximo 255 caracteres
+  sobrenome       String // máximo 255 caracteres
+  email           String   @unique // máximo 255 caracteres
+  telefone        String? // máximo 11 caracteres
+  material        String? // campo extenso para armazenar informações sobre material
+  criador         String? // ID do usuário que criou o aluno
+  dataCriacao     DateTime @default(now())
+  dataAtualizacao DateTime @updatedAt
+
+  // Relacionamento com Contrato
+  contratoes Contrato[]
+  // Relacionamento com DiaAula
+  diaAulas   DiaAula[]
+  // Relacionamento com Aula
+  aulas      Aula[]
+
+  @@map("alunos")
+}
+
+model Configuracao {
+  id              String   @id @default(cuid())
+  duracaoAula     Int
+  tolerancia      Int
+  dataCriacao     DateTime @default(now())
+  dataAtualizacao DateTime @updatedAt
+
+  // Relacionamento com DiaDeFuncionamento
+  diasDeFuncionamento DiaDeFuncionamento[]
+
+  @@map("configuracoes")
+}
+
+model DiaDeFuncionamento {
+  id              String      @id @default(cuid())
+  diaSemana       DiaDaSemana
+  horaInicial     String
+  horaFinal       String
+  ativo           Boolean     @default(true)
+  configuracaoId  String
+  dataCriacao     DateTime    @default(now())
+  dataAtualizacao DateTime    @updatedAt
+
+  // Relacionamento com Configuracao
+  configuracao Configuracao @relation(fields: [configuracaoId], references: [id], onDelete: Cascade)
+
+  @@map("dias_funcionamento")
+}
+
+model Contrato {
+  id                   String         @id @default(cuid())
+  idAluno              String
+  dataInicio           DateTime?
+  dataTermino          DateTime?
+  status               StatusContrato
+  totalAulas           Int // Sistema preenche automático
+  totalAulasFeitas     Int // Sistema preenche automático
+  totalReposicoes      Int // Sistema preenche automático
+  totalFaltas          Int // Sistema preenche automático
+  totalAulasCanceladas Int // Sistema preenche automático
+  dataCriacao          DateTime       @default(now())
+  dataAtualizacao      DateTime       @updatedAt
+
+  // Relacionamento com Aluno
+  aluno    Aluno     @relation(fields: [idAluno], references: [id], onDelete: Cascade)
+  // Relacionamento com DiaAula
+  diaAulas DiaAula[]
+  // Relacionamento com Aula
+  aulas    Aula[]
+
+  @@map("contratos")
+}
+
+model DiaAula {
+  id              String      @id @default(cuid())
+  idAluno         String
+  idContrato      String
+  diaSemana       DiaDaSemana
+  quantidadeAulas Int
+  horaInicial     String
+  horaFinal       String // Sistema preenche automático
+  dataCriacao     DateTime    @default(now())
+  dataAtualizacao DateTime    @updatedAt
+
+  // Relacionamento com Aluno
+  aluno    Aluno    @relation(fields: [idAluno], references: [id], onDelete: Cascade)
+  // Relacionamento com Contrato
+  contrato Contrato @relation(fields: [idContrato], references: [id], onDelete: Cascade)
+
+  @@map("dias_aula")
+}
+
+model Aula {
+  id              String     @id @default(cuid())
+  idAluno         String
+  idProfessor     String
+  idContrato      String
+  dataAula        DateTime
+  horaInicial     String
+  horaFinal       String
+  tipo            TipoAula
+  status          StatusAula
+  observacao      String?
+  dataCriacao     DateTime   @default(now())
+  dataAtualizacao DateTime   @updatedAt
+
+  // Relacionamento com Aluno
+  aluno     Aluno    @relation(fields: [idAluno], references: [id], onDelete: Cascade)
+  // Relacionamento com Professor
+  professor User     @relation(fields: [idProfessor], references: [id], onDelete: Cascade)
+  // Relacionamento com Contrato
+  contrato  Contrato @relation(fields: [idContrato], references: [id], onDelete: Cascade)
+
+  @@unique([idAluno, idProfessor, idContrato, dataAula])
+  @@map("aulas")
 }

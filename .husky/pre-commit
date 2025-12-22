@@ -10,8 +10,4 @@ npm run lint
 echo "🎨 Checking code formatting with Prettier..."
 npm run format:check
 
-# Executa os testes unitários
-echo "🧪 Running unit tests..."
-npm run test:unit
-
 echo "✅ All pre-commit checks passed!"

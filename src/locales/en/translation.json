@@ -18,10 +18,35 @@
     }
   },
   "validation": {
+    "error": "Validation error",
+    "noData": "No data provided in request",
     "required": "Required field",
     "invalid_format": "Invalid format",
     "min_length": "Must have at least {{count}} characters",
-    "max_length": "Cannot have more than {{count}} characters"
+    "max_length": "Cannot have more than {{count}} characters",
+    "no_credentials": "Credentials not provided",
+    "refresh_token_required": "Refresh token is required",
+    "id": {
+      "required": "ID is required",
+      "invalid": "ID must be a valid identifier"
+    }
+  },
+  "auth": {
+    "login": {
+      "unauthorized": "Invalid email or password",
+      "error": "Login error"
+    },
+    "logout": {
+      "success": "Logout successful",
+      "error": "Error logging out"
+    },
+    "refresh": {
+      "unauthorized": "Invalid or expired refresh token",
+      "error": "Error refreshing token"
+    }
+  },
+  "error": {
+    "internal": "Internal server error"
   },
   "common": {
     "success": "Success",
@@ -39,6 +64,10 @@
       "success": "Users listed successfully",
       "error": "Error fetching users"
     },
+    "get": {
+      "not_found": "User not found",
+      "error": "Error fetching user"
+    },
     "create": {
       "success": "User created successfully",
       "error": "Error creating user",
@@ -46,6 +75,154 @@
       "email_required": "Email is required",
       "password_required": "Password is required",
       "email_exists": "This email is already in use"
+    },
+    "update": {
+      "success": "User updated successfully",
+      "error": "Error updating user"
+    },
+    "delete": {
+      "error": "Error deleting user"
+    }
+  },
+  "alunos": {
+    "list": {
+      "success": "Students listed successfully",
+      "error": "Error fetching students"
+    },
+    "get": {
+      "not_found": "Student not found",
+      "error": "Error fetching student"
+    },
+    "create": {
+      "success": "Student created successfully",
+      "error": "Error creating student",
+      "validation": "Invalid data provided",
+      "email_exists": "This email is already in use"
+    },
+    "update": {
+      "success": "Student updated successfully",
+      "error": "Error updating student"
+    },
+    "delete": {
+      "success": "Student deleted successfully",
+      "error": "Error deleting student"
+    }
+  },
+  "configuracaos": {
+    "list": {
+      "error": "Error fetching configurations"
+    },
+    "get": {
+      "not_found": "Configuration not found"
+    },
+    "update": {
+      "error": "Error updating configuration"
+    }
+  },
+  "contratos": {
+    "list": {
+      "success": "Contracts listed successfully",
+      "error": "Error fetching contracts"
+    },
+    "get": {
+      "not_found": "Contract not found",
+      "error": "Error fetching contract"
+    },
+    "create": {
+      "success": "Contract created successfully",
+      "error": "Error creating contract",
+      "aluno_ativo_exists": "This student already has an active contract",
+      "aluno_pendente_exists": "This student already has a pending contract"
+    },
+    "update": {
+      "success": "Contract updated successfully",
+      "error": "Error updating contract"
+    },
+    "delete": {
+      "success": "Contract deleted successfully",
+      "error": "Error deleting contract"
+    },
+    "validate": {
+      "professores_not_exists": "One or more teachers linked to the classes were not found",
+      "aluno_not_exists": "Student linked to the contract was not found",
+      "invalid_dates": "Contract start or end dates are invalid",
+      "no_classes": "Contract has no registered classes",
+      "contrato_actived": "Contract is already active",
+      "contrato_canceled_confirmation_required": "Contract canceled. Confirmation is required to reactivate it",
+      "contrato_inativo_confirmation_required": "Contract inactive. Confirmation is required to activate it",
+      "error": "Error validating contract"
+    }
+  },
+  "aulas": {
+    "list": {
+      "success": "Classes listed successfully",
+      "error": "Error fetching classes"
+    },
+    "get": {
+      "not_found": "Class not found",
+      "error": "Error fetching class"
+    },
+    "create": {
+      "success": "Class created successfully",
+      "error": "Error creating class",
+      "ids_exists": "A class with the provided IDs already exists"
+    },
+    "update": {
+      "success": "Class updated successfully",
+      "error": "Error updating class",
+      "ids_change_not_allowed": "Changing student, teacher, and class day IDs is not allowed"
+    },
+    "delete": {
+      "success": "Class deleted successfully",
+      "error": "Error deleting class"
+    },
+    "generate": {
+      "no_classes": "No classes generated for the given period",
+      "error": "Error generating classes"
+    },
+    "error": {
+      "professor_not_exists": "Teacher not found"
+    }
+  },
+  "diaAulas": {
+    "list": {
+      "success": "Class days listed successfully",
+      "error": "Error fetching class days"
+    },
+    "get": {
+      "not_found": "Class day not found",
+      "error": "Error fetching class day"
+    },
+    "create": {
+      "success": "Class day created successfully",
+      "error": "Error creating class day",
+      "aluno_contrato_dia_aula_exists": "A class day already exists for this student, contract, and day",
+      "you_cannot_change_aluno_contrato": "Changing student or contract is not allowed"
+    },
+    "update": {
+      "success": "Class day updated successfully",
+      "error": "Error updating class day"
+    },
+    "delete": {
+      "success": "Class day deleted successfully",
+      "error": "Error deleting class day"
+    },
+    "error": {
+      "aluno_not_exists": "Student not found",
+      "contrato_not_exists": "Contract not found",
+      "days_of_week_not_provided": "All days of the week must be provided"
+    }
+  },
+  "disponibilidades": {
+    "list": {
+      "success": "Availabilities listed successfully",
+      "error": "Error fetching availabilities"
+    }
+  },
+  "disponibilidadeProfessors": {
+    "update": {
+      "success": "Teacher availability updated successfully",
+      "error": "Error updating teacher availability"
     }
   }
 }

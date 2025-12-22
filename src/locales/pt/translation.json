@@ -18,10 +18,35 @@
     }
   },
   "validation": {
+    "error": "Erro de validação",
+    "noData": "Nenhum dado fornecido na requisição",
     "required": "Campo obrigatório",
     "invalid_format": "Formato inválido",
     "min_length": "Deve ter pelo menos {{count}} caracteres",
-    "max_length": "Não pode ter mais de {{count}} caracteres"
+    "max_length": "Não pode ter mais de {{count}} caracteres",
+    "no_credentials": "Credenciais não fornecidas",
+    "refresh_token_required": "Refresh token é obrigatório",
+    "id": {
+      "required": "ID é obrigatório",
+      "invalid": "ID deve ser um identificador válido"
+    }
+  },
+  "auth": {
+    "login": {
+      "unauthorized": "Email ou senha inválidos",
+      "error": "Erro ao fazer login"
+    },
+    "logout": {
+      "success": "Logout realizado com sucesso",
+      "error": "Erro ao fazer logout"
+    },
+    "refresh": {
+      "unauthorized": "Refresh token inválido ou expirado",
+      "error": "Erro ao renovar token"
+    }
+  },
+  "error": {
+    "internal": "Erro interno do servidor"
   },
   "common": {
     "success": "Sucesso",
@@ -39,6 +64,10 @@
       "success": "Usuários listados com sucesso",
       "error": "Erro ao buscar usuários"
     },
+    "get": {
+      "not_found": "Usuário não encontrado",
+      "error": "Erro ao buscar usuário"
+    },
     "create": {
       "success": "Usuário criado com sucesso",
       "error": "Erro ao criar usuário",
@@ -46,6 +75,154 @@
       "email_required": "Email é obrigatório",
       "password_required": "Senha é obrigatória",
       "email_exists": "Este email já está em uso"
+    },
+    "update": {
+      "success": "Usuário atualizado com sucesso",
+      "error": "Erro ao atualizar usuário"
+    },
+    "delete": {
+      "error": "Erro ao deletar usuário"
+    }
+  },
+  "alunos": {
+    "list": {
+      "success": "Alunos listados com sucesso",
+      "error": "Erro ao buscar alunos"
+    },
+    "get": {
+      "not_found": "Aluno não encontrado",
+      "error": "Erro ao buscar aluno"
+    },
+    "create": {
+      "success": "Aluno criado com sucesso",
+      "error": "Erro ao criar aluno",
+      "validation": "Dados inválidos fornecidos",
+      "email_exists": "Este email já está em uso"
+    },
+    "update": {
+      "success": "Aluno atualizado com sucesso",
+      "error": "Erro ao atualizar aluno"
+    },
+    "delete": {
+      "success": "Aluno excluído com sucesso",
+      "error": "Erro ao excluir aluno"
+    }
+  },
+  "configuracaos": {
+    "list": {
+      "error": "Erro ao buscar configurações"
+    },
+    "get": {
+      "not_found": "Configuração não encontrada"
+    },
+    "update": {
+      "error": "Erro ao atualizar configuração"
+    }
+  },
+  "contratos": {
+    "list": {
+      "success": "Contratos listados com sucesso",
+      "error": "Erro ao buscar contratos"
+    },
+    "get": {
+      "not_found": "Contrato não encontrado",
+      "error": "Erro ao buscar contrato"
+    },
+    "create": {
+      "success": "Contrato criado com sucesso",
+      "error": "Erro ao criar contrato",
+      "aluno_ativo_exists": "Este aluno já possui um contrato ativo",
+      "aluno_pendente_exists": "Este aluno já possui um contrato pendente"
+    },
+    "update": {
+      "success": "Contrato atualizado com sucesso",
+      "error": "Erro ao atualizar contrato"
+    },
+    "delete": {
+      "success": "Contrato deletado com sucesso",
+      "error": "Erro ao deletar contrato"
+    },
+    "validate": {
+      "professores_not_exists": "Um ou mais professores vinculados às aulas não foram encontrados",
+      "aluno_not_exists": "Aluno vinculado ao contrato não foi encontrado",
+      "invalid_dates": "Datas de início ou término do contrato estão inválidas",
+      "no_classes": "Contrato não possui aulas cadastradas",
+      "contrato_actived": "Contrato já está ativo",
+      "contrato_canceled_confirmation_required": "Contrato cancelado. É necessário confirmação para reativá-lo",
+      "contrato_inativo_confirmation_required": "Contrato inativo. É necessário confirmação para ativá-lo",
+      "error": "Erro ao validar contrato"
+    }
+  },
+  "aulas": {
+    "list": {
+      "success": "Aulas listadas com sucesso",
+      "error": "Erro ao buscar aulas"
+    },
+    "get": {
+      "not_found": "Aula não encontrada",
+      "error": "Erro ao buscar aula"
+    },
+    "create": {
+      "success": "Aula criada com sucesso",
+      "error": "Erro ao criar aula",
+      "ids_exists": "Já existe uma aula com os IDs informados"
+    },
+    "update": {
+      "success": "Aula atualizada com sucesso",
+      "error": "Erro ao atualizar aula",
+      "ids_change_not_allowed": "Não é permitido alterar os IDs de aluno, professor e dia da aula"
+    },
+    "delete": {
+      "success": "Aula deletada com sucesso",
+      "error": "Erro ao deletar aula"
+    },
+    "generate": {
+      "no_classes": "Nenhuma aula gerada para o período informado",
+      "error": "Erro ao gerar aulas"
+    },
+    "error": {
+      "professor_not_exists": "Professor não encontrado"
+    }
+  },
+  "diaAulas": {
+    "list": {
+      "success": "Dias de aula listados com sucesso",
+      "error": "Erro ao buscar dias de aula"
+    },
+    "get": {
+      "not_found": "Dia de aula não encontrado",
+      "error": "Erro ao buscar dia de aula"
+    },
+    "create": {
+      "success": "Dia de aula criado com sucesso",
+      "error": "Erro ao criar dia de aula",
+      "aluno_contrato_dia_aula_exists": "Já existe um dia de aula cadastrado para este aluno, contrato e dia",
+      "you_cannot_change_aluno_contrato": "Não é permitido alterar o aluno ou contrato"
+    },
+    "update": {
+      "success": "Dia de aula atualizado com sucesso",
+      "error": "Erro ao atualizar dia de aula"
+    },
+    "delete": {
+      "success": "Dia de aula deletado com sucesso",
+      "error": "Erro ao deletar dia de aula"
+    },
+    "error": {
+      "aluno_not_exists": "Aluno não encontrado",
+      "contrato_not_exists": "Contrato não encontrado",
+      "days_of_week_not_provided": "Todos os dias da semana devem ser fornecidos"
+    }
+  },
+  "disponibilidades": {
+    "list": {
+      "success": "Disponibilidades listadas com sucesso",
+      "error": "Erro ao buscar disponibilidades"
+    }
+  },
+  "disponibilidadeProfessors": {
+    "update": {
+      "success": "Disponibilidade do professor atualizada com sucesso",
+      "error": "Erro ao atualizar disponibilidade do professor"
     }
   }
 }

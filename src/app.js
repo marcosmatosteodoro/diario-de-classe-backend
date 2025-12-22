@@ -11,10 +11,14 @@ import cookieParser from 'cookie-parser';
 
 import Constants from './utilities/constants.js';
 import routes from './routes.js';
-import LoggerManager from './utilities/logger-manager.js';
+import LoggerManager from './utilities/loggerManager.js';
 import ErrorHandler from './middlewares/error-handler.js';
 import cleanRequest from './middlewares/cleanRequest.js';
 import i18nMiddleware from './middlewares/i18n.js';
+
+import { InitialSetting } from './InitialSetting.js';
+
+InitialSetting.handle();
 
 const app = express();
 

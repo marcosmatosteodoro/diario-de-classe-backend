@@ -5,8 +5,10 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "docker compose -f docker-compose.app-only.yml up --build",
+    "start:db": "docker compose -f docker-compose.yml up --build",
     "dev": "nodemon src/server.js",
+    "server": "git pull && npm install && npm run db:generate && npm run db:migrate && npm run db:push && npm run start",
     "test": "NODE_OPTIONS='--experimental-vm-modules' jest",
     "test:watch": "NODE_OPTIONS='--experimental-vm-modules' jest --watch",
     "test:coverage": "NODE_OPTIONS='--experimental-vm-modules' jest --coverage",
@@ -24,7 +26,7 @@
     "db:setup:sqlite": "node scripts/setup-database.js sqlite",
     "db:setup:postgresql": "node scripts/setup-database.js postgresql",
     "db:setup:mysql": "node scripts/setup-database.js mysql",
-    "db:seed": "node src/db/seed.js",
+    "db:seed": "node src/db/seeds/seed.js",
     "prepare": "husky || echo 'Husky not found, skipping...'",
     "build": "npm run db:generate",
     "vercel-build": "npm run db:generate"
