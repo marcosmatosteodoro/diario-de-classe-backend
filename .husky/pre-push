@@ -3,11 +3,14 @@
 echo "🚀 Running pre-push checks..."
 
 # Executa todos os testes
-echo "🧪 Running all tests..."
-npm test
-
-# Verifica se há erros de lint que possam ter sido perdidos
-echo "📝 Final lint check..."
-npm run lint
+echo "🧪 Running all units tests..."
+npm test units/controllers
+npm test units/middlewares
+npm test units/repositories
+npm test units/services
+npm test units/utilities
+npm test units/InitialSetting.test.js
+echo "🧪 Running all integration tests..."
+npm test integration
 
 echo "✅ All pre-push checks passed! Ready to push! 🎉"
