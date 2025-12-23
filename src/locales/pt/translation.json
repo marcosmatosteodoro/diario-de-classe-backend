@@ -182,6 +182,10 @@
     },
     "error": {
       "professor_not_exists": "Professor não encontrado"
+    },
+    "andamento": {
+      "status_required": "O status da aula é obrigatório.",
+      "invalid_status_transition": "Transição de status inválida de '{{currentStatus}}' para '{{newStatus}}'."
     }
   },
   "diaAulas": {
