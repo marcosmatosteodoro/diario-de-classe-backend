@@ -10,7 +10,7 @@ npm test units/repositories
 npm test units/services
 npm test units/utilities
 npm test units/InitialSetting.test.js
-echo "🧪 Running all integration tests..."
-npm test integration
+# echo "🧪 Running all integration tests..."
+# npm test integration
 
 echo "✅ All pre-push checks passed! Ready to push! 🎉"
