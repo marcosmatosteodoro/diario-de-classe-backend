@@ -182,6 +182,10 @@
     },
     "error": {
       "professor_not_exists": "Teacher not found"
+    },
+    "andamento": {
+      "status_required": "Class status is required.",
+      "invalid_status_transition": "Invalid status transition from '{{currentStatus}}' to '{{newStatus}}'."
     }
   },
   "diaAulas": {
