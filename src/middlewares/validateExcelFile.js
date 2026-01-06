@@ -13,18 +13,47 @@ export const validateExcelFile = (req, res, next) => {
     });
   }
 
-  // Verifica se o arquivo é do tipo Excel ou CSV
+  // Tipos MIME aceitos
   const allowedMimeTypes = [
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+    'text/csv',
+    'application/csv',
     'application/vnd.ms-excel', // .xls
-    'text/csv' // .csv
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' // .xlsx
   ];
 
-  if (!allowedMimeTypes.includes(req.file.mimetype)) {
+  // Extensões aceitas
+  const allowedExtensions = ['.csv', '.xls', '.xlsx'];
+
+  const file = req.file;
+  const mimeType = file.mimetype;
+  const originalName = file.originalname.toLowerCase();
+
+  // Verifica o tipo MIME
+  const isMimeTypeValid = allowedMimeTypes.includes(mimeType);
+
+  // Verifica a extensão do arquivo
+  const hasValidExtension = allowedExtensions.some(ext => originalName.endsWith(ext));
+
+  // Se o tipo MIME ou extensão não forem válidos, retorna erro
+  if (!isMimeTypeValid && !hasValidExtension) {
     return res.status(400).json({
       message: req.t
         ? req.t('validation.excel_file.invalid_type')
-        : 'Tipo de arquivo inválido. Apenas arquivos Excel ou CSV são permitidos'
+        : 'Tipo de arquivo inválido. Apenas arquivos Excel ou CSV são permitidos',
+      receivedMimeType: mimeType,
+      receivedFileName: file.originalname,
+      allowedFormats: ['CSV', 'XLS', 'XLSX']
+    });
+  }
+
+  // Opcional: Validar tamanho do arquivo (ex: max 10MB)
+  const maxSize = 10 * 1024 * 1024; // 10MB em bytes
+  if (file.size > maxSize) {
+    return res.status(400).json({
+      message: 'Arquivo muito grande. Tamanho máximo permitido: 10MB',
+      error: 'FILE_TOO_LARGE',
+      receivedSize: `${(file.size / 1024 / 1024).toFixed(2)}MB`,
+      maxSize: '10MB'
     });
   }
 
