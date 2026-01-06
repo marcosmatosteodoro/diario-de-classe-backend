@@ -54,6 +54,7 @@
     "i18next-http-middleware": "^3.8.1",
     "method-override": "^3.0.0",
     "morgan": "^1.10.1",
+    "multer": "^2.0.2",
     "newrelic": "^13.6.2",
     "prisma": "^6.18.0",
     "response-time": "^2.3.4"
