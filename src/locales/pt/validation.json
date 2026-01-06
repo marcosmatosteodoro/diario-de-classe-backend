@@ -1,0 +1,6 @@
+{
+  "excel_file": {
+    "required": "Arquivo Excel é obrigatório.",
+    "invalid_type": "Tipo de arquivo inválido. Apenas arquivos Excel ou CSV são permitidos."
+  }
+}
