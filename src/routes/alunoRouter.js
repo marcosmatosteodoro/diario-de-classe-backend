@@ -1,4 +1,5 @@
 import express from 'express';
+import multer from 'multer';
 // Controladores
 import { GetAlunoListController } from '../controllers/aluno/getAlunoListController.js';
 import { GetAlunoController } from '../controllers/aluno/getAlunoController.js';
@@ -9,13 +10,16 @@ import { GetDiaAulaListByAlunoController } from '../controllers/diaAula/getDiaAu
 import { GetContratoByAlunoController } from '../controllers/contrato/getContratoByAlunoController.js';
 import { GetAulasByAlunoController } from '../controllers/aula/getAulasByAlunoController.js';
 import { GetContratosByAlunoController } from '../controllers/contrato/getContratosByAlunoController.js';
+import { UploadAlunoExcelController } from '../controllers/aluno/uploadAlunoExcelController.js';
 // Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateAluno } from '../middlewares/aluno/validateCreateAluno.js';
 import { validateUpdateAluno } from '../middlewares/aluno/validateUpdateAluno.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
+import { validateExcelFile } from '../middlewares/validateExcelFile.js';
 
 const router = express.Router();
+const upload = multer({ dest: 'uploads/' });
 
 // GET /api/alunos - Buscar todos os alunos
 router.get('/', validateSearchQuery, GetAlunoListController.handle);
@@ -43,5 +47,8 @@ router.get('/:id/contratos', validateId, GetContratosByAlunoController.handle);
 
 // GET /api/alunos/:id/aulas - Buscar todas as aulas do aluno pelo ID
 router.get('/:id/aulas', validateId, GetAulasByAlunoController.handle);
+
+// POST /api/alunos/upload - Gerar alunos de acordo com lista de excel
+router.post('/upload', upload.single('file'), validateExcelFile, UploadAlunoExcelController.handle);
 
 export default router;
