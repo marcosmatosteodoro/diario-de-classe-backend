@@ -106,6 +106,10 @@
     "delete": {
       "success": "Aluno excluído com sucesso",
       "error": "Erro ao excluir aluno"
+    },
+    "upload": {
+      "repeated_emails": "Emails repetidos encontrados no arquivo",
+      "error": "Erro ao fazer upload do arquivo"
     }
   },
   "configuracaos": {
