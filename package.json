@@ -45,6 +45,7 @@
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "csv-parser": "^3.2.0",
     "custom-env": "^2.0.6",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
@@ -57,7 +58,8 @@
     "multer": "^2.0.2",
     "newrelic": "^13.6.2",
     "prisma": "^6.18.0",
-    "response-time": "^2.3.4"
+    "response-time": "^2.3.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",
