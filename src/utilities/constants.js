@@ -1,9 +1,9 @@
 import env from 'custom-env';
 
-env.env(true);
-
-if (process.env.NODE_ENV !== 'test') {
-  console.log('Env check: ', process.env.ENV_CHECK);
+// Só carrega custom-env em desenvolvimento/test
+// Em produção (Vercel), as variáveis vêm do dashboard
+if (process.env.NODE_ENV !== 'production') {
+  env.env(true);
 }
 
 export default class Constants {
