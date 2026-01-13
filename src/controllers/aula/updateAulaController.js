@@ -24,7 +24,7 @@ export class UpdateAulaController extends AbstractController {
         });
       }
 
-      this.removeStatus();
+      // this.removeStatus();
 
       const updatedAula = await UpdateAulaService.handle(id, this.req.body);
 
@@ -44,11 +44,11 @@ export class UpdateAulaController extends AbstractController {
     return isChangeAluno || isChangeProfessor || isChangeContrato;
   }
 
-  removeStatus() {
-    if (this.req.body.status) {
-      delete this.req.body.status;
-    }
-  }
+  // removeStatus() {
+  //   if (this.req.body.status) {
+  //     delete this.req.body.status;
+  //   }
+  // }
 
   static async handle(req, res) {
     const controller = new UpdateAulaController(req, res);
