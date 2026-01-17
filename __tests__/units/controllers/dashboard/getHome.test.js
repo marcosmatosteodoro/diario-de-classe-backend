@@ -10,7 +10,10 @@ describe('GetHomeController', () => {
   let req, res;
 
   beforeEach(() => {
-    req = { user: { sub: 42, role: 'admin' } };
+    req = {
+      user: { sub: 42, role: 'admin' },
+      query: {}
+    };
     res = { json: jest.fn(), status: jest.fn().mockReturnThis() };
     jest.clearAllMocks();
   });
@@ -36,11 +39,7 @@ describe('GetHomeController', () => {
       totalAulas: 3, // aulasAgendadas
       totalAlunos: 2,
       totalContratos: 3,
-      minhasAulas: [
-        { status: 'AGENDADA', idProfessor: 42 },
-        { status: 'AGENDADA', idProfessor: 42 }
-      ],
-      todasAsAulas: [
+      aulas: [
         { status: 'AGENDADA', idProfessor: 42 },
         { status: 'EM_ANDAMENTO', idProfessor: 99 },
         { status: 'AGENDADA', idProfessor: 42 },
