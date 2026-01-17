@@ -13,26 +13,17 @@ import { healthCheck, welcome } from './controllers/healthController.js';
 // Middlewares de validação
 import isLoggedIn from './middlewares/auth/isLoggedIn.js';
 
-const authController = authRouter;
-const userController = userRoutes;
-const alunoController = alunoRouters;
-const configuracaoController = configuracaoRouter;
-const contratoController = contratoRouter;
-const diaAulaController = diaAulaRouter;
-const aulaController = aulaRouter;
-const dashboardController = dashboardRouter;
-
 const router = express.Router();
 
 router.get('/', welcome);
 router.get('/health', healthCheck);
-router.use('/auth', authController);
-router.use('/dashboard', isLoggedIn, dashboardController);
-router.use('/professores', isLoggedIn, userController);
-router.use('/alunos', isLoggedIn, alunoController);
-router.use('/configuracao', isLoggedIn, configuracaoController);
-router.use('/contratos', isLoggedIn, contratoController);
-router.use('/dias-aulas', isLoggedIn, diaAulaController);
-router.use('/aulas', isLoggedIn, aulaController);
+router.use('/auth', authRouter);
+router.use('/dashboard', isLoggedIn, dashboardRouter);
+router.use('/professores', isLoggedIn, userRoutes);
+router.use('/alunos', isLoggedIn, alunoRouters);
+router.use('/configuracao', isLoggedIn, configuracaoRouter);
+router.use('/contratos', isLoggedIn, contratoRouter);
+router.use('/dias-aulas', isLoggedIn, diaAulaRouter);
+router.use('/aulas', isLoggedIn, aulaRouter);
 
 export default router;
