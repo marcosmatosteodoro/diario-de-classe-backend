@@ -2,6 +2,14 @@
  * Controller para endpoints de saúde da API
  */
 
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8'));
+
 /**
  * Health check da API
  * @param {Object} req - Request object
@@ -24,12 +32,11 @@ export const healthCheck = (req, res) => {
  */
 export const welcome = (req, res) => {
   res.status(200).json({
+    version: packageJson.version,
     message: req.t('api.welcome'),
-    version: '1.0.0',
-    language: req.language || 'pt',
-    endpoints: {
-      health: '/api/health',
-      users: '/api/users'
-    }
+    status: req.t('api.health.status'),
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    language: req.language || 'pt'
   });
 };
