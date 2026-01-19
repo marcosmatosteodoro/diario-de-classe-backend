@@ -59,4 +59,8 @@ export default class AbstractController {
 
     return this.res.status(statusCode).json(errorResponse);
   }
+
+  getWhereClauseByQuerySearch({ query, fields }) {
+    this.where.OR = fields.map(field => ({ [field]: { contains: query } }));
+  }
 }

@@ -1,6 +1,5 @@
 import AbstractController from '../abstractController.js';
 import { GetAulaListService } from '../../services/aula/getAulaListService.js';
-import { getWhereClauseByQuerySearch } from '../../utilities/getWhereClauseByQuerySearch.js';
 
 export class GetAulaListController extends AbstractController {
   constructor(req, res) {
@@ -11,7 +10,7 @@ export class GetAulaListController extends AbstractController {
   async execute() {
     try {
       if (this.req.query.q) {
-        this.where = getWhereClauseByQuerySearch({
+        this.getWhereClauseByQuerySearch({
           query: this.req.query.q,
           fields: ['horaInicial', 'horaFinal']
         });
