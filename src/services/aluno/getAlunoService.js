@@ -2,21 +2,24 @@ import AbstractService from '../abstractService.js';
 import AlunoRepository from '../../repositories/alunoRepository.js';
 
 export class GetAlunoService extends AbstractService {
-  constructor(Repository, id) {
+  constructor(Repository, id, additionalWhere = {}) {
     super(Repository);
-    this.id = id;
+    this.where = {
+      id: id,
+      ...additionalWhere
+    };
   }
 
   async execute() {
     return await this.repository.selectOne({
-      where: { id: this.id },
+      where: this.where,
       select: this.repository.selectFields
     });
   }
 
-  static async handle(id) {
+  static async handle(id, additionalWhere = {}) {
     const Repository = AlunoRepository;
-    const service = new GetAlunoService(Repository, id);
+    const service = new GetAlunoService(Repository, id, additionalWhere);
     return await service.execute();
   }
 }

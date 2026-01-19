@@ -13,7 +13,7 @@ describe('GetAlunoService - Inicialização', () => {
     expect(service).toBeInstanceOf(GetAlunoService);
     expect(service).toBeInstanceOf(AbstractService);
     expect(service.repository).toBeInstanceOf(AlunoRepository);
-    expect(service.id).toBe('aluno-id-1');
+    expect(service.where).toEqual({ id: 'aluno-id-1' });
   });
 
   test('deve criar uma instância com repositório customizado e id', () => {
@@ -28,18 +28,48 @@ describe('GetAlunoService - Inicialização', () => {
     expect(service).toBeInstanceOf(GetAlunoService);
     expect(service).toBeInstanceOf(AbstractService);
     expect(service.repository).toBeInstanceOf(MockRepository);
-    expect(service.id).toBe('aluno-id-2');
+    expect(service.where).toEqual({ id: 'aluno-id-2' });
   });
 
   test('deve herdar de AbstractService', () => {
     expect(Object.getPrototypeOf(GetAlunoService)).toBe(AbstractService);
   });
 
-  test('deve armazenar o id fornecido', () => {
+  test('deve armazenar o id fornecido no where', () => {
     const alunoId = 'aluno-id-123';
     const service = new GetAlunoService(AlunoRepository, alunoId);
 
-    expect(service.id).toBe(alunoId);
+    expect(service.where.id).toBe(alunoId);
+  });
+
+  test('deve aceitar additionalWhere como terceiro parâmetro', () => {
+    const additionalWhere = {
+      aulas: {
+        some: {
+          idProfessor: 'professor-123'
+        }
+      }
+    };
+    const service = new GetAlunoService(AlunoRepository, 'aluno-id-1', additionalWhere);
+
+    expect(service.where).toEqual({
+      id: 'aluno-id-1',
+      aulas: {
+        some: {
+          idProfessor: 'professor-123'
+        }
+      }
+    });
+  });
+
+  test('deve mesclar additionalWhere com id no where', () => {
+    const additionalWhere = { status: 'ATIVO' };
+    const service = new GetAlunoService(AlunoRepository, 'aluno-id-1', additionalWhere);
+
+    expect(service.where).toEqual({
+      id: 'aluno-id-1',
+      status: 'ATIVO'
+    });
   });
 });
 
@@ -183,6 +213,18 @@ describe('GetAlunoService - Método estático handle()', () => {
   test('deve aceitar apenas id como parâmetro', async () => {
     // Verifica que o método funciona apenas com ID
     const result = await GetAlunoService.handle('id-inexistente-teste-2');
+    expect(result).toBeNull();
+  });
+
+  test('deve aceitar additionalWhere como segundo parâmetro', async () => {
+    const additionalWhere = {
+      aulas: {
+        some: {
+          idProfessor: 'professor-999'
+        }
+      }
+    };
+    const result = await GetAlunoService.handle('id-inexistente-teste-3', additionalWhere);
     expect(result).toBeNull();
   });
 });
@@ -330,22 +372,22 @@ describe('GetAlunoService - Validação de campos selecionados', () => {
 describe('GetAlunoService - Diferentes tipos de ID', () => {
   test('deve funcionar com ID string', () => {
     const service = new GetAlunoService(AlunoRepository, 'aluno-id-123');
-    expect(service.id).toBe('aluno-id-123');
+    expect(service.where.id).toBe('aluno-id-123');
   });
 
   test('deve funcionar com ID cuid', () => {
     const service = new GetAlunoService(AlunoRepository, 'cmhj1234567890abcdef');
-    expect(service.id).toBe('cmhj1234567890abcdef');
+    expect(service.where.id).toBe('cmhj1234567890abcdef');
   });
 
   test('deve funcionar com ID undefined', () => {
     const service = new GetAlunoService(AlunoRepository, undefined);
-    expect(service.id).toBeUndefined();
+    expect(service.where.id).toBeUndefined();
   });
 
   test('deve funcionar com ID null', () => {
     const service = new GetAlunoService(AlunoRepository, null);
-    expect(service.id).toBeNull();
+    expect(service.where.id).toBeNull();
   });
 
   test('deve funcionar com IDs específicos do modelo Aluno', () => {
@@ -353,7 +395,7 @@ describe('GetAlunoService - Diferentes tipos de ID', () => {
 
     alunoIds.forEach(alunoId => {
       const service = new GetAlunoService(AlunoRepository, alunoId);
-      expect(service.id).toBe(alunoId);
+      expect(service.where.id).toBe(alunoId);
     });
   });
 });
