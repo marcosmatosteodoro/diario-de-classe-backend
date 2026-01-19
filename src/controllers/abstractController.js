@@ -16,6 +16,7 @@ export default class AbstractController {
 
     this.req = req;
     this.res = res;
+    this.where = {};
   }
 
   /**
