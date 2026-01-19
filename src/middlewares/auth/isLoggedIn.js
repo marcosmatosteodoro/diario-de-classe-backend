@@ -44,5 +44,6 @@ export default function isLoggedIn(req, res, next) {
     return next(new UnauthorizedError());
   }
   req.user = payload;
+  req.user.isAdmin = payload && payload.role === 'admin';
   return next();
 }
