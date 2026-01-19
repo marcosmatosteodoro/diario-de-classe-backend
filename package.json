@@ -4,6 +4,7 @@
   "description": "Api do diário de classe",
   "main": "app.js",
   "type": "module",
+  "private": true,
   "scripts": {
     "start": "node src/server.js",
     "start:docker": "docker compose -f docker-compose.app-only.yml up --build",
