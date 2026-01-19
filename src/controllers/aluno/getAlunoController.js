@@ -1,7 +1,7 @@
-import AbstractController from '../abstractController.js';
+import { AbstractAlunoController } from './AbstractAlunoController.js';
 import { GetAlunoService } from '../../services/aluno/getAlunoService.js';
 
-export class GetAlunoController extends AbstractController {
+export class GetAlunoController extends AbstractAlunoController {
   constructor(req, res) {
     super(req, res);
   }
@@ -10,7 +10,7 @@ export class GetAlunoController extends AbstractController {
     try {
       // Usa o ID validado pelo middleware se disponível, senão usa o parâmetro original
       const id = this.req.validatedId || this.req.params.id;
-      const aluno = await GetAlunoService.handle(id);
+      const aluno = await GetAlunoService.handle(id, this.where);
 
       if (!aluno) {
         return this.res.status(404).json({

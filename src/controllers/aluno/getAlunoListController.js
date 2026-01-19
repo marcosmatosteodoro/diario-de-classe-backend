@@ -1,10 +1,9 @@
-import AbstractController from '../abstractController.js';
+import { AbstractAlunoController } from './AbstractAlunoController.js';
 import { GetAlunoListService } from '../../services/aluno/getAlunoListService.js';
 
-export class GetAlunoListController extends AbstractController {
+export class GetAlunoListController extends AbstractAlunoController {
   constructor(req, res) {
     super(req, res);
-    this.where = {};
   }
 
   async execute() {
