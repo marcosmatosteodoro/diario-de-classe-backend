@@ -9,12 +9,15 @@ export class GetContratoService extends AbstractService {
       params && params.withRelations
         ? this.repository.getSelectFieldsWithRelations()
         : this.repository.selectFields;
-    this.params = params;
+    this.where = {
+      id: this.id,
+      ...(params.additionalWhere || {})
+    };
   }
 
   async execute() {
     return await this.repository.selectOne({
-      where: { id: this.id },
+      where: this.where,
       select: this.select
     });
   }
