@@ -3,6 +3,7 @@ import UserRepository from '../../repositories/userRepository.js';
 import { createJwt } from '../../utilities/createJwt.js';
 import Constants from '../../utilities/constants.js';
 import { GetConfiguracaoService } from '../configuracao/getConfiguracaoService.js';
+import { generatePayload } from '../../utilities/generatePayload.js';
 
 export class LoginService extends AbstractService {
   constructor(Repository, email, senha) {
@@ -45,11 +46,8 @@ export class LoginService extends AbstractService {
   }
 
   buildToken(user) {
-    this.accessToken = createJwt(
-      { sub: user.id, email: user.email },
-      Constants.jwtSecret,
-      Constants.accessExp
-    );
+    const payload = generatePayload(user);
+    this.accessToken = createJwt(payload, Constants.jwtSecret, Constants.accessExp);
     this.refreshToken = createJwt(
       { sub: user.id },
       Constants.jwtRefreshSecret,

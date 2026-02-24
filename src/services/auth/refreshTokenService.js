@@ -3,6 +3,7 @@ import UserRepository from '../../repositories/userRepository.js';
 import { createJwt } from '../../utilities/createJwt.js';
 import Constants from '../../utilities/constants.js';
 import tokenRevocationManager from './tokenRevocationManagerService.js';
+import { generatePayload } from '../../utilities/generatePayload.js';
 
 export class RefreshTokenService extends AbstractService {
   constructor(Repository, refreshToken) {
@@ -36,11 +37,8 @@ export class RefreshTokenService extends AbstractService {
     }
 
     // Gera novo access token
-    const newAccessToken = createJwt(
-      { sub: user.id, email: user.email },
-      Constants.jwtSecret,
-      Constants.accessExp
-    );
+    const payload = generatePayload(user);
+    const newAccessToken = createJwt(payload, Constants.jwtSecret, Constants.accessExp);
 
     return {
       accessToken: newAccessToken,

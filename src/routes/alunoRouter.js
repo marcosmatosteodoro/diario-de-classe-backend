@@ -1,5 +1,7 @@
 import express from 'express';
 import multer from 'multer';
+import os from 'os';
+import path from 'path';
 // Controladores
 import { GetAlunoListController } from '../controllers/aluno/getAlunoListController.js';
 import { GetAlunoController } from '../controllers/aluno/getAlunoController.js';
@@ -19,7 +21,11 @@ import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 import { validateExcelFile } from '../middlewares/validateExcelFile.js';
 
 const router = express.Router();
-const upload = multer({ dest: 'uploads/' });
+
+// Usa /tmp tanto em produção quanto local
+const uploadDir = path.join(os.tmpdir(), 'uploads');
+
+const upload = multer({ dest: uploadDir });
 
 // GET /api/alunos - Buscar todos os alunos
 router.get('/', validateSearchQuery, GetAlunoListController.handle);

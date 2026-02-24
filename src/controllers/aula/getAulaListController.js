@@ -1,17 +1,15 @@
-import AbstractController from '../abstractController.js';
 import { GetAulaListService } from '../../services/aula/getAulaListService.js';
-import { getWhereClauseByQuerySearch } from '../../utilities/getWhereClauseByQuerySearch.js';
+import { AbstractAulaController } from './AbstractAulaController.js';
 
-export class GetAulaListController extends AbstractController {
+export class GetAulaListController extends AbstractAulaController {
   constructor(req, res) {
     super(req, res);
-    this.where = {};
   }
 
   async execute() {
     try {
       if (this.req.query.q) {
-        this.where = getWhereClauseByQuerySearch({
+        this.getWhereClauseByQuerySearch({
           query: this.req.query.q,
           fields: ['horaInicial', 'horaFinal']
         });

@@ -19,6 +19,9 @@ export default class AlunoRepository extends AbstractRepository {
       telefone: true,
       criador: true,
       material: true,
+      // aulas: false,
+      // contratoes: false,
+      // diaAulas: false,
       dataCriacao: true,
       dataAtualizacao: true
     };

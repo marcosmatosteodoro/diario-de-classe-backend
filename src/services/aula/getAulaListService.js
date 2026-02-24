@@ -2,6 +2,7 @@ import AbstractService from '../abstractService.js';
 import AulaRepository from '../../repositories/aulaRepository.js';
 
 export class GetAulaListService extends AbstractService {
+  // TODO entender a necessidade de retornar todos os dados de aulas em todas as situações, algumas chamadas devem retornar só a aula, outra só a aula com os nomes e outras completas
   constructor(Repository, where, params) {
     super(Repository);
     this.where = where;

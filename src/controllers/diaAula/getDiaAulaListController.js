@@ -1,17 +1,15 @@
-import AbstractController from '../abstractController.js';
 import { GetDiaAulaListService } from '../../services/diaAula/getDiaAulaListService.js';
-import { getWhereClauseByQuerySearch } from '../../utilities/getWhereClauseByQuerySearch.js';
+import { AbstractDiaAulaController } from './AbstractDiaAulaController.js';
 
-export class GetDiaAulaListController extends AbstractController {
+export class GetDiaAulaListController extends AbstractDiaAulaController {
   constructor(req, res) {
     super(req, res);
-    this.where = {};
   }
 
   async execute() {
     try {
       if (this.req.query.q) {
-        this.where = getWhereClauseByQuerySearch({
+        this.getWhereClauseByQuerySearch({
           query: this.req.query.q,
           fields: ['diaSemana', 'quantidadeAulas', 'horaInicial', 'horaFinal']
         });

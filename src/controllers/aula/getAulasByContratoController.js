@@ -1,20 +1,14 @@
-import AbstractController from '../abstractController.js';
 import { GetAulaListService } from '../../services/aula/getAulaListService.js';
+import { AbstractAulaController } from './AbstractAulaController.js';
 
-export class GetAulasByContratoController extends AbstractController {
+export class GetAulasByContratoController extends AbstractAulaController {
   constructor(req, res) {
     super(req, res);
-    this.where = {};
   }
 
   async execute() {
     try {
-      const idContrato = this.req.validatedId || this.req.params.id;
-
-      this.where = {
-        idContrato
-      };
-
+      this.where.idContrato = this.req.validatedId || this.req.params.id;
       const aulas = await GetAulaListService.handle(this.where);
 
       if (!aulas || aulas.length === 0) {

@@ -9,6 +9,10 @@ describe('GetAlunoController', () => {
     // Mock básico do request
     mockReq = {
       params: { id: '1' },
+      user: {
+        id: 'admin-default',
+        isAdmin: true
+      },
       t: key => {
         const translations = {
           'alunos.get.not_found': 'Aluno não encontrado',
@@ -220,11 +224,12 @@ describe('GetAlunoController', () => {
       expect(typeof controller.handleError).toBe('function');
     });
 
-    test('deve ser uma subclasse de AbstractController', () => {
+    test('deve ser uma subclasse de AbstractController através de AbstractAlunoController', () => {
       expect(GetAlunoController.prototype).toBeInstanceOf(Object);
-      expect(Object.getPrototypeOf(GetAlunoController.prototype)).toBe(
-        AbstractController.prototype
-      );
+      // GetAlunoController herda de AbstractAlunoController que herda de AbstractController
+      const proto = Object.getPrototypeOf(GetAlunoController.prototype);
+      expect(proto.constructor.name).toBe('AbstractAlunoController');
+      expect(Object.getPrototypeOf(proto)).toBe(AbstractController.prototype);
     });
 
     test('deve implementar método handle() estático', () => {
@@ -447,6 +452,77 @@ describe('GetAlunoController', () => {
       expect(mockRes.data).toEqual(mockAluno);
 
       // Restore original
+      GetAlunoService.handle = originalHandle;
+    });
+  });
+
+  describe('Controle de acesso - Filtros por permissão', () => {
+    test('deve passar where vazio quando usuário é admin', async () => {
+      mockReq.user = {
+        id: 'admin-123',
+        isAdmin: true
+      };
+
+      const originalHandle = GetAlunoService.handle;
+      let receivedWhere;
+      GetAlunoService.handle = async (id, where) => {
+        receivedWhere = where;
+        return { id: '1', nome: 'Teste' };
+      };
+
+      const controller = new GetAlunoController(mockReq, mockRes);
+      await controller.execute();
+
+      expect(receivedWhere).toEqual({});
+
+      GetAlunoService.handle = originalHandle;
+    });
+
+    test('deve passar filtro de aulas quando usuário não é admin', async () => {
+      const professorId = 'professor-456';
+      mockReq.user = {
+        id: professorId,
+        isAdmin: false
+      };
+
+      const originalHandle = GetAlunoService.handle;
+      let receivedWhere;
+      GetAlunoService.handle = async (id, where) => {
+        receivedWhere = where;
+        return { id: '1', nome: 'Teste' };
+      };
+
+      const controller = new GetAlunoController(mockReq, mockRes);
+      await controller.execute();
+
+      expect(receivedWhere).toEqual({
+        aulas: {
+          some: {
+            idProfessor: professorId
+          }
+        }
+      });
+
+      GetAlunoService.handle = originalHandle;
+    });
+
+    test('deve retornar 404 se aluno não pertence ao professor', async () => {
+      mockReq.user = {
+        id: 'professor-999',
+        isAdmin: false
+      };
+
+      const originalHandle = GetAlunoService.handle;
+      GetAlunoService.handle = async () => null;
+
+      const controller = new GetAlunoController(mockReq, mockRes);
+      await controller.execute();
+
+      expect(mockRes.statusCode).toBe(404);
+      expect(mockRes.data).toEqual({
+        message: 'Aluno não encontrado'
+      });
+
       GetAlunoService.handle = originalHandle;
     });
   });

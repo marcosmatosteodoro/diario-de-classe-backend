@@ -10,6 +10,10 @@ describe('DeleteAlunoController', () => {
     mockReq = {
       validatedId: 'cq7k8j2l4m0n5o6p7q8r9s0t1u',
       params: { id: 'cq7k8j2l4m0n5o6p7q8r9s0t1u' },
+      user: {
+        id: 'admin-default',
+        isAdmin: true
+      },
       t: key => {
         const translations = {
           'alunos.get.not_found': 'Aluno não encontrado',
@@ -408,11 +412,12 @@ describe('DeleteAlunoController', () => {
       expect(typeof controller.handleError).toBe('function');
     });
 
-    test('deve ser uma subclasse de AbstractController', () => {
+    test('deve ser uma subclasse de AbstractController através de AbstractAlunoController', () => {
       expect(DeleteAlunoController.prototype).toBeInstanceOf(Object);
-      expect(Object.getPrototypeOf(DeleteAlunoController.prototype)).toBe(
-        AbstractController.prototype
-      );
+      // DeleteAlunoController herda de AbstractAlunoController que herda de AbstractController
+      const proto = Object.getPrototypeOf(DeleteAlunoController.prototype);
+      expect(proto.constructor.name).toBe('AbstractAlunoController');
+      expect(Object.getPrototypeOf(proto)).toBe(AbstractController.prototype);
     });
 
     test('deve implementar método handle() estático', () => {
@@ -525,6 +530,110 @@ describe('DeleteAlunoController', () => {
       await controller.execute();
 
       expect(mockRes.statusCode).toBe(204);
+
+      GetAlunoService.handle = originalGetHandle;
+      DeleteAlunoService.handle = originalDeleteHandle;
+    });
+  });
+
+  describe('Controle de acesso - Filtros por permissão', () => {
+    test('deve passar where vazio quando usuário é admin', async () => {
+      mockReq.user = {
+        id: 'admin-123',
+        isAdmin: true
+      };
+
+      const originalGetHandle = GetAlunoService.handle;
+      const originalDeleteHandle = DeleteAlunoService.handle;
+
+      let receivedWhere;
+      GetAlunoService.handle = async (id, where) => {
+        receivedWhere = where;
+        return { id: '1', nome: 'Teste' };
+      };
+      DeleteAlunoService.handle = async () => {};
+
+      const controller = new DeleteAlunoController(mockReq, mockRes);
+      await controller.execute();
+
+      expect(receivedWhere).toEqual({});
+
+      GetAlunoService.handle = originalGetHandle;
+      DeleteAlunoService.handle = originalDeleteHandle;
+    });
+
+    test('deve passar filtro de aulas quando usuário não é admin', async () => {
+      const professorId = 'professor-456';
+      mockReq.user = {
+        id: professorId,
+        isAdmin: false
+      };
+
+      const originalGetHandle = GetAlunoService.handle;
+      const originalDeleteHandle = DeleteAlunoService.handle;
+
+      let receivedWhere;
+      GetAlunoService.handle = async (id, where) => {
+        receivedWhere = where;
+        return { id: '1', nome: 'Teste' };
+      };
+      DeleteAlunoService.handle = async () => {};
+
+      const controller = new DeleteAlunoController(mockReq, mockRes);
+      await controller.execute();
+
+      expect(receivedWhere).toEqual({
+        aulas: {
+          some: {
+            idProfessor: professorId
+          }
+        }
+      });
+
+      GetAlunoService.handle = originalGetHandle;
+      DeleteAlunoService.handle = originalDeleteHandle;
+    });
+
+    test('deve retornar 404 se aluno não pertence ao professor', async () => {
+      mockReq.user = {
+        id: 'professor-999',
+        isAdmin: false
+      };
+
+      const originalGetHandle = GetAlunoService.handle;
+      GetAlunoService.handle = async () => null;
+
+      const controller = new DeleteAlunoController(mockReq, mockRes);
+      await controller.execute();
+
+      expect(mockRes.statusCode).toBe(404);
+      expect(mockRes.data).toEqual({
+        message: 'Aluno não encontrado'
+      });
+
+      GetAlunoService.handle = originalGetHandle;
+    });
+
+    test('não deve deletar aluno que não pertence ao professor', async () => {
+      mockReq.user = {
+        id: 'professor-888',
+        isAdmin: false
+      };
+
+      const originalGetHandle = GetAlunoService.handle;
+      const originalDeleteHandle = DeleteAlunoService.handle;
+
+      let deleteWasCalled = false;
+      GetAlunoService.handle = async () => null;
+      DeleteAlunoService.handle = async () => {
+        deleteWasCalled = true;
+      };
+
+      const controller = new DeleteAlunoController(mockReq, mockRes);
+      await controller.execute();
+
+      expect(deleteWasCalled).toBe(false);
+      expect(mockRes.statusCode).toBe(404);
 
       GetAlunoService.handle = originalGetHandle;
       DeleteAlunoService.handle = originalDeleteHandle;

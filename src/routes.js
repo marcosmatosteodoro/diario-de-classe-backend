@@ -12,6 +12,7 @@ import dashboardRouter from './routes/dashboardRouter.js';
 import { healthCheck, welcome } from './controllers/healthController.js';
 // Middlewares de validação
 import isLoggedIn from './middlewares/auth/isLoggedIn.js';
+import adminOnly from './middlewares/adminOnly.js';
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.get('/', welcome);
 router.get('/health', healthCheck);
 router.use('/auth', authRouter);
 router.use('/dashboard', isLoggedIn, dashboardRouter);
-router.use('/professores', isLoggedIn, userRoutes);
+router.use('/professores', isLoggedIn, adminOnly, userRoutes);
 router.use('/alunos', isLoggedIn, alunoRouters);
 router.use('/configuracao', isLoggedIn, configuracaoRouter);
 router.use('/contratos', isLoggedIn, contratoRouter);

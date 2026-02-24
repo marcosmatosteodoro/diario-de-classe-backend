@@ -14,7 +14,8 @@
       "not_found": "Endpoint not found",
       "internal_error": "Internal server error",
       "bad_request": "Invalid request",
-      "unauthorized": "Unauthorized"
+      "unauthorized": "Unauthorized",
+      "forbidden": "You do not have permission to perform this action"
     }
   },
   "validation": {

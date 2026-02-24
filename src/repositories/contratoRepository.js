@@ -24,7 +24,11 @@ export default class ContratoRepository extends AbstractRepository {
       totalAulasCanceladas: true,
       dataCriacao: true,
       dataAtualizacao: true,
-      aluno: false,
+      aluno: {
+        select: {
+          nome: true
+        }
+      },
       diaAulas: false
     };
   }
