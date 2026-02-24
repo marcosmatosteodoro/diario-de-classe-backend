@@ -18,6 +18,7 @@ import { validateUpdateContrato } from '../middlewares/contrato/validateUpdateCo
 import { validateCreateManyDiaAula } from '../middlewares/diaAula/validateCreateManyDiaAula.js';
 import { validateCreateManyAula } from '../middlewares/aula/validateCreateManyAula.js';
 import { validateGenerateAula } from '../middlewares/aula/validateGenerateAula.js';
+import adminOnly from '../middlewares/adminOnly.js';
 
 const router = express.Router();
 
@@ -28,13 +29,13 @@ router.get('/', GetContratoListController.handle);
 router.get('/:id', validateId, GetContratoController.handle);
 
 // POST /api/contratos - Criar novo contrato
-router.post('/', validateCreateContrato, CreateContratoController.handle);
+router.post('/', adminOnly, validateCreateContrato, CreateContratoController.handle);
 
 // PUT /api/contratos/:id - Atualizar contrato por ID
-router.put('/:id', validateId, validateUpdateContrato, UpdateContratoController.handle);
+router.put('/:id', adminOnly, validateId, validateUpdateContrato, UpdateContratoController.handle);
 
 // DELETE /api/contratos/:id - Deletar contrato por ID
-router.delete('/:id', validateId, DeleteContratoController.handle);
+router.delete('/:id', adminOnly, validateId, DeleteContratoController.handle);
 
 // GET /api/contratos/:id/dias-aulas - Buscar dias de aulas de um contrato
 router.get('/:id/dias-aulas', validateId, GetDiaAulaListByContratoController.handle);
@@ -42,6 +43,7 @@ router.get('/:id/dias-aulas', validateId, GetDiaAulaListByContratoController.han
 // POST /api/contratos/:id/dia-aulas - Criar novos dias de aulas
 router.post(
   '/:id/dias-aulas',
+  adminOnly,
   validateId,
   validateCreateManyDiaAula,
   CreateManyDiaAulaController.handle
@@ -51,17 +53,24 @@ router.post(
 router.get('/:id/aulas', validateId, GetAulasByContratoController.handle);
 
 // POST /api/contratos/:id/aulas - Criar aulas de um contrato
-router.post('/:id/aulas', validateId, validateCreateManyAula, CreateManyAulaController.handle);
+router.post(
+  '/:id/aulas',
+  adminOnly,
+  validateId,
+  validateCreateManyAula,
+  CreateManyAulaController.handle
+);
 
 // GET /api/contratos/:id/aulas/generate - Buscar aulas de um contrato
 router.post(
   '/:id/aulas/generate',
+  adminOnly,
   validateId,
   validateGenerateAula,
   GenerateAulasByContratoController.handle
 );
 
 // GET /api/contratos/:id/validate - Faz a validação do contrato
-router.get('/:id/validate', validateId, ValidateContratoController.handle);
+router.get('/:id/validate', adminOnly, validateId, ValidateContratoController.handle);
 
 export default router;

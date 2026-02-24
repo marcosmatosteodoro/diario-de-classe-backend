@@ -4,6 +4,7 @@ import { GetConfiguracaoController } from '../controllers/configuracao/getConfig
 import { UpdateConfiguracaoController } from '../controllers/configuracao/updateConfiguracaoController.js';
 // Middlewares de validação
 import { validateUpdateConfiguracao } from '../middlewares/configuracao/validateUpdateConfiguracao.js';
+import adminOnly from '../middlewares/adminOnly.js';
 
 const router = express.Router();
 
@@ -11,6 +12,6 @@ const router = express.Router();
 router.get('/', GetConfiguracaoController.handle);
 
 // PUT /api/configuracaos/:id - Atualizar configuracao por ID
-router.put('/', validateUpdateConfiguracao, UpdateConfiguracaoController.handle);
+router.put('/', adminOnly, validateUpdateConfiguracao, UpdateConfiguracaoController.handle);
 
 export default router;

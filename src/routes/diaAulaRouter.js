@@ -10,6 +10,7 @@ import { validateId } from '../middlewares/validateId.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 import { validateCreateDiaAula } from '../middlewares/diaAula/validateCreateDiaAula.js.js';
 import { validateUpdateDiaAula } from '../middlewares/diaAula/validateUpdateDiaAula.js.js';
+import adminOnly from '../middlewares/adminOnly.js';
 
 const router = express.Router();
 
@@ -20,12 +21,12 @@ router.get('/', validateSearchQuery, GetDiaAulaListController.handle);
 router.get('/:id', validateId, GetDiaAulaController.handle);
 
 // POST /api/diaAulas - Criar novo diaAula
-router.post('/', validateCreateDiaAula, CreateDiaAulaController.handle);
+router.post('/', adminOnly, validateCreateDiaAula, CreateDiaAulaController.handle);
 
 // PUT /api/diaAulas/:id - Atualizar diaAula por ID
-router.put('/:id', validateId, validateUpdateDiaAula, UpdateDiaAulaController.handle);
+router.put('/:id', adminOnly, validateId, validateUpdateDiaAula, UpdateDiaAulaController.handle);
 
 // DELETE /api/diaAulas/:id - Deletar diaAula por ID
-router.delete('/:id', validateId, DeleteDiaAulaController.handle);
+router.delete('/:id', adminOnly, validateId, DeleteDiaAulaController.handle);
 
 export default router;

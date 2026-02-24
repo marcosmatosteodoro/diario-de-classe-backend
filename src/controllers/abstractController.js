@@ -16,6 +16,7 @@ export default class AbstractController {
 
     this.req = req;
     this.res = res;
+    this.where = {};
   }
 
   /**
@@ -58,5 +59,9 @@ export default class AbstractController {
     }
 
     return this.res.status(statusCode).json(errorResponse);
+  }
+
+  getWhereClauseByQuerySearch({ query, fields }) {
+    this.where.OR = fields.map(field => ({ [field]: { contains: query } }));
   }
 }

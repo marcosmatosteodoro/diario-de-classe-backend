@@ -11,6 +11,7 @@ describe('AndamentoAulaController', () => {
       params: { id: 'aula-1' },
       validatedId: 'aula-1',
       body: {},
+      user: { id: 'user-1', isAdmin: false },
       t: (key, args) => {
         if (key === 'aulas.andamento.invalid_status_transition' && args) {
           return `Transição de status inválida de '${args.currentStatus}' para '${args.newStatus}'.`;

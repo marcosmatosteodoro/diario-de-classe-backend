@@ -9,6 +9,7 @@ describe('GetAulasByContratoController', () => {
     // Mock básico do request
     mockReq = {
       params: { id: '1' },
+      user: { id: 'user-1', isAdmin: false },
       t: key => {
         const translations = {
           'aulas.list.error': 'Erro ao buscar aulas'
@@ -48,9 +49,10 @@ describe('GetAulasByContratoController', () => {
     });
 
     test('deve inicializar where como objeto vazio', () => {
+      // Como user.isAdmin é false, where vai ter idProfessor
       const controller = new GetAulasByContratoController(mockReq, mockRes);
 
-      expect(controller.where).toEqual({});
+      expect(controller.where).toEqual({ idProfessor: 'user-1' });
       expect(typeof controller.where).toBe('object');
     });
 

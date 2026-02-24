@@ -1,17 +1,15 @@
-import AbstractController from '../abstractController.js';
+import { AbstractAlunoController } from './AbstractAlunoController.js';
 import { GetAlunoListService } from '../../services/aluno/getAlunoListService.js';
-import { getWhereClauseByQuerySearch } from '../../utilities/getWhereClauseByQuerySearch.js';
 
-export class GetAlunoListController extends AbstractController {
+export class GetAlunoListController extends AbstractAlunoController {
   constructor(req, res) {
     super(req, res);
-    this.where = {};
   }
 
   async execute() {
     try {
       if (this.req.query.q) {
-        this.where = getWhereClauseByQuerySearch({
+        this.getWhereClauseByQuerySearch({
           query: this.req.query.q,
           fields: ['nome', 'sobrenome', 'email', 'telefone']
         });

@@ -1,9 +1,9 @@
-import AbstractController from '../abstractController.js';
+import { AbstractAlunoController } from './AbstractAlunoController.js';
 import { GetAlunoService } from '../../services/aluno/getAlunoService.js';
 import { UpdateAlunoService } from '../../services/aluno/updateAlunoService.js';
 import { IsAlunoEmailExistsService } from '../../services/aluno/isAlunoEmailExistsService.js';
 
-export class UpdateAlunoController extends AbstractController {
+export class UpdateAlunoController extends AbstractAlunoController {
   constructor(req, res) {
     super(req, res);
   }
@@ -11,7 +11,7 @@ export class UpdateAlunoController extends AbstractController {
   async execute() {
     try {
       const id = this.req.validatedId || this.req.params.id;
-      const aluno = await GetAlunoService.handle(id);
+      const aluno = await GetAlunoService.handle(id, this.where);
 
       if (!aluno) {
         return this.res.status(404).json({

@@ -17,6 +17,10 @@ describe('GetAlunoListController', () => {
 
     mockReq = {
       query: {},
+      user: {
+        id: 'admin-default',
+        isAdmin: true
+      },
       t: key => key
     };
 
@@ -45,8 +49,10 @@ describe('GetAlunoListController', () => {
       expect(controller.where).toEqual({});
     });
 
-    test('deve herdar de AbstractController', () => {
-      expect(Object.getPrototypeOf(GetAlunoListController)).toBe(AbstractController);
+    test('deve herdar de AbstractController através de AbstractAlunoController', () => {
+      const proto = Object.getPrototypeOf(GetAlunoListController);
+      expect(proto.name).toBe('AbstractAlunoController');
+      expect(Object.getPrototypeOf(proto)).toBe(AbstractController);
     });
 
     test('deve implementar métodos obrigatórios', () => {
@@ -180,11 +186,16 @@ describe('GetAlunoListController', () => {
       expect(controller.res).toBe(mockRes);
     });
 
-    test('deve ser uma subclasse de AbstractController', () => {
+    test('deve ser uma subclasse de AbstractController através de AbstractAlunoController', () => {
       const controller = new GetAlunoListController(mockReq, mockRes);
 
       expect(controller instanceof AbstractController).toBe(true);
       expect(controller instanceof GetAlunoListController).toBe(true);
+
+      // Verifica a cadeia de herança
+      const proto = Object.getPrototypeOf(GetAlunoListController.prototype);
+      expect(proto.constructor.name).toBe('AbstractAlunoController');
+      expect(Object.getPrototypeOf(proto)).toBe(AbstractController.prototype);
     });
   });
 
@@ -460,6 +471,68 @@ describe('GetAlunoListController', () => {
       expect(statusCode).toBe(200);
       expect(responseData.count).toBe(3);
       expect(responseData.data).toEqual(listaAlunos);
+    });
+  });
+
+  describe('Controle de acesso - Filtros por permissão', () => {
+    test('deve manter where vazio quando usuário é admin', () => {
+      mockReq.user = {
+        id: 'admin-123',
+        isAdmin: true
+      };
+
+      const controller = new GetAlunoListController(mockReq, mockRes);
+
+      expect(controller.where).toEqual({});
+    });
+
+    test('deve aplicar filtro de aulas quando usuário não é admin', () => {
+      const professorId = 'professor-456';
+      mockReq.user = {
+        id: professorId,
+        isAdmin: false
+      };
+
+      const controller = new GetAlunoListController(mockReq, mockRes);
+
+      expect(controller.where).toEqual({
+        aulas: {
+          some: {
+            idProfessor: professorId
+          }
+        }
+      });
+    });
+
+    test('deve combinar filtro de professor com busca por query', () => {
+      const professorId = 'professor-789';
+      mockReq.user = {
+        id: professorId,
+        isAdmin: false
+      };
+      mockReq.query.q = 'João';
+
+      const controller = new GetAlunoListController(mockReq, mockRes);
+
+      // Antes de executar, deve ter apenas o filtro de professor
+      expect(controller.where.aulas).toEqual({
+        some: {
+          idProfessor: professorId
+        }
+      });
+    });
+
+    test('admin pode buscar com query sem filtro de professor', () => {
+      mockReq.user = {
+        id: 'admin-999',
+        isAdmin: true
+      };
+      mockReq.query.q = 'Maria';
+
+      const controller = new GetAlunoListController(mockReq, mockRes);
+
+      // Admin não deve ter filtro de aulas
+      expect(controller.where.aulas).toBeUndefined();
     });
   });
 });
