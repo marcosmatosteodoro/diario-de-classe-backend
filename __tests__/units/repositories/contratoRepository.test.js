@@ -97,22 +97,18 @@ describe('ContratoRepository', () => {
         'dataAtualizacao'
       ];
 
-      const expectedFalseFields = ['aluno', 'diaAulas'];
+      // Campos relacionais com select
+      expect(fields.aluno).toEqual({ select: { nome: true } });
+      expect(fields.diaAulas).toBe(false);
 
       // Campos selecionados (true)
       expectedTrueFields.forEach(field => {
         expect(fields[field]).toBe(true);
       });
 
-      // Campos relacionais (false)
-      expectedFalseFields.forEach(field => {
-        expect(fields[field]).toBe(false);
-      });
-
-      // Total de campos
-      expect(Object.keys(fields)).toHaveLength(
-        expectedTrueFields.length + expectedFalseFields.length
-      );
+      // Total de campos (11 campos true + aluno + diaAulas + dataCriacao + dataAtualizacao = 15, mas na lista só 11)
+      // Na verdade são: id, idAluno, dataInicio, dataTermino, status, totalAulas, totalAulasFeitas, totalReposicoes, totalFaltas, totalAulasCanceladas, dataCriacao, dataAtualizacao, aluno, diaAulas = 14
+      expect(Object.keys(fields)).toHaveLength(14);
     });
   });
 
