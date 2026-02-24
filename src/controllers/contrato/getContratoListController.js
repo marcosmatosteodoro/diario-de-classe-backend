@@ -1,10 +1,9 @@
-import AbstractController from '../abstractController.js';
 import { GetContratoListService } from '../../services/contrato/getContratoListService.js';
+import { AbstractContratoController } from './AbstractContratoController.js';
 
-export class GetContratoListController extends AbstractController {
+export class GetContratoListController extends AbstractContratoController {
   constructor(req, res) {
     super(req, res);
-    this.where = {};
   }
 
   async execute() {

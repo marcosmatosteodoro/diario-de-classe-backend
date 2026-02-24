@@ -1,8 +1,8 @@
-import AbstractController from '../abstractController.js';
 import { GetAulaService } from '../../services/aula/getAulaService.js';
 import { UpdateAulaService } from '../../services/aula/updateAulaService.js';
+import { AbstractAulaController } from './AbstractAulaController.js';
 
-export class UpdateAulaController extends AbstractController {
+export class UpdateAulaController extends AbstractAulaController {
   constructor(req, res) {
     super(req, res);
   }
@@ -10,7 +10,7 @@ export class UpdateAulaController extends AbstractController {
   async execute() {
     try {
       const id = this.req.validatedId || this.req.params.id;
-      const aula = await GetAulaService.handle(id);
+      const aula = await GetAulaService.handle(id, this.where);
 
       if (!aula) {
         return this.res.status(404).json({

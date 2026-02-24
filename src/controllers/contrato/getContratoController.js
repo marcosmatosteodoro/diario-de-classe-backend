@@ -1,7 +1,7 @@
-import AbstractController from '../abstractController.js';
 import { GetContratoService } from '../../services/contrato/getContratoService.js';
+import { AbstractContratoController } from './AbstractContratoController.js';
 
-export class GetContratoController extends AbstractController {
+export class GetContratoController extends AbstractContratoController {
   constructor(req, res) {
     super(req, res);
   }
@@ -10,6 +10,7 @@ export class GetContratoController extends AbstractController {
     try {
       const id = this.req.validatedId || this.req.params.id;
       const params = this.req.query || {};
+      params.additionalWhere = this.where;
       const contrato = await GetContratoService.handle(id, params);
 
       if (!contrato) {

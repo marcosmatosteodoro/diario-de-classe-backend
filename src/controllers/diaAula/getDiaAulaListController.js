@@ -1,10 +1,9 @@
-import AbstractController from '../abstractController.js';
 import { GetDiaAulaListService } from '../../services/diaAula/getDiaAulaListService.js';
+import { AbstractDiaAulaController } from './AbstractDiaAulaController.js';
 
-export class GetDiaAulaListController extends AbstractController {
+export class GetDiaAulaListController extends AbstractDiaAulaController {
   constructor(req, res) {
     super(req, res);
-    this.where = {};
   }
 
   async execute() {
