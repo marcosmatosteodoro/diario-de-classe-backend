@@ -44,7 +44,7 @@ export class AndamentoAulaController extends AbstractAulaController {
       }
 
       const updatedAula = await UpdateAulaService.handle(id, { status: newStatus });
-      await UpdateAulasContratoService.handle(updatedAula.idContrato);
+      await UpdateAulasContratoService.handle(aula.idContrato);
 
       return this.res.status(200).json(updatedAula);
     } catch (error) {
