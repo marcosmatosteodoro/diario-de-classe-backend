@@ -7,16 +7,18 @@ export class GetHomeController extends AbstractController {
   constructor(req, res) {
     super(req, res);
     this.where = {};
+    this.alunoWhere = {};
+    this.contratoWhere;
     this.id = req.user.sub;
   }
 
   async execute() {
     try {
-      this.bindWhere();
+      this.bindWheres();
       const aulasParams = { withRelations: true };
-      const alunos = await GetAlunoListService.handle();
+      const alunos = await GetAlunoListService.handle(this.alunoWhere);
       const aulas = await GetAulaListService.handle(this.where, aulasParams);
-      const contratos = await GetContratoListService.handle({ status: 'ATIVO' });
+      const contratos = await GetContratoListService.handle(this.contratoWhere);
       const aulasAgendadas = aulas.filter(aula => aula.status === 'AGENDADA');
 
       return this.res.status(200).json({
@@ -30,7 +32,27 @@ export class GetHomeController extends AbstractController {
     }
   }
 
-  bindWhere() {
+  bindWheres() {
+    this.bindContratoWhere();
+    this.bindAlunoWhere();
+    this.bindMainWhere();
+  }
+
+  bindContratoWhere() {
+    this.contratoWhere = { status: 'ATIVO' };
+  }
+  bindAlunoWhere() {
+    if (!this.req.user.isAdmin) {
+      this.alunoWhere = {
+        aulas: {
+          some: {
+            idProfessor: this.req.user.id
+          }
+        }
+      };
+    }
+  }
+  bindMainWhere() {
     const { dataInicio, dataTermino, status, tipo, minhasAulas, professorId } = this.req.query;
     if (dataInicio) {
       const dataFim = dataTermino || dataInicio;
