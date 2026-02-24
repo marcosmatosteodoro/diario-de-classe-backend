@@ -1,6 +1,7 @@
 import AbstractController from '../abstractController.js';
 import { CreateAulaService } from '../../services/aula/createAulaService.js';
 import { IsAulaExistsService } from '../../services/aula/isAulaExistsService.js';
+import { UpdateAulasContratoService } from '../../services/contrato/updateAulasContratoService.js';
 
 export class CreateAulaController extends AbstractController {
   constructor(req, res) {
@@ -21,6 +22,7 @@ export class CreateAulaController extends AbstractController {
       };
 
       const newAula = await CreateAulaService.handle(data);
+      await UpdateAulasContratoService.handle(newAula.idContrato);
 
       return this.res.status(201).json(newAula);
     } catch (error) {

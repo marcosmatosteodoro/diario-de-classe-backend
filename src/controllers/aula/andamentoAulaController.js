@@ -1,5 +1,6 @@
 import { GetAulaService } from '../../services/aula/getAulaService.js';
 import { UpdateAulaService } from '../../services/aula/updateAulaService.js';
+import { UpdateAulasContratoService } from '../../services/contrato/updateAulasContratoService.js';
 import { AbstractAulaController } from './AbstractAulaController.js';
 
 export class AndamentoAulaController extends AbstractAulaController {
@@ -43,6 +44,7 @@ export class AndamentoAulaController extends AbstractAulaController {
       }
 
       const updatedAula = await UpdateAulaService.handle(id, { status: newStatus });
+      await UpdateAulasContratoService.handle(updatedAula.idContrato);
 
       return this.res.status(200).json(updatedAula);
     } catch (error) {
