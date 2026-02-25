@@ -6,11 +6,18 @@ export class AbstractDiaAulaController extends AbstractController {
     if (!req.user.isAdmin) {
       this.where = {
         aluno: {
-          aulas: {
-            some: {
-              idProfessor: req.user.id
+          OR: [
+            {
+              aulas: {
+                some: {
+                  idProfessor: req.user.id
+                }
+              }
+            },
+            {
+              criador: req.user.id
             }
-          }
+          ]
         }
       };
     }

@@ -76,8 +76,24 @@ describe('AndamentoAulaController', () => {
   });
 
   test('deve atualizar status da aula com sucesso', async () => {
-    jest.spyOn(GetAulaService, 'handle').mockResolvedValue({ status: 'AGENDADA' });
-    jest.spyOn(UpdateAulaService, 'handle').mockResolvedValue({ status: 'EM_ANDAMENTO' });
+    jest.spyOn(GetAulaService, 'handle').mockResolvedValue({
+      status: 'AGENDADA',
+      idContrato: 'contrato-1'
+    });
+    jest.spyOn(UpdateAulaService, 'handle').mockResolvedValue({
+      status: 'EM_ANDAMENTO',
+      idContrato: 'contrato-1'
+    });
+    // Mock do UpdateAulasContratoService
+    const { UpdateAulasContratoService } = await import(
+      '../../../../src/services/contrato/updateAulasContratoService.js'
+    );
+    jest.spyOn(UpdateAulasContratoService, 'handle').mockResolvedValue({
+      id: 'contrato-1',
+      totalAulas: 10,
+      totalAulasFeitas: 0
+    });
+
     mockReq.body = { status: 'EM_ANDAMENTO' };
     const controller = new AndamentoAulaController(mockReq, mockRes);
     await controller.execute();

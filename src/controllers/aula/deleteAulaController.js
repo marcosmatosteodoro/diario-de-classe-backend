@@ -1,6 +1,7 @@
 import { GetAulaService } from '../../services/aula/getAulaService.js';
 import { DeleteAulaService } from '../../services/aula/deleteAulaService.js';
 import { AbstractAulaController } from './AbstractAulaController.js';
+import { UpdateAulasContratoService } from '../../services/contrato/updateAulasContratoService.js';
 
 export class DeleteAulaController extends AbstractAulaController {
   constructor(req, res) {
@@ -19,6 +20,7 @@ export class DeleteAulaController extends AbstractAulaController {
       }
 
       await DeleteAulaService.handle(id);
+      await UpdateAulasContratoService.handle(aula.idContrato);
 
       return this.res.status(204).json();
     } catch (error) {

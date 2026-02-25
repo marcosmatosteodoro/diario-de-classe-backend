@@ -1,6 +1,7 @@
 import AbstractController from '../abstractController.js';
 import { GetContratoService } from '../../services/contrato/getContratoService.js';
 import { UpdateContratoService } from '../../services/contrato/updateContratoService.js';
+import { UpdateAulasContratoService } from '../../services/contrato/updateAulasContratoService.js';
 
 export class UpdateContratoController extends AbstractController {
   constructor(req, res) {
@@ -22,6 +23,7 @@ export class UpdateContratoController extends AbstractController {
       if (data.dataInicio) data.dataInicio = new Date(data.dataInicio);
       if (data.dataTermino) data.dataTermino = new Date(data.dataTermino);
 
+      await UpdateAulasContratoService.handle(id);
       const updatedContrato = await UpdateContratoService.handle(id, data);
 
       return this.res.status(200).json(updatedContrato);

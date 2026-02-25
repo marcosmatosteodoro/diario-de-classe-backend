@@ -5,11 +5,18 @@ export class AbstractAlunoController extends AbstractController {
     super(req, res);
     if (!req.user.isAdmin) {
       this.where = {
-        aulas: {
-          some: {
-            idProfessor: req.user.id
+        OR: [
+          {
+            aulas: {
+              some: {
+                idProfessor: req.user.id
+              }
+            }
+          },
+          {
+            criador: req.user.id
           }
-        }
+        ]
       };
     }
   }
