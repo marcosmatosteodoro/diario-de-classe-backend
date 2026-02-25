@@ -496,11 +496,18 @@ describe('GetAlunoListController', () => {
       const controller = new GetAlunoListController(mockReq, mockRes);
 
       expect(controller.where).toEqual({
-        aulas: {
-          some: {
-            idProfessor: professorId
+        OR: [
+          {
+            aulas: {
+              some: {
+                idProfessor: professorId
+              }
+            }
+          },
+          {
+            criador: professorId
           }
-        }
+        ]
       });
     });
 
@@ -514,12 +521,13 @@ describe('GetAlunoListController', () => {
 
       const controller = new GetAlunoListController(mockReq, mockRes);
 
-      // Antes de executar, deve ter apenas o filtro de professor
-      expect(controller.where.aulas).toEqual({
+      // Antes de executar, deve ter o filtro OR
+      expect(controller.where.OR[0].aulas).toEqual({
         some: {
           idProfessor: professorId
         }
       });
+      expect(controller.where.OR[1].criador).toBe(professorId);
     });
 
     test('admin pode buscar com query sem filtro de professor', () => {

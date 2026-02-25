@@ -496,11 +496,18 @@ describe('GetAlunoController', () => {
       await controller.execute();
 
       expect(receivedWhere).toEqual({
-        aulas: {
-          some: {
-            idProfessor: professorId
+        OR: [
+          {
+            aulas: {
+              some: {
+                idProfessor: professorId
+              }
+            }
+          },
+          {
+            criador: professorId
           }
-        }
+        ]
       });
 
       GetAlunoService.handle = originalHandle;

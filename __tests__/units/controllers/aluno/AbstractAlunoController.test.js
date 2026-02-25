@@ -63,11 +63,18 @@ describe('AbstractAlunoController', () => {
       const controller = new AbstractAlunoController(mockReq, mockRes);
 
       expect(controller.where).toEqual({
-        aulas: {
-          some: {
-            idProfessor: userId
+        OR: [
+          {
+            aulas: {
+              some: {
+                idProfessor: userId
+              }
+            }
+          },
+          {
+            criador: userId
           }
-        }
+        ]
       });
     });
 
@@ -82,7 +89,8 @@ describe('AbstractAlunoController', () => {
 
       const controller = new AbstractAlunoController(mockReq, mockRes);
 
-      expect(controller.where.aulas.some.idProfessor).toBe(userId);
+      expect(controller.where.OR[0].aulas.some.idProfessor).toBe(userId);
+      expect(controller.where.OR[1].criador).toBe(userId);
     });
 
     test('deve usar estrutura some para filtrar aulas', () => {
@@ -95,9 +103,11 @@ describe('AbstractAlunoController', () => {
 
       const controller = new AbstractAlunoController(mockReq, mockRes);
 
-      expect(controller.where).toHaveProperty('aulas');
-      expect(controller.where.aulas).toHaveProperty('some');
-      expect(controller.where.aulas.some).toHaveProperty('idProfessor');
+      expect(controller.where).toHaveProperty('OR');
+      expect(controller.where.OR[0]).toHaveProperty('aulas');
+      expect(controller.where.OR[0].aulas).toHaveProperty('some');
+      expect(controller.where.OR[0].aulas.some).toHaveProperty('idProfessor');
+      expect(controller.where.OR[1]).toHaveProperty('criador');
     });
   });
 
@@ -113,7 +123,8 @@ describe('AbstractAlunoController', () => {
       const controller = new AbstractAlunoController(mockReq, mockRes);
 
       expect(controller.where).toBeDefined();
-      expect(controller.where.aulas.some.idProfessor).toBe('user-999');
+      expect(controller.where.OR[0].aulas.some.idProfessor).toBe('user-999');
+      expect(controller.where.OR[1].criador).toBe('user-999');
     });
 
     test('deve lidar corretamente com isAdmin sendo true explicitamente', () => {
@@ -139,7 +150,8 @@ describe('AbstractAlunoController', () => {
       const controller = new AbstractAlunoController(mockReq, mockRes);
 
       expect(controller.where).toBeDefined();
-      expect(controller.where.aulas.some.idProfessor).toBe('user-888');
+      expect(controller.where.OR[0].aulas.some.idProfessor).toBe('user-888');
+      expect(controller.where.OR[1].criador).toBe('user-888');
     });
 
     test('deve tratar isAdmin null como não admin', () => {
@@ -153,7 +165,8 @@ describe('AbstractAlunoController', () => {
       const controller = new AbstractAlunoController(mockReq, mockRes);
 
       expect(controller.where).toBeDefined();
-      expect(controller.where.aulas.some.idProfessor).toBe('user-777');
+      expect(controller.where.OR[0].aulas.some.idProfessor).toBe('user-777');
+      expect(controller.where.OR[1].criador).toBe('user-777');
     });
 
     test('deve tratar isAdmin 0 como não admin', () => {
@@ -167,7 +180,8 @@ describe('AbstractAlunoController', () => {
       const controller = new AbstractAlunoController(mockReq, mockRes);
 
       expect(controller.where).toBeDefined();
-      expect(controller.where.aulas.some.idProfessor).toBe('user-666');
+      expect(controller.where.OR[0].aulas.some.idProfessor).toBe('user-666');
+      expect(controller.where.OR[1].criador).toBe('user-666');
     });
 
     test('deve tratar isAdmin 1 como admin', () => {
