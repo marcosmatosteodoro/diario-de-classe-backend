@@ -61,11 +61,11 @@ router.post(
   CreateManyAulaController.handle
 );
 
-// GET /api/contratos/:id/aulas/generate - Buscar aulas de um contrato
+// POST /api/contratos/aulas/generate - Buscar aulas de um contrato
+
 router.post(
-  '/:id/aulas/generate',
+  '/aulas/generate',
   adminOnly,
-  validateId,
   validateGenerateAula,
   GenerateAulasByContratoController.handle
 );
