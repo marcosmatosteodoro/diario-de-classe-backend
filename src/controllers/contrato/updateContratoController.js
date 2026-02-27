@@ -14,7 +14,7 @@ import { GetContratoService } from '../../services/contrato/getContratoService.j
 import { UpdateContratoService } from '../../services/contrato/updateContratoService.js';
 import { UpdateAulasContratoService } from '../../services/contrato/updateAulasContratoService.js';
 
-export class CreateContratoController extends AbstractController {
+export class UpdateContratoController extends AbstractController {
   constructor(req, res) {
     super(req, res);
     this.idAluno = req.body.idAluno;
@@ -231,7 +231,7 @@ export class CreateContratoController extends AbstractController {
   }
 
   static async handle(req, res) {
-    const controller = new CreateContratoController(req, res);
+    const controller = new UpdateContratoController(req, res);
     await controller.execute();
   }
 }
