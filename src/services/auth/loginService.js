@@ -35,6 +35,8 @@ export class LoginService extends AbstractService {
 
     const configuracao = configuracoes[0];
 
+    delete user.senha;
+
     return {
       accessToken: this.accessToken,
       refreshToken: this.refreshToken,
