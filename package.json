@@ -1,6 +1,6 @@
 {
   "name": "diario-de-classe-backend",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Api do diário de classe",
   "main": "app.js",
   "type": "module",
