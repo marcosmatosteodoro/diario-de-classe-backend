@@ -8,7 +8,7 @@ export class GetHomeController extends AbstractController {
     super(req, res);
     this.where = {};
     this.alunoWhere = {};
-    this.contratoWhere;
+    this.contratoWhere = {};
     this.id = req.user.sub;
   }
 
@@ -40,20 +40,39 @@ export class GetHomeController extends AbstractController {
 
   bindContratoWhere() {
     this.contratoWhere = { status: 'ATIVO' };
-  }
-  bindAlunoWhere() {
+
     if (!this.req.user.isAdmin) {
-      this.alunoWhere = {
-        aulas: {
-          some: {
-            idProfessor: this.req.user.id
-          }
+      this.contratoWhere.aulas = {
+        some: {
+          idProfessor: this.req.user.id
         }
       };
     }
   }
+
+  bindAlunoWhere() {
+    if (!this.req.user.isAdmin) {
+      this.alunoWhere = {
+        OR: [
+          {
+            aulas: {
+              some: {
+                idProfessor: this.req.user.id
+              }
+            }
+          },
+          {
+            criador: this.req.user.id
+          }
+        ]
+      };
+    }
+  }
+
   bindMainWhere() {
-    const { dataInicio, dataTermino, status, tipo, minhasAulas, professorId } = this.req.query;
+    const { dataInicio, dataTermino, status, tipo, minhasAulas, professorId, alunoId } =
+      this.req.query;
+
     if (dataInicio) {
       const dataFim = dataTermino || dataInicio;
       this.where.dataAula = {
@@ -61,13 +80,26 @@ export class GetHomeController extends AbstractController {
         lte: new Date(`${dataFim}T23:59:59.999Z`)
       };
     }
-    if (minhasAulas === 'true') {
+
+    if (status) {
+      this.where.status = status;
+    }
+
+    if (tipo) {
+      this.where.tipo = tipo;
+    }
+
+    if (alunoId) {
+      this.where.idAluno = alunoId;
+    }
+
+    if (!this.req.user.isAdmin) {
+      this.where.idProfessor = this.req.user.id;
+    } else if (minhasAulas === 'true') {
       this.where.idProfessor = this.id;
     } else if (professorId) {
       this.where.idProfessor = professorId;
     }
-    if (status) this.where.status = status;
-    if (tipo) this.where.tipo = tipo;
   }
 
   static async handle(req, res) {
