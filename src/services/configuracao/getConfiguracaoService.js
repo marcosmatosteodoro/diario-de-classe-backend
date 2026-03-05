@@ -8,9 +8,19 @@ export class GetConfiguracaoService extends AbstractService {
   }
 
   async execute() {
-    return await this.repository.selectMany({
+    const diasOrdem = ['SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO', 'DOMINGO'];
+    const result = await this.repository.selectMany({
       select: this.repository.selectFields,
       where: this.where
+    });
+    // Ordena diasDeFuncionamento em cada configuração pelo campo diaSemana
+    return result.map(config => {
+      if (Array.isArray(config.diasDeFuncionamento)) {
+        config.diasDeFuncionamento = [...config.diasDeFuncionamento].sort(
+          (a, b) => diasOrdem.indexOf(a.diaSemana) - diasOrdem.indexOf(b.diaSemana)
+        );
+      }
+      return config;
     });
   }
 
