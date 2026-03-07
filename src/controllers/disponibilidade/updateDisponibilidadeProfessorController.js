@@ -1,6 +1,7 @@
 import AbstractController from '../abstractController.js';
 import { UpdateDisponibilidadeProfessorService } from '../../services/disponibilidadeProfessor/updateDisponibilidadeProfessorService.js';
 import { GetUserService } from '../../services/user/getUserService.js';
+import { CreateDisponibilidadeProfessorService } from '../../services/disponibilidadeProfessor/createDisponibilidadeProfessorService.js';
 
 export class UpdateDisponibilidadeProfessorController extends AbstractController {
   constructor(req, res) {
@@ -8,6 +9,7 @@ export class UpdateDisponibilidadeProfessorController extends AbstractController
   }
 
   async execute() {
+    // TODO a criação da disponibilidade tem que respeitar a configuração
     try {
       const id = this.req.validatedId || this.req.params.id;
       const user = await GetUserService.handle(id);
@@ -22,10 +24,17 @@ export class UpdateDisponibilidadeProfessorController extends AbstractController
       const disponibilidades = this.req.body;
 
       for (const disponibilidade of disponibilidades) {
-        const updated = await UpdateDisponibilidadeProfessorService.handle(
-          disponibilidade.id,
-          disponibilidade
-        );
+        let updated = null;
+        if (disponibilidade.id) {
+          updated = await UpdateDisponibilidadeProfessorService.handle(
+            disponibilidade.id,
+            disponibilidade
+          );
+          updated.action = 'updated';
+        } else {
+          updated = await CreateDisponibilidadeProfessorService.handle(disponibilidade);
+          updated.action = 'created';
+        }
         updatedDisponibilidades.push(updated);
       }
 
