@@ -10,7 +10,7 @@ const router = express.Router();
 // GET /api/relatorios - Buscar todos os relatorios
 router.get('/', GetRelatoriosController.handle);
 
-// POST /api/relatorios/relatorio-1 - Traz o relatorio 1
-router.post('/relatorio-1', validateRelatorio1, GetRelatorio1Controller.handle);
+// GET /api/relatorios/relatorio-1 - Traz o relatorio 1
+router.get('/relatorio-1', validateRelatorio1, GetRelatorio1Controller.handle);
 
 export default router;
