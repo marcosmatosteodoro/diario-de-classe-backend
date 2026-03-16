@@ -16,7 +16,8 @@ export class UpdateUserService extends AbstractService {
       telefone: this.data.telefone,
       senha: this.data.senha,
       resetarSenha: this.data.resetarSenha,
-      permissao: this.data.permissao
+      permissao: this.data.permissao,
+      idiomas: this.data.idiomas
     };
 
     // remover campos undefined

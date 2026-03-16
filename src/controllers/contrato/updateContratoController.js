@@ -77,7 +77,8 @@ export class UpdateContratoController extends AbstractController {
     const dataContrato = {
       idAluno: this.idAluno,
       dataInicio: new Date(body.dataInicio),
-      dataTermino: new Date(body.dataTermino)
+      dataTermino: new Date(body.dataTermino),
+      idioma: body.idioma
     };
 
     this.contrato = await UpdateContratoService.handle(id, dataContrato);

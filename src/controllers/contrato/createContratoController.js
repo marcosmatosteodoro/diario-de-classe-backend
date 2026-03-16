@@ -81,6 +81,7 @@ export class CreateContratoController extends AbstractController {
     const body = this.req.body;
     const dataContrato = {
       idAluno: this.idAluno,
+      idioma: body.idioma,
       dataInicio: new Date(body.dataInicio),
       dataTermino: new Date(body.dataTermino)
     };
