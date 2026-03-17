@@ -84,7 +84,7 @@ export class CreateContratoController extends AbstractController {
       idioma: body.idioma,
       dataInicio: new Date(body.dataInicio),
       dataTermino: new Date(body.dataTermino),
-      status: body.status || 'PENDENTE'
+      status: body.status
     };
 
     this.contrato = await CreateContratoService.handle(dataContrato);
