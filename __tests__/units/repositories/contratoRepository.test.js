@@ -94,7 +94,8 @@ describe('ContratoRepository', () => {
         'totalFaltas',
         'totalAulasCanceladas',
         'dataCriacao',
-        'dataAtualizacao'
+        'dataAtualizacao',
+        'idioma'
       ];
 
       // Campos relacionais com select
@@ -106,9 +107,8 @@ describe('ContratoRepository', () => {
         expect(fields[field]).toBe(true);
       });
 
-      // Total de campos (11 campos true + aluno + diaAulas + dataCriacao + dataAtualizacao = 15, mas na lista só 11)
-      // Na verdade são: id, idAluno, dataInicio, dataTermino, status, totalAulas, totalAulasFeitas, totalReposicoes, totalFaltas, totalAulasCanceladas, dataCriacao, dataAtualizacao, aluno, diaAulas = 14
-      expect(Object.keys(fields)).toHaveLength(14);
+      // Total de campos: 13 campos true + aluno (com select) + diaAulas (false) = 15
+      expect(Object.keys(fields)).toHaveLength(15);
     });
   });
 
