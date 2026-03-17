@@ -68,7 +68,7 @@ export class UpdateContratoController extends AbstractController {
 
       return this.res.status(201).json(data);
     } catch (error) {
-      return this.handleError(error, 'contratos.create.error');
+      return this.handleError(error, 'contratos.update.error');
     }
   }
 
