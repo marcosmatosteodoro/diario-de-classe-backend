@@ -10,7 +10,7 @@ export class GetAulaService extends AbstractService {
   async execute() {
     return await this.repository.selectOne({
       where: { id: this.id },
-      select: this.repository.selectFields
+      select: this.repository.getSelectFieldsWithRelations()
     });
   }
 
