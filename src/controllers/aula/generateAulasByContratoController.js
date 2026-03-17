@@ -54,7 +54,7 @@ export class GenerateAulasByContratoController extends AbstractController {
     const diasPermitidos = diasAulas.map(dia => diasSemanaMap[dia.diaSemana]);
 
     while (currentDate <= endDate) {
-      const diaSemana = currentDate.getDay();
+      const diaSemana = currentDate.getUTCDay();
 
       // Adicionar a data apenas se o dia da semana estiver nos dias permitidos
       if (diasPermitidos.includes(diaSemana)) {
@@ -66,7 +66,7 @@ export class GenerateAulasByContratoController extends AbstractController {
         });
       }
 
-      currentDate.setDate(currentDate.getDate() + 1);
+      currentDate.setUTCDate(currentDate.getUTCDate() + 1);
     }
 
     return dates;

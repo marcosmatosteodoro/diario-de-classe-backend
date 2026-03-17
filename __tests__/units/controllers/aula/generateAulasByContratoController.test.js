@@ -103,8 +103,8 @@ describe('GenerateAulasByContratoController', () => {
       const result = controller.generateDateRangeByWeekDay(startDate, endDate, diasAulas);
 
       expect(result.length).toBe(2); // 1 segunda + 1 quarta
-      expect(result[0].dataAula.getDay()).toBe(1); // Segunda-feira
-      expect(result[1].dataAula.getDay()).toBe(3); // Quarta-feira
+      expect(result[0].dataAula.getUTCDay()).toBe(1); // Segunda-feira
+      expect(result[1].dataAula.getUTCDay()).toBe(3); // Quarta-feira
     });
 
     test('deve incluir horaInicial e horaFinal de cada dia', () => {
@@ -165,7 +165,7 @@ describe('GenerateAulasByContratoController', () => {
       const result = controller.generateDateRangeByWeekDay(startDate, endDate, diasAulas);
 
       expect(result.length).toBe(1);
-      expect(result[0].dataAula.getDay()).toBe(0);
+      expect(result[0].dataAula.getUTCDay()).toBe(0);
     });
 
     test('deve mapear corretamente SABADO como dia 6', () => {
@@ -176,7 +176,7 @@ describe('GenerateAulasByContratoController', () => {
       const result = controller.generateDateRangeByWeekDay(startDate, endDate, diasAulas);
 
       expect(result.length).toBe(1);
-      expect(result[0].dataAula.getDay()).toBe(6);
+      expect(result[0].dataAula.getUTCDay()).toBe(6);
     });
 
     test('deve retornar objetos com dataAula, horaInicial e horaFinal', () => {
