@@ -13,7 +13,7 @@ export class CreateContratoService extends AbstractService {
         idAluno: this.data.idAluno,
         dataInicio: this.data.dataInicio || null,
         dataTermino: this.data.dataTermino || null,
-        status: 'PENDENTE',
+        status: this.data.status || 'PENDENTE',
         totalAulas: 0,
         totalAulasFeitas: 0,
         totalReposicoes: 0,

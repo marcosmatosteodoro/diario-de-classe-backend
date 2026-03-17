@@ -170,7 +170,7 @@
     "create": {
       "success": "Aula criada com sucesso",
       "error": "Erro ao criar aula",
-      "ids_exists": "Já existe uma aula com os IDs informados"
+      "ids_exists": "Já existe uma aula para este dia"
     },
     "update": {
       "success": "Aula atualizada com sucesso",

@@ -68,7 +68,7 @@ export class UpdateContratoController extends AbstractController {
 
       return this.res.status(201).json(data);
     } catch (error) {
-      return this.handleError(error, 'contratos.create.error');
+      return this.handleError(error, 'contratos.update.error');
     }
   }
 
@@ -77,7 +77,9 @@ export class UpdateContratoController extends AbstractController {
     const dataContrato = {
       idAluno: this.idAluno,
       dataInicio: new Date(body.dataInicio),
-      dataTermino: new Date(body.dataTermino)
+      dataTermino: new Date(body.dataTermino),
+      idioma: body.idioma,
+      status: body.status || 'ATIVO'
     };
 
     this.contrato = await UpdateContratoService.handle(id, dataContrato);

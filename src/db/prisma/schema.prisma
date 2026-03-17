@@ -11,6 +11,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Idioma {
+  INGLES
+  ESPANHOL
+}
+
 enum Permissao {
   member
   admin
@@ -63,6 +68,8 @@ model User {
   disponibilidades DisponibilidadeProfessor[]
   // Relacionamento com Aula
   aulas            Aula[]
+  // Relacionamento com Idiomas
+  idiomas          Idioma[]
 
   @@map("users")
 }
@@ -153,6 +160,8 @@ model Contrato {
   diaAulas DiaAula[]
   // Relacionamento com Aula
   aulas    Aula[]
+  // Relacionamento com Idioma
+  idioma   Idioma    @default(INGLES)
 
   @@map("contratos")
 }

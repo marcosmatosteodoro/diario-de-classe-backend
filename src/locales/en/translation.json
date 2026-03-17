@@ -170,7 +170,7 @@
     "create": {
       "success": "Class created successfully",
       "error": "Error creating class",
-      "ids_exists": "A class with the provided IDs already exists"
+      "ids_exists": "There is already a class scheduled for today."
     },
     "update": {
       "success": "Class updated successfully",
