@@ -62,7 +62,8 @@ export class GenerateAulasByContratoController extends AbstractController {
         dates.push({
           dataAula: new Date(currentDate),
           horaInicial: diaAula.horaInicial,
-          horaFinal: diaAula.horaFinal
+          horaFinal: diaAula.horaFinal,
+          duracaoAula: diaAula.duracaoAula
         });
       }
 
@@ -72,12 +73,13 @@ export class GenerateAulasByContratoController extends AbstractController {
     return dates;
   }
 
-  aulaPrepare({ dataAula, horaInicial, horaFinal }) {
+  aulaPrepare({ dataAula, horaInicial, horaFinal, duracaoAula }) {
     return {
       dataAula,
       horaInicial,
       horaFinal,
       tipo: 'PADRAO',
+      duracaoAula,
       observacao: null
     };
   }

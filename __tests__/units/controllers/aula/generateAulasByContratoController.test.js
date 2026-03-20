@@ -199,7 +199,8 @@ describe('GenerateAulasByContratoController', () => {
       const input = {
         dataAula: new Date('2025-01-10'),
         horaInicial: '08:00',
-        horaFinal: '10:00'
+        horaFinal: '10:00',
+        duracaoAula: 60
       };
 
       const result = controller.aulaPrepare(input);
@@ -208,6 +209,7 @@ describe('GenerateAulasByContratoController', () => {
         dataAula: input.dataAula,
         horaInicial: '08:00',
         horaFinal: '10:00',
+        duracaoAula: 60,
         tipo: 'PADRAO',
         observacao: null
       });
@@ -217,7 +219,8 @@ describe('GenerateAulasByContratoController', () => {
       const input = {
         dataAula: new Date('2025-01-10'),
         horaInicial: '14:00',
-        horaFinal: '16:00'
+        horaFinal: '16:00',
+        duracaoAula: 120
       };
 
       const result = controller.aulaPrepare(input);
@@ -229,7 +232,8 @@ describe('GenerateAulasByContratoController', () => {
       const input = {
         dataAula: new Date('2025-01-10'),
         horaInicial: '08:00',
-        horaFinal: '10:00'
+        horaFinal: '10:00',
+        duracaoAula: 60
       };
 
       const result = controller.aulaPrepare(input);
@@ -242,7 +246,8 @@ describe('GenerateAulasByContratoController', () => {
       const input = {
         dataAula: originalDate,
         horaInicial: '08:00',
-        horaFinal: '10:00'
+        horaFinal: '10:00',
+        duracaoAula: 60
       };
 
       const result = controller.aulaPrepare(input);
@@ -254,13 +259,28 @@ describe('GenerateAulasByContratoController', () => {
       const input = {
         dataAula: new Date('2025-01-10'),
         horaInicial: '09:30',
-        horaFinal: '11:45'
+        horaFinal: '11:45',
+        duracaoAula: 90
       };
 
       const result = controller.aulaPrepare(input);
 
       expect(result.horaInicial).toBe('09:30');
       expect(result.horaFinal).toBe('11:45');
+      expect(result.duracaoAula).toBe(90);
+    });
+
+    test('deve incluir duracaoAula', () => {
+      const input = {
+        dataAula: new Date('2025-01-10'),
+        horaInicial: '08:00',
+        horaFinal: '10:00',
+        duracaoAula: 120
+      };
+
+      const result = controller.aulaPrepare(input);
+
+      expect(result.duracaoAula).toBe(120);
     });
   });
 

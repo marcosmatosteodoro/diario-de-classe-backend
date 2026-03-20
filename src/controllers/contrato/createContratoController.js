@@ -173,13 +173,12 @@ export class CreateContratoController extends AbstractController {
     return this.diasSemanas.every(diaSemana => body[diaSemana]);
   }
 
-  prepareDiasAulasData({ body, idAluno, idContrato, duracaoAula }) {
+  prepareDiasAulasData({ body, idAluno, idContrato }) {
     return this.diasSemanas.map(diaSemana => {
       const data = body[diaSemana];
-      const hotaFimCalculada = this.getHoraDeFim({
-        duracaoAula,
+      const hotaFimCalculada = this.calculateHoraFimByDuracaoAula({
         horaInicial: data.horaInicial,
-        quantidadeAulas: data.quantidadeAulas
+        duracaoAula: data.duracaoAula
       });
       return {
         idAluno,
@@ -187,7 +186,8 @@ export class CreateContratoController extends AbstractController {
         diaSemana,
         quantidadeAulas: parseInt(data.quantidadeAulas, 10),
         horaInicial: data.horaInicial,
-        horaFinal: hotaFimCalculada
+        horaFinal: hotaFimCalculada,
+        duracaoAula: data.duracaoAula
       };
     });
   }
@@ -217,6 +217,19 @@ export class CreateContratoController extends AbstractController {
     const formattedEndMinutes = String(endMinutes).padStart(2, '0');
 
     return `${formattedEndHours}:${formattedEndMinutes}`;
+  }
+
+  calculateHoraFimByDuracaoAula({ horaInicial, duracaoAula }) {
+    const [horas, minutos] = horaInicial.split(':').map(Number);
+    const horaInicialEmMinutos = horas * 60 + minutos;
+    const horaFinalEmMinutos = horaInicialEmMinutos + Number(duracaoAula);
+    const horaFinalHoras = Math.floor(horaFinalEmMinutos / 60) % 24;
+    const horaFinalMinutos = horaFinalEmMinutos % 60;
+
+    return `${String(horaFinalHoras).padStart(2, '0')}:${String(horaFinalMinutos).padStart(
+      2,
+      '0'
+    )}`;
   }
 
   aulaPrepareData({ idAluno, idProfessor, idContrato, aula }) {
