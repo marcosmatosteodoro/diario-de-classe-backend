@@ -17,6 +17,7 @@ export default class DiaAulaRepository extends AbstractRepository {
       idContrato: true,
       diaSemana: true,
       quantidadeAulas: true,
+      duracaoAula: true,
       horaInicial: true,
       horaFinal: true,
       dataCriacao: true,

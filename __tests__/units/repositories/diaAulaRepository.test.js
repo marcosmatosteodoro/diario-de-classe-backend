@@ -88,6 +88,7 @@ describe('DiaAulaRepository', () => {
         'idContrato',
         'diaSemana',
         'quantidadeAulas',
+        'duracaoAula',
         'horaInicial',
         'horaFinal',
         'dataCriacao',
