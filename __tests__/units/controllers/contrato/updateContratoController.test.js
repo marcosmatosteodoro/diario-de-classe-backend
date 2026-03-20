@@ -8,8 +8,8 @@ describe('UpdateContratoController', () => {
     mockReq = {
       params: { id: '1' },
       body: {
-        idAluno: 1,
-        idProfessor: 2,
+        idAluno: '1',
+        idProfessor: '2',
         idioma: 'INGLES',
         dataInicio: '2025-01-10',
         dataTermino: '2025-12-31',
@@ -109,8 +109,8 @@ describe('UpdateContratoController', () => {
     });
 
     test('deve inicializar idAluno e idProfessor do body', () => {
-      expect(controller.idAluno).toBe(1);
-      expect(controller.idProfessor).toBe(2);
+      expect(controller.idAluno).toBe('1');
+      expect(controller.idProfessor).toBe('2');
     });
 
     test('deve inicializar diasSemanas com todos os dias', () => {

@@ -26,6 +26,13 @@ export class UpdateContratoController extends AbstractController {
 
   async execute() {
     try {
+      // Validar dias da semana primeiro (validação de entrada)
+      if (!this.checkIfAllDaysOfWeekAreAvailable(this.req.body)) {
+        return this.res.status(422).json({
+          message: this.req.t('diaAulas.error.days_of_week_not_provided')
+        });
+      }
+
       const id = this.req.validatedId || this.req.params.id;
       const contrato = await GetContratoService.handle(id);
       const aluno = await GetAlunoService.handle(this.idAluno);
@@ -46,12 +53,6 @@ export class UpdateContratoController extends AbstractController {
       if (!professor) {
         return this.res.status(404).json({
           message: this.req.t('professor.get.not_found')
-        });
-      }
-
-      if (!this.checkIfAllDaysOfWeekAreAvailable(this.req.body)) {
-        return this.res.status(422).json({
-          message: this.req.t('diaAulas.error.days_of_week_not_provided')
         });
       }
 
@@ -171,7 +172,7 @@ export class UpdateContratoController extends AbstractController {
   prepareDiasAulasData({ body, idAluno, idContrato }) {
     return this.diasSemanas.map(diaSemana => {
       const data = body[diaSemana];
-      const hotaFimCalculada = this.calculateHoraFimByDuracaoAula({
+      const horaFimCalculada = this.calculateHoraFimByDuracaoAula({
         horaInicial: data.horaInicial,
         duracaoAula: data.duracaoAula
       });
@@ -181,7 +182,7 @@ export class UpdateContratoController extends AbstractController {
         diaSemana,
         quantidadeAulas: parseInt(data.quantidadeAulas, 10),
         horaInicial: data.horaInicial,
-        horaFinal: hotaFimCalculada,
+        horaFinal: horaFimCalculada,
         duracaoAula: data.duracaoAula
       };
     });
@@ -247,6 +248,6 @@ export class UpdateContratoController extends AbstractController {
 
   static async handle(req, res) {
     const controller = new UpdateContratoController(req, res);
-    await controller.execute();
+    return await controller.execute();
   }
 }
