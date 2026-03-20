@@ -27,6 +27,13 @@ export class CreateContratoController extends AbstractController {
 
   async execute() {
     try {
+      // Validar dias da semana primeiro (validação de entrada)
+      if (!this.checkIfAllDaysOfWeekAreAvailable(this.req.body)) {
+        return this.res.status(422).json({
+          message: this.req.t('diaAulas.error.days_of_week_not_provided')
+        });
+      }
+
       const aluno = await GetAlunoService.handle(this.idAluno);
       const professor = await GetUserService.handle(this.idProfessor);
 
@@ -51,12 +58,6 @@ export class CreateContratoController extends AbstractController {
       if (await IsContratoAlunoPendenteExistsService.handle(this.idAluno)) {
         return this.res.status(400).json({
           message: this.req.t('contratos.create.aluno_pendente_exists')
-        });
-      }
-
-      if (!this.checkIfAllDaysOfWeekAreAvailable(this.req.body)) {
-        return this.res.status(422).json({
-          message: this.req.t('diaAulas.error.days_of_week_not_provided')
         });
       }
 
@@ -176,7 +177,7 @@ export class CreateContratoController extends AbstractController {
   prepareDiasAulasData({ body, idAluno, idContrato }) {
     return this.diasSemanas.map(diaSemana => {
       const data = body[diaSemana];
-      const hotaFimCalculada = this.calculateHoraFimByDuracaoAula({
+      const horaFimCalculada = this.calculateHoraFimByDuracaoAula({
         horaInicial: data.horaInicial,
         duracaoAula: data.duracaoAula
       });
@@ -186,7 +187,7 @@ export class CreateContratoController extends AbstractController {
         diaSemana,
         quantidadeAulas: parseInt(data.quantidadeAulas, 10),
         horaInicial: data.horaInicial,
-        horaFinal: hotaFimCalculada,
+        horaFinal: horaFimCalculada,
         duracaoAula: data.duracaoAula
       };
     });
@@ -252,6 +253,6 @@ export class CreateContratoController extends AbstractController {
 
   static async handle(req, res) {
     const controller = new CreateContratoController(req, res);
-    await controller.execute();
+    return await controller.execute();
   }
 }
