@@ -16,6 +16,7 @@ export class CreateAulaService extends AbstractService {
         dataAula: this.data.dataAula,
         horaInicial: this.data.horaInicial,
         horaFinal: this.data.horaFinal,
+        duracaoAula: this.data.duracaoAula,
         tipo: this.data.tipo,
         status: this.data.status,
         observacao: this.data.observacao

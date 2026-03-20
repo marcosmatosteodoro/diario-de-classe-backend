@@ -14,6 +14,7 @@ export class UpdateDiaAulaService extends AbstractService {
       idContrato: this.data.idContrato,
       diaSemana: this.data.diaSemana,
       quantidadeAulas: this.data.quantidadeAulas,
+      duracaoAula: this.data.duracaoAula,
       horaInicial: this.data.horaInicial,
       horaFinal: this.data.horaFinal
     };
