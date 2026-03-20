@@ -6,6 +6,18 @@ export class GetAulaListController extends AbstractAulaController {
     super(req, res);
   }
 
+  bindMainWhere() {
+    const { dataInicio, dataTermino } = this.req.query;
+
+    if (dataInicio) {
+      const dataFim = dataTermino || dataInicio;
+      this.where.dataAula = {
+        gte: new Date(`${dataInicio}T00:00:00.000Z`),
+        lte: new Date(`${dataFim}T23:59:59.999Z`)
+      };
+    }
+  }
+
   async execute() {
     try {
       if (this.req.query.q) {
@@ -14,6 +26,8 @@ export class GetAulaListController extends AbstractAulaController {
           fields: ['horaInicial', 'horaFinal']
         });
       }
+
+      this.bindMainWhere();
 
       const aulas = await GetAulaListService.handle(this.where);
 
@@ -32,6 +46,6 @@ export class GetAulaListController extends AbstractAulaController {
 
   static async handle(req, res) {
     const controller = new GetAulaListController(req, res);
-    await controller.execute();
+    return await controller.execute();
   }
 }
