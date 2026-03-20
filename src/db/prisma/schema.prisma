@@ -172,6 +172,7 @@ model DiaAula {
   idContrato      String
   diaSemana       DiaDaSemana
   quantidadeAulas Int
+  duracaoAula     Int?
   horaInicial     String
   horaFinal       String // Sistema preenche automático
   dataCriacao     DateTime    @default(now())
@@ -193,6 +194,7 @@ model Aula {
   dataAula        DateTime
   horaInicial     String
   horaFinal       String
+  duracaoAula     Int?
   tipo            TipoAula
   status          StatusAula
   observacao      String?
