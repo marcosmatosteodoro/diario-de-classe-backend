@@ -6,15 +6,20 @@ export class GetAulaListService extends AbstractService {
   constructor(Repository, where, params) {
     super(Repository);
     this.where = where;
-    this.select =
-      params && params.withRelations
-        ? this.repository.getSelectFieldsWithRelations()
-        : this.repository.selectFields;
+
+    if (params && params.withRelations) {
+      this.select = this.repository.getSelectFieldsWithRelations();
+    } else if (params && params.select) {
+      this.select = params.select;
+    } else {
+      this.select = this.repository.getSelectFieldsWithRelations();
+      // this.select = this.repository.selectFields;
+    }
   }
 
   async execute() {
     return await this.repository.selectMany({
-      select: this.repository.getSelectFieldsWithRelations(),
+      select: this.select,
       where: this.where,
       orderBy: { dataAula: 'asc' }
     });
