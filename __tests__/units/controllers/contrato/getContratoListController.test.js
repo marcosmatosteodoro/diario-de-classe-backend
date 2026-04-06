@@ -141,9 +141,20 @@ describe('GetContratoListController', () => {
       const controller = new GetContratoListController(mockReq, mockRes);
 
       expect(controller.where.aluno).toBeDefined();
-      expect(controller.where.aluno.nome).toBeDefined();
-      expect(controller.where.aluno.nome.contains).toBe('João');
-      expect(controller.where.aluno.nome.mode).toBe('insensitive');
+      expect(controller.where.aluno.OR).toBeDefined();
+      expect(controller.where.aluno.OR).toHaveLength(2);
+      expect(controller.where.aluno.OR[0]).toEqual({
+        nome: {
+          contains: 'João',
+          mode: 'insensitive'
+        }
+      });
+      expect(controller.where.aluno.OR[1]).toEqual({
+        nomeCompleto: {
+          contains: 'João',
+          mode: 'insensitive'
+        }
+      });
     });
 
     test('deve configurar filtro q com OR para busca em aluno.nome', () => {
@@ -170,7 +181,9 @@ describe('GetContratoListController', () => {
       expect(controller.where.dataInicio.gte.toISOString()).toBe('2024-01-01T00:00:00.000Z');
       expect(controller.where.dataTermino.lte.toISOString()).toBe('2024-12-31T23:59:59.999Z');
       expect(controller.where.idioma).toBe('espanhol');
-      expect(controller.where.aluno.nome.contains).toBe('Pedro');
+      expect(controller.where.aluno.OR).toBeDefined();
+      expect(controller.where.aluno.OR[0].nome.contains).toBe('Pedro');
+      expect(controller.where.aluno.OR[1].nomeCompleto.contains).toBe('Pedro');
     });
 
     test('deve manter where vazio quando nenhum parâmetro é fornecido', () => {

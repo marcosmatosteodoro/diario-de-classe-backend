@@ -121,10 +121,20 @@ describe('GetAulaListController', () => {
       const controller = new GetAulaListController(mockReq, mockRes);
 
       expect(controller.where.aluno).toEqual({
-        nome: {
-          contains: 'João',
-          mode: 'insensitive'
-        }
+        OR: [
+          {
+            nome: {
+              contains: 'João',
+              mode: 'insensitive'
+            }
+          },
+          {
+            nomeCompleto: {
+              contains: 'João',
+              mode: 'insensitive'
+            }
+          }
+        ]
       });
     });
 
@@ -214,6 +224,26 @@ describe('GetAulaListController', () => {
 
       expect(controller.params.select.aluno).toEqual({ select: { nome: true } });
       expect(controller.params.select.professor).toEqual({ select: { nome: true } });
+    });
+
+    test('deve incluir nomeCompleto na busca de aluno', () => {
+      mockReq.query.aluno = 'João Silva';
+      const controller = new GetAulaListController(mockReq, mockRes);
+
+      expect(controller.where.aluno.OR).toBeDefined();
+      expect(controller.where.aluno.OR).toHaveLength(2);
+      expect(controller.where.aluno.OR[0]).toEqual({
+        nome: {
+          contains: 'João Silva',
+          mode: 'insensitive'
+        }
+      });
+      expect(controller.where.aluno.OR[1]).toEqual({
+        nomeCompleto: {
+          contains: 'João Silva',
+          mode: 'insensitive'
+        }
+      });
     });
   });
 
