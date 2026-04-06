@@ -11,7 +11,7 @@ export class GetAlunoListController extends AbstractAlunoController {
       if (this.req.query.q) {
         this.getWhereClauseByQuerySearch({
           query: this.req.query.q,
-          fields: ['nome', 'sobrenome', 'email', 'telefone']
+          fields: ['nomeCompleto', 'nome', 'sobrenome', 'email', 'telefone']
         });
       }
 

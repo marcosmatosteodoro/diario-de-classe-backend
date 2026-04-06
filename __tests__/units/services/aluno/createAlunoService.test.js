@@ -68,6 +68,7 @@ function testExecuteMethod() {
           id: true,
           nome: true,
           sobrenome: true,
+          nomeCompleto: true,
           email: true,
           telefone: true,
           material: true,
@@ -83,6 +84,7 @@ function testExecuteMethod() {
           id: 'aluno-id-1',
           nome: 'João',
           sobrenome: 'Silva',
+          nomeCompleto: 'João Silva',
           email: 'joao@email.com'
         };
       }
@@ -96,6 +98,7 @@ function testExecuteMethod() {
       data: {
         nome: mockData.nome,
         sobrenome: mockData.sobrenome,
+        nomeCompleto: 'João Silva',
         email: mockData.email,
         telefone: mockData.telefone,
         material: mockData.material,
@@ -350,6 +353,7 @@ function testCreationScenarios() {
 
     expect(result.nome).toBe('João');
     expect(result.sobrenome).toBe('Silva');
+    expect(result.nomeCompleto).toBe('João Silva');
     expect(result.email).toBe('joao@email.com');
     expect(result.telefone).toBe('11999999999');
     expect(result.criador).toBe('user-id-123');
@@ -378,6 +382,7 @@ function testCreationScenarios() {
 
     expect(result.nome).toBe('João');
     expect(result.sobrenome).toBe('Silva');
+    expect(result.nomeCompleto).toBe('João Silva');
     expect(result.email).toBe('joao@email.com');
   });
 
@@ -431,6 +436,33 @@ function testCreationScenarios() {
     const result = await service.execute();
 
     expect(result.nome).toBe('Pedro');
+    expect(result.nomeCompleto).toBe('Pedro Oliveira');
     expect(result.criador).toBe('user-admin-456');
+  });
+
+  test('deve calcular nomeCompleto corretamente quando nome e sobrenome existem', async () => {
+    const mockData = {
+      nome: 'Maria',
+      sobrenome: 'Santos',
+      email: 'maria@email.com'
+    };
+
+    class MockRepository {
+      constructor() {
+        this.createCalls = [];
+        this.selectFields = {};
+      }
+
+      async create(data, _options) {
+        this.createCalls.push(data);
+        return { ...data, id: 'aluno-id-1' };
+      }
+    }
+
+    const service = new CreateAlunoService(MockRepository, mockData);
+    await service.execute();
+
+    const passedData = service.repository.createCalls[0];
+    expect(passedData.nomeCompleto).toBe('Maria Santos');
   });
 }

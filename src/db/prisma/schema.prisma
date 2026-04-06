@@ -57,6 +57,7 @@ model User {
   id              String    @id @default(cuid())
   nome            String // máximo 255 caracteres
   sobrenome       String // máximo 255 caracteres
+  nomeCompleto    String? // máximo 255 caracteres
   email           String    @unique // máximo 255 caracteres
   telefone        String? // máximo 11 caracteres
   senha           String
@@ -95,6 +96,7 @@ model Aluno {
   id              String   @id @default(cuid())
   nome            String // máximo 255 caracteres
   sobrenome       String // máximo 255 caracteres
+  nomeCompleto    String? // máximo 255 caracteres
   email           String   @unique // máximo 255 caracteres
   telefone        String? // máximo 11 caracteres
   material        String? // campo extenso para armazenar informações sobre material
