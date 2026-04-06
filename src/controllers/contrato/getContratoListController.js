@@ -27,11 +27,22 @@ export class GetContratoListController extends AbstractContratoController {
     }
 
     if (aluno) {
+      // add pesquisa por nome OR nomeCompleto
       this.where.aluno = {
-        nome: {
-          contains: aluno,
-          mode: 'insensitive'
-        }
+        OR: [
+          {
+            nome: {
+              contains: aluno,
+              mode: 'insensitive'
+            }
+          },
+          {
+            nomeCompleto: {
+              contains: aluno,
+              mode: 'insensitive'
+            }
+          }
+        ]
       };
     }
 

@@ -66,6 +66,7 @@ function describeExecuteMethod() {
             id: true,
             nome: true,
             sobrenome: true,
+            nomeCompleto: true,
             email: true,
             telefone: true,
             material: true,
@@ -81,6 +82,7 @@ function describeExecuteMethod() {
             id: 'aluno-id-1',
             nome: 'João',
             sobrenome: 'Silva',
+            nomeCompleto: 'João Silva',
             email: 'joao@email.com'
           };
         }
@@ -90,9 +92,18 @@ function describeExecuteMethod() {
       await service.execute();
 
       expect(service.repository.updateCalls).toHaveLength(1);
+      expect(service.repository.updateCalls[0].data.nomeCompleto).toBe('João Silva');
       expect(service.repository.updateCalls[0]).toEqual({
         where: { id: 'aluno-id-1' },
-        data: mockData,
+        data: {
+          nome: mockData.nome,
+          sobrenome: mockData.sobrenome,
+          nomeCompleto: 'João Silva',
+          email: mockData.email,
+          telefone: mockData.telefone,
+          criador: mockData.criador,
+          material: undefined
+        },
         options: { select: service.repository.selectFields }
       });
     });
@@ -193,6 +204,8 @@ function describeExecuteMethod() {
       const actualData = service.repository.updateCalls[0].data;
       expect(actualData).not.toHaveProperty('telefone');
       expect(actualData).not.toHaveProperty('criador');
+      expect(actualData).toHaveProperty('nomeCompleto');
+      expect(actualData.nomeCompleto).toBe('João Silva');
       expect(actualData.nome).toBe('João');
       expect(actualData.sobrenome).toBe('Silva');
       expect(actualData.email).toBe('joao@email.com');
@@ -387,7 +400,7 @@ function describeUpdateScenarios() {
         }
 
         async update(where, data, _options) {
-          return { id: where.id, nome: data.nome };
+          return { id: where.id, nome: data.nome, nomeCompleto: data.nomeCompleto };
         }
       }
 
@@ -395,6 +408,7 @@ function describeUpdateScenarios() {
       const result = await service.execute();
 
       expect(result.nome).toBe('João Atualizado');
+      expect(result.nomeCompleto).toBe('João Atualizado ');
       expect(result.id).toBe('aluno-id-1');
     });
 
@@ -425,7 +439,7 @@ function describeUpdateScenarios() {
       expect(result.criador).toBe('professor-456');
     });
 
-    test('deve funcionar com criador null', async () => {
+    test('deve funcionar com atualização de nome completo', async () => {
       const mockData = {
         nome: 'Ana',
         sobrenome: 'Oliveira',
@@ -447,6 +461,8 @@ function describeUpdateScenarios() {
 
       expect(result.criador).toBeNull();
       expect(result.nome).toBe('Ana');
+      expect(result.sobrenome).toBe('Oliveira');
+      expect(result.nomeCompleto).toBe('Ana Oliveira');
     });
 
     test('deve funcionar com telefone null', async () => {

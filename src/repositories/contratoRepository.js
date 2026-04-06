@@ -27,7 +27,8 @@ export default class ContratoRepository extends AbstractRepository {
       idioma: true,
       aluno: {
         select: {
-          nome: true
+          nome: true,
+          nomeCompleto: true
         }
       },
       diaAulas: false

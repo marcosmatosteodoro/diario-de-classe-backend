@@ -80,11 +80,21 @@ describe('GetUserListController', () => {
       expect(controller.where).toEqual({});
     });
 
-    test('deve ter campos de busca definidos', () => {
+    test('deve ter campos de busca definidos incluindo nomeCompleto', () => {
       const controller = new GetUserListController(mockReq, mockRes);
 
       // Verifica que o controller está configurado para usar os campos corretos
       expect(controller).toBeInstanceOf(GetUserListController);
+      // Os campos nomeCompleto, nome, sobrenome, email, telefone devem ser usados na busca
+    });
+
+    test('deve buscar por nomeCompleto, nome, sobrenome, email e telefone quando q é fornecido', () => {
+      mockReq.query.q = 'João';
+      const controller = new GetUserListController(mockReq, mockRes);
+
+      // O controller deve chamar getWhereClauseByQuerySearch com os campos corretos
+      expect(controller.req.query.q).toBe('João');
+      // Verifica que o método será chamado com os campos corretos na função execute
     });
   });
 

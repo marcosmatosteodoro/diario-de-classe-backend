@@ -1,5 +1,6 @@
 import AbstractService from '../abstractService.js';
 import UserRepository from '../../repositories/userRepository.js';
+import { getNomeCompleto } from '../../utilities/getNomeCompleto.js';
 
 export class CreateUserService extends AbstractService {
   constructor(Repository, data) {
@@ -12,6 +13,7 @@ export class CreateUserService extends AbstractService {
       {
         nome: this.data.nome,
         sobrenome: this.data.sobrenome,
+        nomeCompleto: getNomeCompleto(this.data),
         email: this.data.email,
         telefone: this.data.telefone,
         senha: this.data.senha,

@@ -1,5 +1,6 @@
 import AbstractService from '../abstractService.js';
 import AlunoRepository from '../../repositories/alunoRepository.js';
+import { getNomeCompleto } from '../../utilities/getNomeCompleto.js';
 
 export class CreateAlunoService extends AbstractService {
   constructor(Repository, data) {
@@ -12,6 +13,7 @@ export class CreateAlunoService extends AbstractService {
       {
         nome: this.data.nome,
         sobrenome: this.data.sobrenome,
+        nomeCompleto: getNomeCompleto(this.data),
         email: this.data.email,
         telefone: this.data.telefone,
         criador: this.data.criador,

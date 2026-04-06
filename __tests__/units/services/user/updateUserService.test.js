@@ -68,6 +68,7 @@ function describeExecuteMethod() {
             id: true,
             nome: true,
             sobrenome: true,
+            nomeCompleto: true,
             email: true,
             telefone: true,
             resetarSenha: true,
@@ -83,6 +84,7 @@ function describeExecuteMethod() {
             id: 1,
             nome: 'João',
             sobrenome: 'Silva',
+            nomeCompleto: 'João Silva',
             email: 'joao@email.com'
           };
         }
@@ -92,9 +94,20 @@ function describeExecuteMethod() {
       await service.execute();
 
       expect(service.repository.updateCalls).toHaveLength(1);
+      expect(service.repository.updateCalls[0].data.nomeCompleto).toBe('João Silva');
       expect(service.repository.updateCalls[0]).toEqual({
         where: { id: 'user-id-1' },
-        data: mockData,
+        data: {
+          nome: mockData.nome,
+          sobrenome: mockData.sobrenome,
+          nomeCompleto: 'João Silva',
+          email: mockData.email,
+          telefone: mockData.telefone,
+          senha: mockData.senha,
+          resetarSenha: mockData.resetarSenha,
+          permissao: mockData.permissao,
+          idiomas: undefined
+        },
         options: { select: service.repository.selectFields }
       });
     });
@@ -316,6 +329,8 @@ function describeUpdateScenarios() {
       const result = await service.execute();
 
       expect(result.nome).toBe('João');
+      expect(result.sobrenome).toBe('Silva');
+      expect(result.nomeCompleto).toBe('João Silva');
       expect(result.email).toBe('joao@email.com');
       expect(result.id).toBe('user-id-1');
     });
@@ -331,7 +346,7 @@ function describeUpdateScenarios() {
         }
 
         async update(where, data, _options) {
-          return { id: where.id, nome: data.nome };
+          return { id: where.id, nome: data.nome, nomeCompleto: data.nomeCompleto };
         }
       }
 
@@ -339,7 +354,36 @@ function describeUpdateScenarios() {
       const result = await service.execute();
 
       expect(result.nome).toBe('João Atualizado');
+      expect(result.nomeCompleto).toBe('João Atualizado ');
       expect(result.id).toBe('user-id-1');
+    });
+
+    test('deve atualizar nomeCompleto quando nome e sobrenome são alterados', async () => {
+      const mockData = {
+        nome: 'Pedro',
+        sobrenome: 'Oliveira',
+        email: 'pedro@email.com'
+      };
+
+      class MockRepository {
+        constructor() {
+          this.updateCalls = [];
+          this.selectFields = {};
+        }
+
+        async update(where, data, _options) {
+          this.updateCalls.push(data);
+          return { ...data, id: where.id };
+        }
+      }
+
+      const service = new UpdateUserService(MockRepository, 'user-id-2', mockData);
+      await service.execute();
+
+      const passedData = service.repository.updateCalls[0];
+      expect(passedData.nomeCompleto).toBe('Pedro Oliveira');
+      expect(passedData.nome).toBe('Pedro');
+      expect(passedData.sobrenome).toBe('Oliveira');
     });
   });
 }

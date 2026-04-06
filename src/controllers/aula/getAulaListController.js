@@ -45,10 +45,20 @@ export class GetAulaListController extends AbstractAulaController {
 
     if (aluno) {
       this.where.aluno = {
-        nome: {
-          contains: aluno,
-          mode: 'insensitive'
-        }
+        OR: [
+          {
+            nome: {
+              contains: aluno,
+              mode: 'insensitive'
+            }
+          },
+          {
+            nomeCompleto: {
+              contains: aluno,
+              mode: 'insensitive'
+            }
+          }
+        ]
       };
     }
 

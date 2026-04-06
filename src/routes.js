@@ -9,6 +9,7 @@ import diaAulaRouter from './routes/diaAulaRouter.js';
 import aulaRouter from './routes/aulaRouter.js';
 import dashboardRouter from './routes/dashboardRouter.js';
 import relatoriosRouter from './routes/relatoriosRouter.js';
+import adminRouter from './routes/adminRouter.js';
 // Controladores
 import { healthCheck, welcome } from './controllers/healthController.js';
 // Middlewares de validação
@@ -28,5 +29,6 @@ router.use('/contratos', isLoggedIn, contratoRouter);
 router.use('/dias-aulas', isLoggedIn, diaAulaRouter);
 router.use('/aulas', isLoggedIn, aulaRouter);
 router.use('/relatorios', isLoggedIn, adminOnly, relatoriosRouter);
+router.use('/admin', isLoggedIn, adminOnly, adminRouter);
 
 export default router;

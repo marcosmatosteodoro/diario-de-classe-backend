@@ -69,6 +69,7 @@ function testExecuteMethod() {
           id: true,
           nome: true,
           sobrenome: true,
+          nomeCompleto: true,
           email: true,
           telefone: true,
           resetarSenha: true,
@@ -83,6 +84,8 @@ function testExecuteMethod() {
         return {
           id: 1,
           nome: 'João',
+          sobrenome: 'Silva',
+          nomeCompleto: 'João Silva',
           email: 'joao@email.com'
         };
       }
@@ -92,8 +95,19 @@ function testExecuteMethod() {
     await service.execute();
 
     expect(service.repository.createCalls).toHaveLength(1);
+    expect(service.repository.createCalls[0].data.nomeCompleto).toBe('João Silva');
     expect(service.repository.createCalls[0]).toEqual({
-      data: mockData,
+      data: {
+        nome: mockData.nome,
+        sobrenome: mockData.sobrenome,
+        nomeCompleto: 'João Silva',
+        email: mockData.email,
+        telefone: mockData.telefone,
+        senha: mockData.senha,
+        resetarSenha: mockData.resetarSenha,
+        permissao: mockData.permissao,
+        idiomas: undefined
+      },
       options: { select: service.repository.selectFields }
     });
   });
@@ -292,6 +306,7 @@ function testCreationScenarios() {
     const mockData = {
       id: 1,
       nome: 'João',
+      sobrenome: 'Silva',
       email: 'joao@email.com',
       telefone: '11999999999',
       senha: 'senha123',
@@ -313,6 +328,8 @@ function testCreationScenarios() {
     const result = await service.execute();
 
     expect(result.nome).toBe('João');
+    expect(result.sobrenome).toBe('Silva');
+    expect(result.nomeCompleto).toBe('João Silva');
     expect(result.email).toBe('joao@email.com');
     expect(result.id).toBe(1);
   });
@@ -320,6 +337,7 @@ function testCreationScenarios() {
   test('deve funcionar com dados mínimos obrigatórios', async () => {
     const mockData = {
       nome: 'João',
+      sobrenome: 'Silva',
       email: 'joao@email.com',
       senha: 'senha123'
     };
@@ -338,6 +356,35 @@ function testCreationScenarios() {
     const result = await service.execute();
 
     expect(result.nome).toBe('João');
+    expect(result.sobrenome).toBe('Silva');
+    expect(result.nomeCompleto).toBe('João Silva');
     expect(result.email).toBe('joao@email.com');
+  });
+
+  test('deve calcular nomeCompleto corretamente quando nome e sobrenome existem', async () => {
+    const mockData = {
+      nome: 'Maria',
+      sobrenome: 'Santos',
+      email: 'maria@email.com',
+      senha: 'senha123'
+    };
+
+    class MockRepository {
+      constructor() {
+        this.createCalls = [];
+        this.selectFields = {};
+      }
+
+      async create(data, _options) {
+        this.createCalls.push(data);
+        return { ...data, id: 1 };
+      }
+    }
+
+    const service = new CreateUserService(MockRepository, mockData);
+    await service.execute();
+
+    const passedData = service.repository.createCalls[0];
+    expect(passedData.nomeCompleto).toBe('Maria Santos');
   });
 }
