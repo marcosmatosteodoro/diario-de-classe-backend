@@ -99,7 +99,7 @@ describe('ContratoRepository', () => {
       ];
 
       // Campos relacionais com select
-      expect(fields.aluno).toEqual({ select: { nome: true } });
+      expect(fields.aluno).toEqual({ select: { nome: true, nomeCompleto: true } });
       expect(fields.diaAulas).toBe(false);
 
       // Campos selecionados (true)

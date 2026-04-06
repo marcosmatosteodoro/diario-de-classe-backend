@@ -15,6 +15,7 @@ export default class UserRepository extends AbstractRepository {
       id: true,
       nome: true,
       sobrenome: true,
+      nomeCompleto: true,
       email: true,
       telefone: true,
       senha: false,

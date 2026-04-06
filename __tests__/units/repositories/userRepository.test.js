@@ -94,11 +94,13 @@ describe('UserRepository', () => {
       expect(fields.id).toBe(true);
       expect(fields.nome).toBe(true);
       expect(fields.sobrenome).toBe(true);
+      expect(fields.nomeCompleto).toBe(true);
       expect(fields.email).toBe(true);
       expect(fields.telefone).toBe(true);
       expect(fields.disponibilidades).toBe(true);
       expect(fields.resetarSenha).toBe(true);
       expect(fields.permissao).toBe(true);
+      expect(fields.idiomas).toBe(true);
       expect(fields.dataCriacao).toBe(true);
       expect(fields.dataAtualizacao).toBe(true);
 
