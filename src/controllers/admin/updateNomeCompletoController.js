@@ -2,19 +2,25 @@ import AbstractController from '../abstractController.js';
 import { GetUserListService } from '../../services/user/getUserListService.js';
 import { GetAlunoListService } from '../../services/aluno/getAlunoListService.js';
 import { UpdateUserService } from '../../services/user/updateUserService.js';
+import { UpdateAlunoService } from '../../services/aluno/updateAlunoService.js';
 
 export class UpdateNomeCompletoController extends AbstractController {
   constructor(req, res) {
     super(req, res);
-    const comonData = {
+    this.professorData = {
       encontrados: 0,
       atualizados: 0,
       ignorados: 0,
       erros: 0,
       detalhesErros: []
     };
-    this.professorData = comonData;
-    this.alunoData = comonData;
+    this.alunoData = {
+      encontrados: 0,
+      atualizados: 0,
+      ignorados: 0,
+      erros: 0,
+      detalhesErros: []
+    };
   }
 
   async updateProfessores() {
@@ -32,15 +38,14 @@ export class UpdateNomeCompletoController extends AbstractController {
           return;
         }
         try {
-          await UpdateUserService.handle({
-            id: professor.id,
-            nomeCompleto
-          });
+          await UpdateUserService.handle(professor.id, { nomeCompleto });
           this.professorData.atualizados += 1;
         } catch (error) {
           this.professorData.erros += 1;
           this.professorData.detalhesErros.push({
             id: professor.id,
+            nomeCompleto: nomeCompleto || 'null',
+            professores,
             error: error.message
           });
         }
@@ -63,15 +68,14 @@ export class UpdateNomeCompletoController extends AbstractController {
           return;
         }
         try {
-          await UpdateUserService.handle({
-            id: aluno.id,
-            nomeCompleto
-          });
+          await UpdateAlunoService.handle(aluno.id, { nomeCompleto });
           this.alunoData.atualizados += 1;
         } catch (error) {
           this.alunoData.erros += 1;
           this.alunoData.detalhesErros.push({
             id: aluno.id,
+            nomeCompleto: nomeCompleto || 'null',
+            aluno,
             error: error.message
           });
         }
@@ -84,11 +88,8 @@ export class UpdateNomeCompletoController extends AbstractController {
       await Promise.all([this.updateProfessores(), this.updateAlunos()]);
 
       return this.res.status(200).json({
-        count: this.professorData.atualizados + this.alunoData.atualizados,
-        data: {
-          professores: this.professorData,
-          alunos: this.alunoData
-        }
+        professores: this.professorData,
+        alunos: this.alunoData
       });
     } catch (error) {
       return this.handleError(error, 'admin.updateNomeCompleto.error');

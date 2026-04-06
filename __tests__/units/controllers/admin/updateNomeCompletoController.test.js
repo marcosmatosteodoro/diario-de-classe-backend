@@ -66,13 +66,14 @@ describe('UpdateNomeCompletoController', () => {
   });
 
   describe('Estrutura de dados', () => {
-    it('deve manter mesma referência para professores e alunos (compartilham dados)', () => {
+    it('deve manter dados independentes para professores e alunos', () => {
       const controller = new UpdateNomeCompletoController(req, res);
 
       controller.professorData.atualizados = 5;
 
-      // Como são a mesma referência, modificar um afeta o outro
-      expect(controller.alunoData.atualizados).toBe(5);
+      // Como são referências diferentes, modificar um não afeta o outro
+      expect(controller.alunoData.atualizados).toBe(0);
+      expect(controller.professorData.atualizados).toBe(5);
     });
 
     it('deve permitir adicionar erros aos detalhes', () => {
