@@ -30,6 +30,15 @@
     "id": {
       "required": "ID is required",
       "invalid": "ID must be a valid identifier"
+    },
+    "contrato": {
+      "hasAulasWithOtherProfessor": "Contract has {{count}} class(es) associated with another teacher(s).",
+      "hasSavedAulas": "Contract has {{count}} saved class(es) prior to the current day.",
+      "option": {
+        "keep": "Keep current and prior classes to the current day (requires manual correction to change teacher)",
+        "overwrite": "Overwrite all for the new teacher and/or date",
+        "generateNew": "Generate new classes (keep old classes for manual correction)"
+      }
     }
   },
   "auth": {
@@ -233,5 +242,9 @@
       "success": "Teacher availability updated successfully",
       "error": "Error updating teacher availability"
     }
+  },
+  "excel_file": {
+    "required": "Excel file is required.",
+    "invalid_type": "Invalid file type. Only Excel or CSV files are allowed."
   }
 }

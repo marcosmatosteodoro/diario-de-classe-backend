@@ -30,6 +30,15 @@
     "id": {
       "required": "ID é obrigatório",
       "invalid": "ID deve ser um identificador válido"
+    },
+    "contrato": {
+      "hasAulasWithOtherProfessor": "Contrato possui {{count}} aula(s) associada(s) a outro(s) professor(es).",
+      "hasSavedAulas": "Contrato possui {{count}} aula(s) salva(s) anteriores ao dia atual.",
+      "option": {
+        "keep": "Manter aulas atuais e anteriores ao dia atual (requer correção manual para mudar professor)",
+        "overwrite": "Sobrescrever todas para o novo professor e/ou data",
+        "generateNew": "Gerar novas aulas (manter aulas antigas para correção manual)"
+      }
     }
   },
   "auth": {
@@ -233,5 +242,9 @@
       "success": "Disponibilidade do professor atualizada com sucesso",
       "error": "Erro ao atualizar disponibilidade do professor"
     }
+  },
+  "excel_file": {
+    "required": "Arquivo Excel é obrigatório.",
+    "invalid_type": "Tipo de arquivo inválido. Apenas arquivos Excel ou CSV são permitidos."
   }
 }

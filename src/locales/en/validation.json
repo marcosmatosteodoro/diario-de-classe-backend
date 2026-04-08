@@ -1,6 +1,0 @@
-{
-  "excel_file": {
-    "required": "Excel file is required.",
-    "invalid_type": "Invalid file type. Only Excel or CSV files are allowed."
-  }
-}
