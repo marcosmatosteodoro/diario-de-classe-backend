@@ -23,6 +23,11 @@ describe('ContratoRepository', () => {
       expect(contratoRepository.getSelectFields()).toBeDefined();
     });
 
+    test('deve ter método getSelectFieldsWithRelations', () => {
+      expect(typeof contratoRepository.getSelectFieldsWithRelations).toBe('function');
+      expect(contratoRepository.getSelectFieldsWithRelations()).toBeDefined();
+    });
+
     test('deve ter selectFields definido como objeto', () => {
       expect(contratoRepository.selectFields).toBeDefined();
       expect(typeof contratoRepository.selectFields).toBe('object');
@@ -109,6 +114,124 @@ describe('ContratoRepository', () => {
 
       // Total de campos: 13 campos true + aluno (com select) + diaAulas (false) = 15
       expect(Object.keys(fields)).toHaveLength(15);
+    });
+  });
+
+  describe('getSelectFieldsWithRelations', () => {
+    test('deve retornar campos com relações completas', () => {
+      const fields = contratoRepository.getSelectFieldsWithRelations();
+
+      const expectedTrueFields = [
+        'id',
+        'idAluno',
+        'dataInicio',
+        'dataTermino',
+        'status',
+        'totalAulas',
+        'totalAulasFeitas',
+        'totalReposicoes',
+        'totalFaltas',
+        'totalAulasCanceladas',
+        'dataCriacao',
+        'dataAtualizacao',
+        'idioma'
+      ];
+
+      // Campos selecionados (true)
+      expectedTrueFields.forEach(field => {
+        expect(fields[field]).toBe(true);
+      });
+    });
+
+    test('deve incluir relação aluno completa', () => {
+      const fields = contratoRepository.getSelectFieldsWithRelations();
+
+      expect(fields.aluno).toBe(true);
+    });
+
+    test('deve incluir relação diaAulas completa', () => {
+      const fields = contratoRepository.getSelectFieldsWithRelations();
+
+      expect(fields.diaAulas).toBe(true);
+    });
+
+    test('deve incluir relação aulas com select específico', () => {
+      const fields = contratoRepository.getSelectFieldsWithRelations();
+
+      expect(fields.aulas).toBeDefined();
+      expect(fields.aulas.select).toBeDefined();
+      expect(typeof fields.aulas.select).toBe('object');
+    });
+
+    test('deve incluir campos corretos na relação aulas', () => {
+      const fields = contratoRepository.getSelectFieldsWithRelations();
+      const aulaFields = fields.aulas.select;
+
+      const expectedAulaFields = [
+        'id',
+        'idAluno',
+        'idProfessor',
+        'idContrato',
+        'dataAula',
+        'horaInicial',
+        'horaFinal',
+        'duracaoAula',
+        'tipo',
+        'status',
+        'observacao',
+        'dataCriacao',
+        'dataAtualizacao'
+      ];
+
+      expectedAulaFields.forEach(field => {
+        expect(aulaFields[field]).toBe(true);
+      });
+    });
+
+    test('deve incluir relação professor dentro de aulas', () => {
+      const fields = contratoRepository.getSelectFieldsWithRelations();
+      const aulaFields = fields.aulas.select;
+
+      expect(aulaFields.professor).toBeDefined();
+      expect(aulaFields.professor.select).toBeDefined();
+      expect(aulaFields.professor.select.nome).toBe(true);
+      expect(aulaFields.professor.select.nomeCompleto).toBe(true);
+    });
+
+    test('deve ter todos os campos necessários para relações completas', () => {
+      const fields = contratoRepository.getSelectFieldsWithRelations();
+
+      // Campos base
+      expect(fields.id).toBe(true);
+      expect(fields.idAluno).toBe(true);
+      expect(fields.dataInicio).toBe(true);
+      expect(fields.dataTermino).toBe(true);
+      expect(fields.status).toBe(true);
+      expect(fields.totalAulas).toBe(true);
+      expect(fields.idioma).toBe(true);
+
+      // Relações
+      expect(fields.aluno).toBe(true);
+      expect(fields.diaAulas).toBe(true);
+      expect(fields.aulas).toBeDefined();
+      expect(fields.aulas.select).toBeDefined();
+    });
+
+    test('deve retornar estrutura diferente de getSelectFields', () => {
+      const basicFields = contratoRepository.getSelectFields();
+      const fieldsWithRelations = contratoRepository.getSelectFieldsWithRelations();
+
+      // aluno deve ser objeto com select no básico, mas true no com relações
+      expect(basicFields.aluno).toEqual({ select: { nome: true, nomeCompleto: true } });
+      expect(fieldsWithRelations.aluno).toBe(true);
+
+      // diaAulas deve ser false no básico, mas true no com relações
+      expect(basicFields.diaAulas).toBe(false);
+      expect(fieldsWithRelations.diaAulas).toBe(true);
+
+      // aulas não existe no básico, mas existe no com relações
+      expect(basicFields.aulas).toBeUndefined();
+      expect(fieldsWithRelations.aulas).toBeDefined();
     });
   });
 

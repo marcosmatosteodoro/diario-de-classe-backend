@@ -52,7 +52,29 @@ export default class ContratoRepository extends AbstractRepository {
       idioma: true,
       aluno: true,
       diaAulas: true,
-      aulas: true
+      aulas: {
+        select: {
+          id: true,
+          idAluno: true,
+          idProfessor: true,
+          idContrato: true,
+          dataAula: true,
+          horaInicial: true,
+          horaFinal: true,
+          duracaoAula: true,
+          tipo: true,
+          status: true,
+          observacao: true,
+          dataCriacao: true,
+          dataAtualizacao: true,
+          professor: {
+            select: {
+              nome: true,
+              nomeCompleto: true
+            }
+          }
+        }
+      }
     };
   }
 }

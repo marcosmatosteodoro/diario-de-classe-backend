@@ -11,6 +11,7 @@ export class GetContratoController extends AbstractContratoController {
       const id = this.req.validatedId || this.req.params.id;
       const params = this.req.query || {};
       params.additionalWhere = this.where;
+      params.withRelations = true;
       const contrato = await GetContratoService.handle(id, params);
 
       if (!contrato) {
