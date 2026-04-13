@@ -32,12 +32,12 @@
       "invalid": "ID deve ser um identificador válido"
     },
     "contrato": {
-      "hasAulasWithOtherProfessor": "Contrato possui {{count}} aula(s) associada(s) a outro(s) professor(es).",
-      "hasSavedAulas": "Contrato possui {{count}} aula(s) salva(s) anteriores ao dia atual.",
+      "hasAulasWithOtherProfessor": "O contrato possui {{count}} aula(s) associada(s) a outro(s) professor(es).",
+      "hasSavedAulas": "O contrato possui {{count}} aula(s) salva(s) anteriores ao dia atual.",
       "option": {
         "keep": "Manter aulas atuais e anteriores ao dia atual (requer correção manual para mudar professor)",
-        "overwrite": "Sobrescrever todas para o novo professor e/ou data",
-        "generateNew": "Gerar novas aulas (manter aulas antigas para correção manual)"
+        "overwrite": "Sobrescrever todas as aulas para o novo professor ou data",
+        "generateNew": "Gerar novas aulas a partir da data atual (manter antigas para correção manual)"
       }
     }
   },

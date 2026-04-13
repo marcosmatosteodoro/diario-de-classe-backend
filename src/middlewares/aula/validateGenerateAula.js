@@ -1,3 +1,4 @@
+import { GetContratoService } from '../../services/contrato/getContratoService.js';
 import { BaseValidateEntity } from '../../utilities/baseValidateEntity.js';
 import { ValidateData } from '../../utilities/validateData.js';
 
@@ -74,6 +75,82 @@ class ValidateGenerateAula extends BaseValidateEntity {
     const inicio = new Date(dataInicio);
     const fim = new Date(dataFim);
     return fim > inicio;
+  }
+
+  validateConfirmation() {
+    const { confirm } = this.req.body;
+    const confirms = ['keep', 'overwrite', 'generateNew'];
+    return confirm && confirms.includes(confirm);
+  }
+  validateAulasOutroProfessor(contrato) {
+    const aulasOutroProfessor = contrato.aulas.filter(
+      aula => aula.idProfessor !== this.req.body.idProfessor
+    );
+    this.aulasOutroProfessorCount = aulasOutroProfessor.length;
+    this.idOutosProfessores = [...new Set(aulasOutroProfessor.map(aula => aula.idProfessor))];
+    return aulasOutroProfessor.length > 0 && !this.validateConfirmation();
+  }
+
+  validateAulasSalvas(contrato) {
+    const hoje = new Date();
+    this.aulasSalvas = contrato.aulas.filter(aula => new Date(aula.dataAula) <= hoje);
+    return this.aulasSalvas.length > 0 && !this.validateConfirmation();
+  }
+
+  async handle() {
+    try {
+      if (!this.req.body) {
+        return this.res.status(400).json({
+          message: this.req.t ? this.req.t('validation.noData') : 'Dados não fornecidos'
+        });
+      }
+
+      if (this.isArray) {
+        return this.handleArrayValidation();
+      }
+
+      if (this.req.body.isEdit) {
+        if (!this.req.body.id) {
+          return this.res.status(400).json({
+            message: this.req.t ? this.req.t('validation.noId') : 'ID não fornecido para edição'
+          });
+        }
+
+        const contrato = await GetContratoService.handle(this.req.body.id, { withRelations: true });
+
+        if (!contrato) {
+          return this.res.status(404).json({
+            message: this.req.t ? this.req.t('validation.noData') : 'Dados não encontrados'
+          });
+        }
+
+        if (this.validateAulasOutroProfessor(contrato) || this.validateAulasSalvas(contrato)) {
+          return this.res.status(409).json({
+            message: this.req.t('validation.contrato.hasAulasWithOtherProfessor', {
+              count: this.aulasOutroProfessorCount
+            }),
+            idOutosProfessores: this.idOutosProfessores,
+            options: [
+              {
+                value: 'overwrite',
+                label: this.req.t('validation.contrato.option.overwrite')
+              },
+              {
+                value: 'generateNew',
+                label: this.req.t('validation.contrato.option.generateNew')
+              }
+            ]
+          });
+        }
+      }
+
+      return this.handleSingleValidation();
+    } catch (error) {
+      return this.res.status(500).json({
+        message: this.req.t ? this.req.t('error.internal') : 'Erro interno do servidor',
+        error: error.message
+      });
+    }
   }
 }
 

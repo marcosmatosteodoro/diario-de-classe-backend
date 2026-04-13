@@ -1,24 +1,32 @@
+import { GetUserService } from '../../services/user/getUserService.js';
 import AbstractController from '../abstractController.js';
 
 export class GenerateAulasByContratoController extends AbstractController {
   constructor(req, res) {
     super(req, res);
     this.where = {};
+    this.initialDatas();
+  }
+
+  initialDatas() {
+    const { body } = this.req;
+    this.dataInicio = body.dataInicio;
+    this.dataFim = body.dataFim;
+    this.diasAulas = body.diasAulas;
+    this.isEdit = body.isEdit === true;
+    this.idProfessor = body.idProfessor;
   }
 
   async execute() {
     try {
-      const dataInicio = this.req.body.dataInicio;
-      const dataFim = this.req.body.dataFim;
-      const diasAulas = this.req.body.diasAulas;
-
       const dates = this.generateDateRangeByWeekDay(
-        new Date(dataInicio),
-        new Date(dataFim),
-        diasAulas
+        new Date(this.dataInicio),
+        new Date(this.dataFim),
+        this.diasAulas
       );
 
-      const aulas = dates.map(dateInfo => this.aulaPrepare(dateInfo));
+      const professor = await GetUserService.handle(this.idProfessor);
+      const aulas = dates.map(dateInfo => this.aulaPrepare(dateInfo, professor));
 
       if (!aulas || aulas.length === 0) {
         return this.res.status(422).json({
@@ -73,13 +81,19 @@ export class GenerateAulasByContratoController extends AbstractController {
     return dates;
   }
 
-  aulaPrepare({ dataAula, horaInicial, horaFinal, duracaoAula }) {
+  aulaPrepare({ dataAula, horaInicial, horaFinal, duracaoAula }, professor) {
     return {
       dataAula,
       horaInicial,
       horaFinal,
       tipo: 'PADRAO',
       duracaoAula,
+      idProfessor: this.idProfessor,
+      professor: {
+        id: professor.id,
+        nomeCompleto: professor.nomeCompleto,
+        nome: professor.nome
+      },
       observacao: null
     };
   }

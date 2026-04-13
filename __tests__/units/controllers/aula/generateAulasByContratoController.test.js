@@ -195,6 +195,12 @@ describe('GenerateAulasByContratoController', () => {
   });
 
   describe('aulaPrepare', () => {
+    const mockProfessor = {
+      id: 'prof-123',
+      nome: 'João',
+      nomeCompleto: 'João Silva'
+    };
+
     test('deve preparar dados da aula com tipo PADRAO', () => {
       const input = {
         dataAula: new Date('2025-01-10'),
@@ -203,7 +209,7 @@ describe('GenerateAulasByContratoController', () => {
         duracaoAula: 60
       };
 
-      const result = controller.aulaPrepare(input);
+      const result = controller.aulaPrepare(input, mockProfessor);
 
       expect(result).toEqual({
         dataAula: input.dataAula,
@@ -211,6 +217,12 @@ describe('GenerateAulasByContratoController', () => {
         horaFinal: '10:00',
         duracaoAula: 60,
         tipo: 'PADRAO',
+        idProfessor: controller.idProfessor,
+        professor: {
+          id: mockProfessor.id,
+          nomeCompleto: mockProfessor.nomeCompleto,
+          nome: mockProfessor.nome
+        },
         observacao: null
       });
     });
@@ -223,7 +235,7 @@ describe('GenerateAulasByContratoController', () => {
         duracaoAula: 120
       };
 
-      const result = controller.aulaPrepare(input);
+      const result = controller.aulaPrepare(input, mockProfessor);
 
       expect(result.tipo).toBe('PADRAO');
     });
@@ -236,7 +248,7 @@ describe('GenerateAulasByContratoController', () => {
         duracaoAula: 60
       };
 
-      const result = controller.aulaPrepare(input);
+      const result = controller.aulaPrepare(input, mockProfessor);
 
       expect(result.observacao).toBeNull();
     });
@@ -250,7 +262,7 @@ describe('GenerateAulasByContratoController', () => {
         duracaoAula: 60
       };
 
-      const result = controller.aulaPrepare(input);
+      const result = controller.aulaPrepare(input, mockProfessor);
 
       expect(result.dataAula).toBe(originalDate);
     });
@@ -263,7 +275,7 @@ describe('GenerateAulasByContratoController', () => {
         duracaoAula: 90
       };
 
-      const result = controller.aulaPrepare(input);
+      const result = controller.aulaPrepare(input, mockProfessor);
 
       expect(result.horaInicial).toBe('09:30');
       expect(result.horaFinal).toBe('11:45');
@@ -278,9 +290,27 @@ describe('GenerateAulasByContratoController', () => {
         duracaoAula: 120
       };
 
-      const result = controller.aulaPrepare(input);
+      const result = controller.aulaPrepare(input, mockProfessor);
 
       expect(result.duracaoAula).toBe(120);
+    });
+
+    test('deve incluir informações do professor', () => {
+      const input = {
+        dataAula: new Date('2025-01-10'),
+        horaInicial: '08:00',
+        horaFinal: '10:00',
+        duracaoAula: 60
+      };
+
+      const result = controller.aulaPrepare(input, mockProfessor);
+
+      expect(result.professor).toEqual({
+        id: mockProfessor.id,
+        nomeCompleto: mockProfessor.nomeCompleto,
+        nome: mockProfessor.nome
+      });
+      expect(result.idProfessor).toBe(controller.idProfessor);
     });
   });
 
@@ -316,7 +346,10 @@ describe('GenerateAulasByContratoController', () => {
       mockReq.body.dataFim = '2025-01-06T03:00:00.000Z';
       mockReq.body.diasAulas = [{ diaSemana: 'SEXTA', horaInicial: '08:00', horaFinal: '10:00' }];
 
-      await controller.execute();
+      // Criar nova instância com os dados atualizados
+      const testController = new GenerateAulasByContratoController(mockReq, mockRes);
+
+      await testController.execute();
 
       expect(mockRes.statusCode).toBe(422);
       expect(mockRes.data.message).toBe('Nenhuma aula gerada para o período informado');
@@ -345,7 +378,10 @@ describe('GenerateAulasByContratoController', () => {
       mockReq.body.dataFim = '2025-01-06T03:00:00.000Z';
       mockReq.body.diasAulas = [{ diaSemana: 'SEXTA', horaInicial: '08:00', horaFinal: '10:00' }];
 
-      await controller.execute();
+      // Criar nova instância com os dados atualizados
+      const testController = new GenerateAulasByContratoController(mockReq, mockRes);
+
+      await testController.execute();
 
       expect(translationKey).toBe('aulas.generate.no_classes');
     });
@@ -353,7 +389,10 @@ describe('GenerateAulasByContratoController', () => {
     test('deve chamar handleError quando ocorrer erro', async () => {
       mockReq.body.diasAulas = null; // Vai causar erro no map
 
-      await controller.execute();
+      // Criar nova instância com os dados atualizados
+      const testController = new GenerateAulasByContratoController(mockReq, mockRes);
+
+      await testController.execute();
 
       expect(mockRes.statusCode).toBe(500);
       expect(mockRes.data.message).toBe('Erro ao gerar aulas');
@@ -368,7 +407,10 @@ describe('GenerateAulasByContratoController', () => {
 
       mockReq.body.diasAulas = null;
 
-      await controller.execute();
+      // Criar nova instância com os dados atualizados
+      const testController = new GenerateAulasByContratoController(mockReq, mockRes);
+
+      await testController.execute();
 
       expect(translationKey).toBe('aulas.generate.error');
     });
@@ -381,7 +423,10 @@ describe('GenerateAulasByContratoController', () => {
       mockReq.body.dataInicio = '2025-01-06T03:00:00.000Z'; // Segunda
       mockReq.body.dataFim = '2025-01-10T03:00:00.000Z'; // Sexta
 
-      await controller.execute();
+      // Criar nova instância com os dados atualizados
+      const testController = new GenerateAulasByContratoController(mockReq, mockRes);
+
+      await testController.execute();
 
       expect(mockRes.statusCode).toBe(200);
       expect(mockRes.data.count).toBe(2);
@@ -473,7 +518,10 @@ describe('GenerateAulasByContratoController', () => {
       mockReq.body.dataFim = '2025-01-06T03:00:00.000Z';
       mockReq.body.diasAulas = [{ diaSemana: 'SEGUNDA', horaInicial: '08:00', horaFinal: '10:00' }];
 
-      await controller.execute();
+      // Criar nova instância com os dados atualizados
+      const testController = new GenerateAulasByContratoController(mockReq, mockRes);
+
+      await testController.execute();
 
       expect(mockRes.statusCode).toBe(200);
       expect(mockRes.data.aulas[0]).toHaveProperty('dataAula');
@@ -492,7 +540,10 @@ describe('GenerateAulasByContratoController', () => {
         { diaSemana: 'SEXTA', horaInicial: '14:00', horaFinal: '16:00' }
       ];
 
-      await controller.execute();
+      // Criar nova instância com os dados atualizados
+      const testController = new GenerateAulasByContratoController(mockReq, mockRes);
+
+      await testController.execute();
 
       expect(mockRes.statusCode).toBe(200);
       expect(mockRes.data.count).toBe(3);
@@ -506,7 +557,10 @@ describe('GenerateAulasByContratoController', () => {
       mockReq.body.dataFim = '2025-01-06T23:59:59.999Z';
       mockReq.body.diasAulas = [{ diaSemana: 'SEGUNDA', horaInicial: '08:00', horaFinal: '10:00' }];
 
-      await controller.execute();
+      // Criar nova instância com os dados atualizados
+      const testController = new GenerateAulasByContratoController(mockReq, mockRes);
+
+      await testController.execute();
 
       expect(mockRes.statusCode).toBe(200);
     });
@@ -516,7 +570,10 @@ describe('GenerateAulasByContratoController', () => {
       mockReq.body.dataFim = '2025-01-06T03:00:00.000Z';
       mockReq.body.diasAulas = [{ diaSemana: 'SEGUNDA', horaInicial: '07:30', horaFinal: '09:45' }];
 
-      await controller.execute();
+      // Criar nova instância com os dados atualizados
+      const testController = new GenerateAulasByContratoController(mockReq, mockRes);
+
+      await testController.execute();
 
       expect(mockRes.statusCode).toBe(200);
       expect(mockRes.data.aulas[0].horaInicial).toBe('07:30');
