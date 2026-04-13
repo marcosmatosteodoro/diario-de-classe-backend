@@ -118,7 +118,7 @@ export class UpdateContratoController extends AbstractController {
     const idAluno = this.idAluno;
     const idProfessor = this.idProfessor;
     const aulas = this.req.body.aulas;
-    const aulasExisted = await GetAulaListService.handle({ idContrato, idAluno, idProfessor });
+    const aulasExisted = await GetAulaListService.handle({ idContrato, idAluno });
 
     // Delete // Update
     await Promise.all(
@@ -231,8 +231,8 @@ export class UpdateContratoController extends AbstractController {
   aulaPrepareData({ idAluno, idProfessor, idContrato, aula }) {
     return {
       idAluno,
-      idProfessor,
       idContrato,
+      idProfessor: aula.idProfessor || idProfessor,
       dataAula: aula.dataAula,
       horaInicial: aula.horaInicial,
       horaFinal: aula.horaFinal,
