@@ -10,7 +10,8 @@ export class GetUserListService extends AbstractService {
   async execute() {
     return await this.repository.selectMany({
       select: this.repository.selectFields,
-      where: this.where
+      where: this.where,
+      orderBy: { nome: 'asc' }
     });
   }
 
