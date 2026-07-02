@@ -1,6 +1,7 @@
 import { GetContratoService } from '../../services/contrato/getContratoService.js';
 import { BaseValidateEntity } from '../../utilities/baseValidateEntity.js';
 import { ValidateData } from '../../utilities/validateData.js';
+import { startOfTodayUTC } from '../../utilities/startOfTodayUTC.js';
 
 class ValidateGenerateAula extends BaseValidateEntity {
   constructor(req, res, next) {
@@ -92,8 +93,10 @@ class ValidateGenerateAula extends BaseValidateEntity {
   }
 
   validateAulasSalvas(contrato) {
-    const hoje = new Date();
-    this.aulasSalvas = contrato.aulas.filter(aula => new Date(aula.dataAula) <= hoje);
+    // Aulas "salvas" = as que já ocorreram (estritamente antes de hoje).
+    // Comparação por dia em UTC, consistente com as datas armazenadas.
+    const hoje = startOfTodayUTC();
+    this.aulasSalvas = contrato.aulas.filter(aula => new Date(aula.dataAula) < hoje);
     return this.aulasSalvas.length > 0 && !this.validateConfirmation();
   }
 

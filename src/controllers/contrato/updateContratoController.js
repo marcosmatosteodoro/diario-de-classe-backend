@@ -13,6 +13,7 @@ import { DeleteAulaService } from '../../services/aula/deleteAulaService.js';
 import { GetContratoService } from '../../services/contrato/getContratoService.js';
 import { UpdateContratoService } from '../../services/contrato/updateContratoService.js';
 import { UpdateAulasContratoService } from '../../services/contrato/updateAulasContratoService.js';
+import { dataAulaKey } from '../../utilities/dataAulaKey.js';
 
 export class UpdateContratoController extends AbstractController {
   constructor(req, res) {
@@ -123,7 +124,9 @@ export class UpdateContratoController extends AbstractController {
     // Delete // Update
     await Promise.all(
       aulasExisted.map(async aulaEx => {
-        const aulaExisted = aulas.find(aula => aula.dataAula === aulaEx.dataAula);
+        const aulaExisted = aulas.find(
+          aula => dataAulaKey(aula.dataAula) === dataAulaKey(aulaEx.dataAula)
+        );
         const isAulaStillExists = aulaExisted || null;
         if (!isAulaStillExists) {
           await DeleteAulaService.handle(aulaEx.id);
@@ -147,7 +150,9 @@ export class UpdateContratoController extends AbstractController {
     // Create
     await Promise.all(
       aulas.map(async aula => {
-        const isAulaExist = aulasExisted.find(aulaEx => aulaEx.dataAula === aula.dataAula);
+        const isAulaExist = aulasExisted.find(
+          aulaEx => dataAulaKey(aulaEx.dataAula) === dataAulaKey(aula.dataAula)
+        );
         if (!isAulaExist) {
           const data = this.aulaPrepareData({
             idAluno,

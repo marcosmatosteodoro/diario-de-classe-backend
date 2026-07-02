@@ -1,5 +1,9 @@
 import { UpdateContratoController } from '../../../../src/controllers/contrato/updateContratoController.js';
 import AbstractController from '../../../../src/controllers/abstractController.js';
+import { GetAulaListService } from '../../../../src/services/aula/getAulaListService.js';
+import { CreateAulaService } from '../../../../src/services/aula/createAulaService.js';
+import { UpdateAulaService } from '../../../../src/services/aula/updateAulaService.js';
+import { DeleteAulaService } from '../../../../src/services/aula/deleteAulaService.js';
 
 describe('UpdateContratoController', () => {
   let controller, mockReq, mockRes;
@@ -386,6 +390,119 @@ describe('UpdateContratoController', () => {
 
       expect(mockRes.statusCode).toBe(500);
       expect(mockRes.data.message).toBe('Erro ao atualizar contrato');
+    });
+  });
+
+  // Regressão do bug: aulas existentes vêm do Prisma como Date e as recebidas
+  // no body como string ISO. A comparação precisa casar por dia (não `===`),
+  // senão toda edição apagava e recriava todas as aulas.
+  describe('createAulas - reconciliação por data (Date x string)', () => {
+    const originals = {};
+
+    const buildController = aulas => {
+      const req = {
+        params: { id: '1' },
+        body: { idAluno: '1', idProfessor: '2', aulas }
+      };
+      const res = {
+        status() {
+          return this;
+        },
+        json() {
+          return this;
+        }
+      };
+      const controller = new UpdateContratoController(req, res);
+      controller.contrato = { id: 'contrato-1' };
+      return controller;
+    };
+
+    beforeEach(() => {
+      originals.list = GetAulaListService.handle;
+      originals.create = CreateAulaService.handle;
+      originals.update = UpdateAulaService.handle;
+      originals.del = DeleteAulaService.handle;
+    });
+
+    afterEach(() => {
+      GetAulaListService.handle = originals.list;
+      CreateAulaService.handle = originals.create;
+      UpdateAulaService.handle = originals.update;
+      DeleteAulaService.handle = originals.del;
+    });
+
+    test('casa existente (Date) com recebida (string) e atualiza, sem deletar', async () => {
+      let updateCalls = 0;
+      let deleteCalls = 0;
+      let createCalls = 0;
+
+      GetAulaListService.handle = async () => [
+        { id: 'aula-1', dataAula: new Date('2025-01-13T00:00:00.000Z') }
+      ];
+      UpdateAulaService.handle = async () => {
+        updateCalls++;
+        return { id: 'aula-1' };
+      };
+      DeleteAulaService.handle = async () => {
+        deleteCalls++;
+        return {};
+      };
+      CreateAulaService.handle = async () => {
+        createCalls++;
+        return {};
+      };
+
+      const controller = buildController([
+        {
+          dataAula: '2025-01-13',
+          horaInicial: '08:00',
+          horaFinal: '09:00',
+          tipo: 'PADRAO'
+        }
+      ]);
+
+      await controller.createAulas();
+
+      expect(deleteCalls).toBe(0);
+      expect(updateCalls).toBe(1);
+      expect(createCalls).toBe(0);
+    });
+
+    test('deleta existente ausente na lista recebida e cria a nova', async () => {
+      let updateCalls = 0;
+      let deleteCalls = 0;
+      let createCalls = 0;
+
+      GetAulaListService.handle = async () => [
+        { id: 'aula-old', dataAula: new Date('2025-01-06T00:00:00.000Z') }
+      ];
+      UpdateAulaService.handle = async () => {
+        updateCalls++;
+        return {};
+      };
+      DeleteAulaService.handle = async () => {
+        deleteCalls++;
+        return {};
+      };
+      CreateAulaService.handle = async () => {
+        createCalls++;
+        return { id: 'nova' };
+      };
+
+      const controller = buildController([
+        {
+          dataAula: '2025-01-13',
+          horaInicial: '08:00',
+          horaFinal: '09:00',
+          tipo: 'PADRAO'
+        }
+      ]);
+
+      await controller.createAulas();
+
+      expect(deleteCalls).toBe(1);
+      expect(updateCalls).toBe(0);
+      expect(createCalls).toBe(1);
     });
   });
 });
