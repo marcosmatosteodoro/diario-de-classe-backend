@@ -58,6 +58,7 @@ jest.unstable_mockModule('i18next', () => ({
   default: {
     use: jest.fn().mockReturnThis(),
     init: jest.fn(),
+    on: jest.fn(), // utilities/i18n.js registra listeners ('loaded', 'failedLoading')
     t: jest.fn(key => `translated_${key}`),
     language: 'pt',
     languages: ['pt', 'en']
@@ -204,9 +205,16 @@ describe('i18n Middleware - Headers e Tratamento de Erros', () => {
 });
 
 describe('i18n Middleware - Integração', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
     setupMocks();
+
+    // O jest.config usa resetMocks: true, que remove as implementações dos mocks
+    // antes de cada teste. Como o mock de i18next já foi cacheado por testes
+    // anteriores (via i18n-inline.js), o encadeamento fluente .use().use().init()
+    // usado em utilities/i18n.js é perdido. Restauramos aqui.
+    const { default: i18next } = await import('i18next');
+    i18next.use.mockReturnThis();
   });
 
   test('deve integrar corretamente com configuração i18next', async () => {
