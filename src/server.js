@@ -2,7 +2,7 @@
 // import './db/database';
 import app from './app.js';
 import Constants from './utilities/constants.js';
-import i18n from './utilities/i18n.js';
+import i18n from './utilities/i18n-inline.js';
 
 console.log('Environment Check:', {
   NODE_ENV: process.env.NODE_ENV,

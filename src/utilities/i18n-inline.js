@@ -1,22 +1,26 @@
 import i18next from 'i18next';
-import Backend from 'i18next-fs-backend';
 import middleware from 'i18next-http-middleware';
-import path from 'path';
+import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
+import path from 'path';
 import Constants from '../utilities/constants.js';
 
 // Obter __dirname em ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Caminho dos arquivos de tradução
-const localesPath = path.join(__dirname, '../locales/{{lng}}/{{ns}}.json');
-console.log('[i18n] Locales path:', localesPath.replace('{{lng}}/{{ns}}.json', ''));
-console.log('[i18n] __dirname:', __dirname);
+// Carregar traduções diretamente como objetos (mais compatível)
+const ptTranslations = JSON.parse(
+  readFileSync(path.join(__dirname, '../locales/pt/translation.json'), 'utf8')
+);
+const enTranslations = JSON.parse(
+  readFileSync(path.join(__dirname, '../locales/en/translation.json'), 'utf8')
+);
 
-// Configuração do i18next
+console.log('[i18n] Carregando traduções diretamente do código');
+
+// Configuração do i18next com recursos inline
 i18next
-  .use(Backend) // Plugin para carregar arquivos de tradução
   .use(middleware.LanguageDetector) // Plugin para detectar idioma automaticamente
   .init(
     {
@@ -26,13 +30,17 @@ i18next
       // Idiomas suportados
       supportedLngs: ['pt', 'en'],
 
-      // Não detectar idioma automaticamente da URL
+      // Carregar idiomas na inicialização
       preload: ['pt', 'en'],
 
-      // Configuração do backend (arquivos de tradução)
-      backend: {
-        // Caminho para os arquivos de tradução
-        loadPath: localesPath
+      // Recursos de tradução carregados diretamente
+      resources: {
+        pt: {
+          translation: ptTranslations
+        },
+        en: {
+          translation: enTranslations
+        }
       },
 
       // Configuração do detector de idioma
@@ -83,31 +91,20 @@ i18next
 
       // Plurais
       pluralSeparator: '_',
-      contextSeparator: '_',
-
-      // Recarregar traduções em desenvolvimento
-      reloadOnPrerender: Constants.env === 'development'
+      contextSeparator: '_'
     },
     (err, t) => {
       if (err) {
-        console.error('[i18n] Erro ao inicializar i18next:', err);
+        console.error('[i18n] ❌ Erro ao inicializar i18next:', err);
       } else {
-        console.log('[i18n] i18next inicializado com sucesso');
-        console.log('[i18n] Idioma padrão:', i18next.language);
-        console.log('[i18n] Teste de tradução pt:', t('auth.login.unauthorized', { lng: 'pt' }));
-        console.log('[i18n] Teste de tradução en:', t('auth.login.unauthorized', { lng: 'en' }));
+        console.log('[i18n] ✅ Inicializado com sucesso -', i18next.language);
+        // Testar tradução em desenvolvimento
+        if (Constants.env === 'development') {
+          console.log('[i18n] Teste PT:', t('auth.login.unauthorized', { lng: 'pt' }));
+          console.log('[i18n] Teste EN:', t('auth.login.unauthorized', { lng: 'en' }));
+        }
       }
     }
   );
-
-// Event listener para verificar quando recursos são carregados
-i18next.on('loaded', loaded => {
-  console.log('[i18n] Recursos carregados:', Object.keys(loaded));
-});
-
-// Event listener para erros de carregamento
-i18next.on('failedLoading', (lng, ns, msg) => {
-  console.error(`[i18n] Falha ao carregar ${lng}/${ns}:`, msg);
-});
 
 export default i18next;

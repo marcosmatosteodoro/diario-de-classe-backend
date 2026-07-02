@@ -1,4 +1,5 @@
-import i18next from '../utilities/i18n.js';
+import i18next from '../utilities/i18n-inline.js'; // Usar recursos inline (produção)
+// import i18next from '../utilities/i18n.js'; // Usar filesystem (desenvolvimento)
 import middleware from 'i18next-http-middleware';
 
 // Middleware para adicionar i18n às requisições
