@@ -32,6 +32,12 @@ export default {
   // Setup files
   setupFilesAfterEnv: ['<rootDir>/__tests__/setup.js'],
 
+  // Substitui o Prisma Client real por um mock nos testes unitários,
+  // evitando que precisem de banco ligado ou alterem dados reais.
+  moduleNameMapper: {
+    'db/prisma\\.js$': '<rootDir>/__tests__/mocks/prismaMock.js'
+  },
+
   // Limpar mocks automaticamente
   clearMocks: true,
   resetMocks: true,

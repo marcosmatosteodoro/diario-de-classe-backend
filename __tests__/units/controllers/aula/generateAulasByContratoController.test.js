@@ -1,8 +1,24 @@
 import { GenerateAulasByContratoController } from '../../../../src/controllers/aula/generateAulasByContratoController.js';
+import { GetUserService } from '../../../../src/services/user/getUserService.js';
 import AbstractController from '../../../../src/controllers/abstractController.js';
 
 describe('GenerateAulasByContratoController', () => {
   let controller, mockReq, mockRes;
+  // execute() busca o professor via GetUserService; mockado para não usar banco.
+  let originalGetUserHandle;
+
+  beforeEach(() => {
+    originalGetUserHandle = GetUserService.handle;
+    GetUserService.handle = async () => ({
+      id: 'professor-1',
+      nome: 'Professor',
+      nomeCompleto: 'Professor Teste'
+    });
+  });
+
+  afterEach(() => {
+    GetUserService.handle = originalGetUserHandle;
+  });
 
   beforeEach(() => {
     mockReq = {

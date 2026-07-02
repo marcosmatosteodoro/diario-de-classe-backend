@@ -1,20 +1,22 @@
 import { RefreshTokenService } from '../../../../src/services/auth/refreshTokenService.js';
-import { LoginService } from '../../../../src/services/auth/loginService.js';
 import UserRepository from '../../../../src/repositories/userRepository.js';
+import { createJwt } from '../../../../src/utilities/createJwt.js';
 import Constants from '../../../../src/utilities/constants.js';
+
+// Gera um refresh token válido diretamente (sem passar pelo LoginService, que
+// depende de banco), isolando o RefreshTokenService no teste unitário.
+const makeRefreshToken = sub =>
+  createJwt({ sub }, Constants.jwtRefreshSecret, Constants.refreshExp);
 
 describe('RefreshTokenService', () => {
   let originalSelectOne;
-  let originalLoginServiceHandle;
 
   beforeEach(() => {
     originalSelectOne = UserRepository.prototype.selectOne;
-    originalLoginServiceHandle = LoginService.handle;
   });
 
   afterEach(() => {
     UserRepository.prototype.selectOne = originalSelectOne;
-    LoginService.handle = originalLoginServiceHandle;
   });
 
   test('should return null when refreshToken is not provided', async () => {
@@ -39,18 +41,9 @@ describe('RefreshTokenService', () => {
   });
 
   test('should return null when user is not found', async () => {
-    // Gera um refresh token válido primeiro
-    UserRepository.prototype.selectOne = async () => ({
-      id: 'user-123',
-      email: 'test@example.com',
-      nome: 'Test User',
-      senha: 'password123'
-    });
+    const refreshToken = makeRefreshToken('user-123');
 
-    const loginResult = await LoginService.handle('test@example.com', 'password123');
-    const refreshToken = loginResult.refreshToken;
-
-    // Agora muda o repository para retornar null ao procurar o usuário
+    // Usuário não existe mais no banco
     UserRepository.prototype.selectOne = async () => null;
 
     const service = new RefreshTokenService(UserRepository, refreshToken);
@@ -60,18 +53,13 @@ describe('RefreshTokenService', () => {
   });
 
   test('should return new accessToken when refreshToken is valid', async () => {
-    // Primeiro faz login para obter um refresh token válido
     UserRepository.prototype.selectOne = async () => ({
       id: 'user-123',
       email: 'test@example.com',
-      nome: 'Test User',
-      senha: 'password123'
+      nome: 'Test User'
     });
 
-    const loginResult = await LoginService.handle('test@example.com', 'password123');
-    const refreshToken = loginResult.refreshToken;
-
-    // Agora usa o refresh token
+    const refreshToken = makeRefreshToken('user-123');
     const service = new RefreshTokenService(UserRepository, refreshToken);
     const result = await service.execute();
 
@@ -85,13 +73,10 @@ describe('RefreshTokenService', () => {
     UserRepository.prototype.selectOne = async () => ({
       id: 'user-123',
       email: 'test@example.com',
-      nome: 'Test User',
-      senha: 'password123'
+      nome: 'Test User'
     });
 
-    const loginResult = await LoginService.handle('test@example.com', 'password123');
-    const refreshToken = loginResult.refreshToken;
-
+    const refreshToken = makeRefreshToken('user-123');
     const service = new RefreshTokenService(UserRepository, refreshToken);
     const result = await service.execute();
 
@@ -105,13 +90,10 @@ describe('RefreshTokenService', () => {
     UserRepository.prototype.selectOne = async () => ({
       id: 'user-123',
       email: 'test@example.com',
-      nome: 'Test User',
-      senha: 'password123'
+      nome: 'Test User'
     });
 
-    const loginResult = await LoginService.handle('test@example.com', 'password123');
-    const refreshToken = loginResult.refreshToken;
-
+    const refreshToken = makeRefreshToken('user-123');
     const service = new RefreshTokenService(UserRepository, refreshToken);
     const result = await service.execute();
 
@@ -122,13 +104,10 @@ describe('RefreshTokenService', () => {
     UserRepository.prototype.selectOne = async () => ({
       id: 'user-123',
       email: 'test@example.com',
-      nome: 'Test User',
-      senha: 'password123'
+      nome: 'Test User'
     });
 
-    const loginResult = await LoginService.handle('test@example.com', 'password123');
-    const refreshToken = loginResult.refreshToken;
-
+    const refreshToken = makeRefreshToken('user-123');
     const service = new RefreshTokenService(UserRepository, refreshToken);
     const result = await service.execute();
 
@@ -139,13 +118,10 @@ describe('RefreshTokenService', () => {
     UserRepository.prototype.selectOne = async () => ({
       id: 'user-456',
       email: 'newuser@example.com',
-      nome: 'New User',
-      senha: 'password123'
+      nome: 'New User'
     });
 
-    const loginResult = await LoginService.handle('newuser@example.com', 'password123');
-    const refreshToken = loginResult.refreshToken;
-
+    const refreshToken = makeRefreshToken('user-456');
     const service = new RefreshTokenService(UserRepository, refreshToken);
     const result = await service.execute();
 
@@ -161,13 +137,10 @@ describe('RefreshTokenService', () => {
     UserRepository.prototype.selectOne = async () => ({
       id: 'user-123',
       email: 'test@example.com',
-      nome: 'Test User',
-      senha: 'password123'
+      nome: 'Test User'
     });
 
-    const loginResult = await LoginService.handle('test@example.com', 'password123');
-    const refreshToken = loginResult.refreshToken;
-
+    const refreshToken = makeRefreshToken('user-123');
     const result = await RefreshTokenService.handle(refreshToken);
 
     expect(result).not.toBeNull();
@@ -178,12 +151,10 @@ describe('RefreshTokenService', () => {
     UserRepository.prototype.selectOne = async () => ({
       id: 'user-123',
       email: 'test@example.com',
-      nome: 'Test User',
-      senha: 'password123'
+      nome: 'Test User'
     });
 
-    const loginResult = await LoginService.handle('test@example.com', 'password123');
-    const refreshToken = loginResult.refreshToken;
+    const refreshToken = makeRefreshToken('user-123');
 
     const service1 = new RefreshTokenService(UserRepository, refreshToken);
     const result1 = await service1.execute();

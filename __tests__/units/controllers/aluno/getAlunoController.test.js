@@ -1,11 +1,24 @@
 import { GetAlunoController } from '../../../../src/controllers/aluno/getAlunoController.js';
 import { GetAlunoService } from '../../../../src/services/aluno/getAlunoService.js';
+import { GetAulaListService } from '../../../../src/services/aula/getAulaListService.js';
+import { GetDiaAulaListService } from '../../../../src/services/diaAula/getDiaAulaListService.js';
+import { GetContratoListService } from '../../../../src/services/contrato/getContratoListService.js';
 import AbstractController from '../../../../src/controllers/abstractController.js';
 
 describe('GetAlunoController', () => {
   let mockReq, mockRes;
+  // Services auxiliares chamados no caminho de sucesso do execute().
+  // Mockados para arrays vazios para não depender de banco real.
+  let originalContratoHandle, originalDiaAulaHandle, originalAulaHandle;
 
   beforeEach(() => {
+    originalContratoHandle = GetContratoListService.handle;
+    originalDiaAulaHandle = GetDiaAulaListService.handle;
+    originalAulaHandle = GetAulaListService.handle;
+    GetContratoListService.handle = async () => [];
+    GetDiaAulaListService.handle = async () => [];
+    GetAulaListService.handle = async () => [];
+
     // Mock básico do request
     mockReq = {
       params: { id: '1' },
@@ -35,6 +48,12 @@ describe('GetAlunoController', () => {
       statusCode: null,
       data: null
     };
+  });
+
+  afterEach(() => {
+    GetContratoListService.handle = originalContratoHandle;
+    GetDiaAulaListService.handle = originalDiaAulaHandle;
+    GetAulaListService.handle = originalAulaHandle;
   });
 
   describe('Inicialização', () => {

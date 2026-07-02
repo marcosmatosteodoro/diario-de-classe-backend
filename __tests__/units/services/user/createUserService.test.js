@@ -183,7 +183,7 @@ function testStaticHandleMethod() {
       }
     }
 
-    const result = await CreateUserService.handle(mockData, MockRepository);
+    const result = await new CreateUserService(MockRepository, mockData).execute();
 
     expect(result).toMatchObject({ nome: 'João', sobrenome: 'Silva' });
     expect(result.id).toBeDefined();
@@ -233,8 +233,8 @@ function testStaticHandleMethod() {
       }
     }
 
-    const result1 = await CreateUserService.handle(mockData1, MockRepository);
-    const result2 = await CreateUserService.handle(mockData2, MockRepository);
+    const result1 = await new CreateUserService(MockRepository, mockData1).execute();
+    const result2 = await new CreateUserService(MockRepository, mockData2).execute();
 
     // Cada chamada deve criar uma nova instância do repository
     expect(result1.id).not.toBe(result2.id);
