@@ -6,12 +6,14 @@ import { DeleteAulaController } from '../controllers/aula/deleteAulaController.j
 import { CreateAulaController } from '../controllers/aula/createAulaController.js';
 import { UpdateAulaController } from '../controllers/aula/updateAulaController.js';
 import { AndamentoAulaController } from '../controllers/aula/andamentoAulaController.js';
+import { UpdateConteudoAulaController } from '../controllers/aula/updateConteudoAulaController.js';
 // Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateAula } from '../middlewares/aula/validateCreateAula.js';
 import { validateUpdateAula } from '../middlewares/aula/validateUpdateAula.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 import { validateAndamentoAula } from '../middlewares/aula/validateAndamentoAula.js';
+import { validateUpdateConteudoAula } from '../middlewares/aula/validateUpdateConteudoAula.js';
 
 const router = express.Router();
 
@@ -32,5 +34,13 @@ router.delete('/:id', validateId, DeleteAulaController.handle);
 
 // PUT /api/aulas/:id/andamento - Atualizar aula por ID
 router.put('/:id/andamento', validateId, validateAndamentoAula, AndamentoAulaController.handle);
+
+// PUT /api/aulas/:id/conteudo - Lançar o conteúdo do livro coberto pela aula
+router.put(
+  '/:id/conteudo',
+  validateId,
+  validateUpdateConteudoAula,
+  UpdateConteudoAulaController.handle
+);
 
 export default router;

@@ -13,12 +13,17 @@ import { GetContratoByAlunoController } from '../controllers/contrato/getContrat
 import { GetAulasByAlunoController } from '../controllers/aula/getAulasByAlunoController.js';
 import { GetContratosByAlunoController } from '../controllers/contrato/getContratosByAlunoController.js';
 import { UploadAlunoExcelController } from '../controllers/aluno/uploadAlunoExcelController.js';
+import { CreateCronogramaController } from '../controllers/cronograma/createCronogramaController.js';
+import { GetProjecaoCronogramaController } from '../controllers/cronograma/getProjecaoCronogramaController.js';
+import { GetProjecaoCronogramaExcelController } from '../controllers/cronograma/getProjecaoCronogramaExcelController.js';
+import { GetCronogramaListByAlunoController } from '../controllers/cronograma/getCronogramaListByAlunoController.js';
 // Middlewares de validação
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateAluno } from '../middlewares/aluno/validateCreateAluno.js';
 import { validateUpdateAluno } from '../middlewares/aluno/validateUpdateAluno.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 import { validateExcelFile } from '../middlewares/validateExcelFile.js';
+import { validateCreateCronograma } from '../middlewares/cronograma/validateCreateCronograma.js';
 
 const router = express.Router();
 
@@ -56,5 +61,22 @@ router.get('/:id/aulas', validateId, GetAulasByAlunoController.handle);
 
 // POST /api/alunos/upload - Gerar alunos de acordo com lista de excel
 router.post('/upload', upload.single('file'), validateExcelFile, UploadAlunoExcelController.handle);
+
+// GET /api/alunos/:id/cronograma - Cronograma do livro em curso (a "planilha")
+router.get('/:id/cronograma', validateId, GetProjecaoCronogramaController.handle);
+
+// GET /api/alunos/:id/cronograma/excel - Baixar o cronograma em xlsx
+router.get('/:id/cronograma/excel', validateId, GetProjecaoCronogramaExcelController.handle);
+
+// POST /api/alunos/:id/cronograma - Matricular o aluno em um livro
+router.post(
+  '/:id/cronograma',
+  validateId,
+  validateCreateCronograma,
+  CreateCronogramaController.handle
+);
+
+// GET /api/alunos/:id/cronogramas - Histórico de livros do aluno
+router.get('/:id/cronogramas', validateId, GetCronogramaListByAlunoController.handle);
 
 export default router;

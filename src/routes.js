@@ -10,6 +10,9 @@ import aulaRouter from './routes/aulaRouter.js';
 import dashboardRouter from './routes/dashboardRouter.js';
 import relatoriosRouter from './routes/relatoriosRouter.js';
 import adminRouter from './routes/adminRouter.js';
+import livroRouter from './routes/livroRouter.js';
+import conteudoLivroRouter from './routes/conteudoLivroRouter.js';
+import cronogramaRouter from './routes/cronogramaRouter.js';
 // Controladores
 import { healthCheck, welcome } from './controllers/healthController.js';
 // Middlewares de validação
@@ -28,6 +31,12 @@ router.use('/configuracao', isLoggedIn, configuracaoRouter);
 router.use('/contratos', isLoggedIn, contratoRouter);
 router.use('/dias-aulas', isLoggedIn, diaAulaRouter);
 router.use('/aulas', isLoggedIn, aulaRouter);
+// Catalogo de livros: leitura para professor logado, escrita restrita a admin
+// dentro do proprio router.
+router.use('/livros', isLoggedIn, livroRouter);
+// Todas as rotas de conteudo aqui sao de escrita no catalogo.
+router.use('/conteudos', isLoggedIn, adminOnly, conteudoLivroRouter);
+router.use('/cronogramas', isLoggedIn, cronogramaRouter);
 router.use('/relatorios', isLoggedIn, adminOnly, relatoriosRouter);
 router.use('/admin', isLoggedIn, adminOnly, adminRouter);
 

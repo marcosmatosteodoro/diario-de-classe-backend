@@ -200,6 +200,14 @@
     "andamento": {
       "status_required": "O status da aula é obrigatório.",
       "invalid_status_transition": "Transição de status inválida de '{{currentStatus}}' para '{{newStatus}}'."
+    },
+    "conteudo": {
+      "success": "Conteúdo da aula atualizado com sucesso",
+      "error": "Erro ao lançar o conteúdo da aula",
+      "aula_nao_consome": "Aulas canceladas, com falta ou do tipo OUTRA não recebem conteúdo",
+      "sem_cronograma": "O contrato deste aluno não tem livro em curso",
+      "fora_do_livro": "Este conteúdo não pertence ao livro que o aluno está cursando",
+      "ja_vinculado": "Este conteúdo já está vinculado a outra aula do contrato"
     }
   },
   "diaAulas": {
@@ -246,5 +254,90 @@
   "excel_file": {
     "required": "Arquivo Excel é obrigatório.",
     "invalid_type": "Tipo de arquivo inválido. Apenas arquivos Excel ou CSV são permitidos."
+  },
+  "livros": {
+    "list": {
+      "success": "Livros listados com sucesso",
+      "error": "Erro ao buscar livros"
+    },
+    "get": {
+      "not_found": "Livro não encontrado",
+      "error": "Erro ao buscar livro"
+    },
+    "create": {
+      "success": "Livro criado com sucesso",
+      "error": "Erro ao criar livro",
+      "nome_idioma_exists": "Já existe um livro com este nome neste idioma"
+    },
+    "update": {
+      "success": "Livro atualizado com sucesso",
+      "error": "Erro ao atualizar livro"
+    },
+    "delete": {
+      "success": "Livro deletado com sucesso",
+      "error": "Erro ao deletar livro",
+      "em_uso": "Este livro está em uso por {{count}} cronograma(s) e não pode ser excluído. Marque-o como inativo."
+    }
+  },
+  "conteudosLivro": {
+    "list": {
+      "success": "Conteúdos listados com sucesso",
+      "error": "Erro ao buscar conteúdos do livro"
+    },
+    "get": {
+      "not_found": "Conteúdo não encontrado",
+      "error": "Erro ao buscar conteúdo"
+    },
+    "create": {
+      "success": "Conteúdo criado com sucesso",
+      "error": "Erro ao criar conteúdo",
+      "ordem_ocupada": "A ordem {{ordem}} já está ocupada neste livro"
+    },
+    "update": {
+      "success": "Conteúdo atualizado com sucesso",
+      "error": "Erro ao atualizar conteúdo"
+    },
+    "delete": {
+      "success": "Conteúdo deletado com sucesso",
+      "error": "Erro ao deletar conteúdo",
+      "tem_historico": "Este conteúdo já foi dado em {{count}} aula(s) e não pode ser excluído, para não apagar o histórico."
+    },
+    "upload": {
+      "success": "Conteúdos importados com sucesso",
+      "error": "Erro ao importar conteúdos da planilha",
+      "empty": "A planilha não tem nenhum conteúdo. Use a coluna A para o título e a coluna B para a descrição.",
+      "too_many": "A planilha tem mais de {{max}} conteúdos",
+      "line_too_long": "O conteúdo da linha {{linha}} excede o tamanho permitido",
+      "historico_bloqueia": "A planilha é menor e removeria conteúdo(s) na ordem {{ordens}}, que já têm aula concluída. Ajuste a planilha ou edite os conteúdos individualmente."
+    }
+  },
+  "cronogramas": {
+    "list": {
+      "success": "Cronogramas listados com sucesso",
+      "error": "Erro ao buscar cronogramas"
+    },
+    "get": {
+      "not_found": "Cronograma não encontrado",
+      "error": "Erro ao buscar cronograma"
+    },
+    "create": {
+      "success": "Cronograma criado com sucesso",
+      "error": "Erro ao criar cronograma",
+      "livro_inativo": "Este livro está inativo e não pode ser usado em um cronograma novo",
+      "contrato_indisponivel": "Contrato com situação {{status}} não aceita cronograma novo",
+      "idioma_divergente": "O livro é de {{livro}} e o contrato é de {{contrato}}"
+    },
+    "update": {
+      "success": "Cronograma atualizado com sucesso",
+      "error": "Erro ao atualizar cronograma"
+    },
+    "excel": {
+      "error": "Erro ao gerar a planilha do cronograma"
+    },
+    "error": {
+      "aluno_not_exists": "Aluno não encontrado",
+      "contrato_not_exists": "Contrato não encontrado para este aluno",
+      "livro_not_exists": "Livro não encontrado"
+    }
   }
 }
