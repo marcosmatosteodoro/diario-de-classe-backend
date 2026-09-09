@@ -200,6 +200,14 @@
     "andamento": {
       "status_required": "Class status is required.",
       "invalid_status_transition": "Invalid status transition from '{{currentStatus}}' to '{{newStatus}}'."
+    },
+    "conteudo": {
+      "success": "Class content updated successfully",
+      "error": "Error setting the class content",
+      "aula_nao_consome": "Cancelled, missed or OTHER type classes do not take content",
+      "sem_cronograma": "This student's contract has no book in progress",
+      "fora_do_livro": "This content does not belong to the book the student is taking",
+      "ja_vinculado": "This content is already linked to another class in the contract"
     }
   },
   "diaAulas": {
@@ -246,5 +254,90 @@
   "excel_file": {
     "required": "Excel file is required.",
     "invalid_type": "Invalid file type. Only Excel or CSV files are allowed."
+  },
+  "livros": {
+    "list": {
+      "success": "Books listed successfully",
+      "error": "Error fetching books"
+    },
+    "get": {
+      "not_found": "Book not found",
+      "error": "Error fetching book"
+    },
+    "create": {
+      "success": "Book created successfully",
+      "error": "Error creating book",
+      "nome_idioma_exists": "A book with this name already exists for this language"
+    },
+    "update": {
+      "success": "Book updated successfully",
+      "error": "Error updating book"
+    },
+    "delete": {
+      "success": "Book deleted successfully",
+      "error": "Error deleting book",
+      "em_uso": "This book is used by {{count}} schedule(s) and cannot be deleted. Mark it as inactive instead."
+    }
+  },
+  "conteudosLivro": {
+    "list": {
+      "success": "Contents listed successfully",
+      "error": "Error fetching book contents"
+    },
+    "get": {
+      "not_found": "Content not found",
+      "error": "Error fetching content"
+    },
+    "create": {
+      "success": "Content created successfully",
+      "error": "Error creating content",
+      "ordem_ocupada": "Position {{ordem}} is already taken in this book"
+    },
+    "update": {
+      "success": "Content updated successfully",
+      "error": "Error updating content"
+    },
+    "delete": {
+      "success": "Content deleted successfully",
+      "error": "Error deleting content",
+      "tem_historico": "This content was already taught in {{count}} class(es) and cannot be deleted, to preserve the history."
+    },
+    "upload": {
+      "success": "Contents imported successfully",
+      "error": "Error importing contents from spreadsheet",
+      "empty": "The spreadsheet has no content. Use column A for the title and column B for the description.",
+      "too_many": "The spreadsheet has more than {{max}} contents",
+      "line_too_long": "The content on line {{linha}} exceeds the allowed length",
+      "historico_bloqueia": "The spreadsheet is shorter and would remove content at position(s) {{ordens}}, which already have a completed class. Adjust the spreadsheet or edit the contents individually."
+    }
+  },
+  "cronogramas": {
+    "list": {
+      "success": "Schedules listed successfully",
+      "error": "Error fetching schedules"
+    },
+    "get": {
+      "not_found": "Schedule not found",
+      "error": "Error fetching schedule"
+    },
+    "create": {
+      "success": "Schedule created successfully",
+      "error": "Error creating schedule",
+      "livro_inativo": "This book is inactive and cannot be used in a new schedule",
+      "contrato_indisponivel": "A contract with status {{status}} does not accept a new schedule",
+      "idioma_divergente": "The book is {{livro}} and the contract is {{contrato}}"
+    },
+    "update": {
+      "success": "Schedule updated successfully",
+      "error": "Error updating schedule"
+    },
+    "excel": {
+      "error": "Error generating the schedule spreadsheet"
+    },
+    "error": {
+      "aluno_not_exists": "Student not found",
+      "contrato_not_exists": "Contract not found for this student",
+      "livro_not_exists": "Book not found"
+    }
   }
 }

@@ -105,11 +105,13 @@ model Aluno {
   dataAtualizacao DateTime @updatedAt
 
   // Relacionamento com Contrato
-  contratoes Contrato[]
+  contratoes  Contrato[]
   // Relacionamento com DiaAula
-  diaAulas   DiaAula[]
+  diaAulas    DiaAula[]
   // Relacionamento com Aula
-  aulas      Aula[]
+  aulas       Aula[]
+  // Relacionamento com CronogramaAluno
+  cronogramas CronogramaAluno[]
 
   @@map("alunos")
 }
@@ -158,13 +160,15 @@ model Contrato {
   dataAtualizacao      DateTime       @updatedAt
 
   // Relacionamento com Aluno
-  aluno    Aluno     @relation(fields: [idAluno], references: [id], onDelete: Cascade)
+  aluno       Aluno             @relation(fields: [idAluno], references: [id], onDelete: Cascade)
   // Relacionamento com DiaAula
-  diaAulas DiaAula[]
+  diaAulas    DiaAula[]
   // Relacionamento com Aula
-  aulas    Aula[]
+  aulas       Aula[]
   // Relacionamento com Idioma
-  idioma   Idioma    @default(INGLES)
+  idioma      Idioma            @default(INGLES)
+  // Relacionamento com CronogramaAluno
+  cronogramas CronogramaAluno[]
 
   @@map("contratos")
 }
@@ -201,16 +205,87 @@ model Aula {
   tipo            TipoAula
   status          StatusAula
   observacao      String?
+  // Conteudo do livro coberto nesta aula. Opcional porque as aulas anteriores a
+  // este recurso nao possuem vinculo e porque aula do tipo OUTRA nao consome
+  // conteudo. A sequencia e derivada: ver ResequenciarCronogramaService.
+  idConteudo      String?
+  // Marca que o vinculo foi escolhido a mao pelo professor. O resequenciador
+  // nunca sobrescreve uma aula marcada, senao desfaria a escolha dele no
+  // proximo disparo.
+  conteudoManual  Boolean    @default(false)
   dataCriacao     DateTime   @default(now())
   dataAtualizacao DateTime   @updatedAt
 
   // Relacionamento com Aluno
-  aluno     Aluno    @relation(fields: [idAluno], references: [id], onDelete: Cascade)
+  aluno     Aluno          @relation(fields: [idAluno], references: [id], onDelete: Cascade)
   // Relacionamento com Professor
-  professor User     @relation(fields: [idProfessor], references: [id], onDelete: Cascade)
+  professor User           @relation(fields: [idProfessor], references: [id], onDelete: Cascade)
   // Relacionamento com Contrato
-  contrato  Contrato @relation(fields: [idContrato], references: [id], onDelete: Cascade)
+  contrato  Contrato       @relation(fields: [idContrato], references: [id], onDelete: Cascade)
+  // Relacionamento com ConteudoLivro
+  conteudo  ConteudoLivro? @relation(fields: [idConteudo], references: [id], onDelete: SetNull)
 
   @@unique([idAluno, idProfessor, idContrato, dataAula])
+  @@index([idConteudo])
   @@map("aulas")
+}
+
+model Livro {
+  id              String   @id @default(cuid())
+  nome            String // maximo 255 caracteres
+  idioma          Idioma
+  nivel           Int? // ordem do livro na trilha do idioma
+  ativo           Boolean  @default(true)
+  dataCriacao     DateTime @default(now())
+  dataAtualizacao DateTime @updatedAt
+
+  // Relacionamento com ConteudoLivro
+  conteudos   ConteudoLivro[]
+  // Relacionamento com CronogramaAluno
+  cronogramas CronogramaAluno[]
+
+  @@unique([nome, idioma])
+  @@map("livros")
+}
+
+model ConteudoLivro {
+  id              String   @id @default(cuid())
+  idLivro         String
+  ordem           Int // "aula um, aula dois, aula tres..." dentro do livro
+  titulo          String // maximo 255 caracteres
+  descricao       String? // conteudo/tarefa detalhada
+  dataCriacao     DateTime @default(now())
+  dataAtualizacao DateTime @updatedAt
+
+  // Relacionamento com Livro
+  livro Livro  @relation(fields: [idLivro], references: [id], onDelete: Cascade)
+  // Relacionamento com Aula
+  aulas Aula[]
+
+  @@unique([idLivro, ordem])
+  @@index([idLivro])
+  @@map("conteudos_livro")
+}
+
+model CronogramaAluno {
+  id              String    @id @default(cuid())
+  idAluno         String
+  idContrato      String
+  idLivro         String
+  dataInicio      DateTime // quando o aluno entrou neste livro
+  dataConclusao   DateTime?
+  ativo           Boolean   @default(true)
+  dataCriacao     DateTime  @default(now())
+  dataAtualizacao DateTime  @updatedAt
+
+  // Relacionamento com Aluno
+  aluno    Aluno    @relation(fields: [idAluno], references: [id], onDelete: Cascade)
+  // Relacionamento com Contrato
+  contrato Contrato @relation(fields: [idContrato], references: [id], onDelete: Cascade)
+  // Relacionamento com Livro
+  livro    Livro    @relation(fields: [idLivro], references: [id])
+
+  @@index([idAluno])
+  @@index([idContrato])
+  @@map("cronogramas_aluno")
 }
