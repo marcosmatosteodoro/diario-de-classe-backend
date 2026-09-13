@@ -5,6 +5,7 @@ import { AlunosSeed } from './models/alunosSeed.js';
 import { ContratosSeed } from './models/contratosSeed.js';
 import { DiaAulasSeed } from './models/diaAulasSeed.js';
 import { AulasSeed } from './models/aulasSeed.js';
+import { LivrosSeed } from './models/livrosSeed.js';
 
 export default class Seed {
   constructor(prisma) {
@@ -15,7 +16,8 @@ export default class Seed {
       'alunos',
       'contratos',
       'diaAulas',
-      'aulas'
+      'aulas',
+      'livros'
     ];
   }
 
@@ -46,6 +48,10 @@ export default class Seed {
     this.aulas = await AulasSeed.handle(this.params);
     this.updateParams();
 
+    console.log('📚 Criando livros...');
+    this.livros = await LivrosSeed.handle(this.params);
+    this.updateParams();
+
     this.seeds.forEach(seed => {
       console.log(`✅ Criado ${this[seed].length} ${seed}`);
     });
@@ -58,7 +64,8 @@ export default class Seed {
       alunos: this.alunos,
       contratos: this.contratos,
       diaAulas: this.diaAulas,
-      aulas: this.aulas
+      aulas: this.aulas,
+      livros: this.livros
     };
   }
 
