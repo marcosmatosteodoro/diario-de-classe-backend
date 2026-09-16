@@ -8,7 +8,7 @@ export class GetContratoListController extends AbstractContratoController {
   }
 
   bindMainWhere() {
-    const { dataInicio, dataTermino, aluno, idioma, q } = this.req.query;
+    const { dataInicio, dataTermino, aluno, idAluno, idioma, q } = this.req.query;
 
     if (dataInicio) {
       this.where.dataInicio = {
@@ -24,6 +24,10 @@ export class GetContratoListController extends AbstractContratoController {
 
     if (idioma) {
       this.where.idioma = idioma;
+    }
+
+    if (idAluno) {
+      this.where.idAluno = idAluno;
     }
 
     if (aluno) {

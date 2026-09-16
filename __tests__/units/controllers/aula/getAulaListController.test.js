@@ -174,6 +174,34 @@ describe('GetAulaListController', () => {
       });
     });
 
+    test('deve adicionar filtro por idAluno quando fornecido', () => {
+      mockReq.query.idAluno = 'aluno-abc';
+      const controller = new GetAulaListController(mockReq, mockRes);
+
+      expect(controller.where.idAluno).toBe('aluno-abc');
+      // idAluno é chave própria: não deve apagar a restrição de dono (idProfessor)
+      // que AbstractAulaController já gravou para usuário não-admin.
+      expect(controller.where.idProfessor).toBe('user-123');
+    });
+
+    test('deve aplicar filtro por idProfessor da query quando usuário é admin', () => {
+      mockReq.user.isAdmin = true;
+      mockReq.query.idProfessor = 'professor-xyz';
+      const controller = new GetAulaListController(mockReq, mockRes);
+
+      expect(controller.where.idProfessor).toBe('professor-xyz');
+    });
+
+    test('deve ignorar idProfessor da query e manter restrição ao próprio usuário quando não é admin', () => {
+      mockReq.user.isAdmin = false;
+      mockReq.user.id = 'user-123';
+      mockReq.query.idProfessor = 'outro-professor-id';
+      const controller = new GetAulaListController(mockReq, mockRes);
+
+      expect(controller.where.idProfessor).toBe('user-123');
+      expect(controller.where.idProfessor).not.toBe('outro-professor-id');
+    });
+
     test('deve combinar múltiplos filtros', () => {
       mockReq.query.dataInicio = '2025-01-10';
       mockReq.query.tipo = 'GRUPO';
