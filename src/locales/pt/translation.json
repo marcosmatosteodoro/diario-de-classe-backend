@@ -38,7 +38,11 @@
         "keep": "Manter aulas atuais e anteriores ao dia atual (requer correção manual para mudar professor)",
         "overwrite": "Sobrescrever todas as aulas para o novo professor ou data",
         "generateNew": "Gerar novas aulas a partir da data atual (manter antigas para correção manual)"
-      }
+      },
+      "invalidFilter": "Filtro inválido: verifique os valores de idioma, dataInicio e dataTermino"
+    },
+    "aula": {
+      "invalidFilter": "Filtro inválido: verifique os valores de tipo, status, dataInicio e dataTermino"
     }
   },
   "auth": {

@@ -270,9 +270,9 @@ describe('GetContratoController', () => {
       await controller.execute();
 
       expect(mockRes.statusCode).toBe(500);
+      // Ambiente de teste não é 'development': erro 500 não deve vazar error.message
       expect(mockRes.data).toEqual({
-        message: 'Erro ao buscar contrato',
-        error: 'Database error'
+        message: 'Erro ao buscar contrato'
       });
 
       // Restore original

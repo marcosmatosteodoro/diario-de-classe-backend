@@ -141,9 +141,9 @@ describe('GetUserListController', () => {
       expect(statusCalled).toBe(true);
       expect(statusCode).toBe(500);
       expect(jsonCalled).toBe(true);
+      // Ambiente de teste não é 'development': erro 500 não deve vazar error.message
       expect(responseData).toEqual({
-        message: 'users.list.error',
-        error: 'Test error'
+        message: 'users.list.error'
       });
     });
   });
@@ -277,7 +277,8 @@ describe('GetUserListController', () => {
       expect(statusCode).toBe(500);
       expect(jsonCalled).toBe(true);
       expect(responseData.message).toBe('users.list.error');
-      expect(responseData.error).toBe('Database connection failed');
+      // Ambiente de teste não é 'development': erro 500 não deve vazar error.message
+      expect(responseData.error).toBeUndefined();
     });
 
     test('deve usar handleError com erro genérico', () => {
