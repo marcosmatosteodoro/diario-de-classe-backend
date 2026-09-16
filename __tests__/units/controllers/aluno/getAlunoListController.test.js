@@ -542,5 +542,49 @@ describe('GetAlunoListController', () => {
       // Admin não deve ter filtro de aulas
       expect(controller.where.aulas).toBeUndefined();
     });
+
+    test('BI-31: professor (não-admin) buscando com ?q= não perde a restrição de dono (AND, não sobrescrita)', () => {
+      const professorId = 'professor-sem-vinculo';
+      mockReq.user = {
+        id: professorId,
+        isAdmin: false
+      };
+      mockReq.query.q = 'a';
+
+      const controller = new GetAlunoListController(mockReq, mockRes);
+
+      controller.getWhereClauseByQuerySearch({
+        query: mockReq.query.q,
+        fields: ['nomeCompleto', 'nome', 'sobrenome', 'email', 'telefone']
+      });
+
+      // A restrição de autorização (OR original) deve continuar presente,
+      // combinada via AND com o OR da busca textual — nunca solta/aberta.
+      expect(controller.where.OR).toBeUndefined();
+      expect(controller.where.AND).toBeDefined();
+      expect(controller.where.AND[0]).toEqual({
+        OR: [
+          {
+            aulas: {
+              some: {
+                idProfessor: professorId
+              }
+            }
+          },
+          {
+            criador: professorId
+          }
+        ]
+      });
+      expect(controller.where.AND[1]).toEqual({
+        OR: [
+          { nomeCompleto: { contains: 'a' } },
+          { nome: { contains: 'a' } },
+          { sobrenome: { contains: 'a' } },
+          { email: { contains: 'a' } },
+          { telefone: { contains: 'a' } }
+        ]
+      });
+    });
   });
 });
