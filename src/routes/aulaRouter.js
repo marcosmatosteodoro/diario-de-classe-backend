@@ -14,11 +14,12 @@ import { validateUpdateAula } from '../middlewares/aula/validateUpdateAula.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 import { validateAndamentoAula } from '../middlewares/aula/validateAndamentoAula.js';
 import { validateUpdateConteudoAula } from '../middlewares/aula/validateUpdateConteudoAula.js';
+import { validateAulaListQuery } from '../middlewares/aula/validateAulaListQuery.js';
 
 const router = express.Router();
 
 // GET /api/aulas - Buscar todos os aulas
-router.get('/', validateSearchQuery, GetAulaListController.handle);
+router.get('/', validateSearchQuery, validateAulaListQuery, GetAulaListController.handle);
 
 // GET /api/aulas/:id - Buscar aula por ID
 router.get('/:id', validateId, GetAulaController.handle);

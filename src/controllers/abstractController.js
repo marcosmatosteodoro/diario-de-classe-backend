@@ -49,9 +49,15 @@ export default class AbstractController {
     console.error(`[${this.constructor.name}] Erro:`, error);
 
     const errorResponse = {
-      message: this.req.t ? this.req.t(messageKey) : 'Erro interno do servidor',
-      error: error.message
+      message: this.req.t ? this.req.t(messageKey) : 'Erro interno do servidor'
     };
+
+    // Erro inesperado (500) fora de desenvolvimento: não vaza error.message cru
+    // (ex.: mensagens do Prisma) na resposta ao cliente.
+    const isUnhandledErrorInNonDevEnv = statusCode === 500 && Constants.env !== 'development';
+    if (!isUnhandledErrorInNonDevEnv) {
+      errorResponse.error = error.message;
+    }
 
     // Em ambiente de desenvolvimento, inclui stack trace
     if (Constants.env === 'development') {

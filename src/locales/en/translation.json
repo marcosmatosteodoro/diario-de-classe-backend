@@ -42,7 +42,11 @@
         "keep": "Keep current and prior classes to the current day (requires manual correction to change teacher)",
         "overwrite": "Overwrite all for the new teacher and/or date",
         "generateNew": "Generate new classes (keep old classes for manual correction)"
-      }
+      },
+      "invalidFilter": "Invalid filter: check the idioma, dataInicio and dataTermino values"
+    },
+    "aula": {
+      "invalidFilter": "Invalid filter: check the tipo, status, dataInicio and dataTermino values"
     }
   },
   "auth": {

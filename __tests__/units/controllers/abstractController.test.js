@@ -1,4 +1,32 @@
 import AbstractController from '../../../src/controllers/abstractController.js';
+import Constants from '../../../src/utilities/constants.js';
+
+class TestController extends AbstractController {
+  async execute() {
+    return 'test';
+  }
+
+  static async handle(req, res) {
+    const controller = new TestController(req, res);
+    return await controller.execute();
+  }
+}
+
+const buildMockRes = () => {
+  const mockRes = {
+    statusCode: null,
+    data: null,
+    status: function (code) {
+      this.statusCode = code;
+      return this;
+    },
+    json: function (data) {
+      this.data = data;
+      return this;
+    }
+  };
+  return mockRes;
+};
 
 describe('AbstractController', () => {
   test('deve ser uma classe', () => {
@@ -86,9 +114,9 @@ describe('AbstractController', () => {
     expect(statusCalled).toBe(true);
     expect(statusCode).toBe(500);
     expect(jsonCalled).toBe(true);
+    // Ambiente de teste não é 'development': erro 500 não deve vazar error.message
     expect(responseData).toEqual({
-      message: 'Erro interno do servidor',
-      error: 'Test error'
+      message: 'Erro interno do servidor'
     });
   });
 
@@ -106,6 +134,54 @@ describe('AbstractController', () => {
     await expect(TestController.handle(mockReq, mockRes)).rejects.toThrow(
       'Método handle() deve ser implementado na subclasse'
     );
+  });
+
+  describe('handleError - vazamento de error.message', () => {
+    const originalEnv = Constants.env;
+
+    afterEach(() => {
+      Constants.env = originalEnv;
+    });
+
+    test('status 500 fora de development não inclui error na resposta', () => {
+      Constants.env = 'test';
+
+      const mockReq = {};
+      const mockRes = buildMockRes();
+      const controller = new TestController(mockReq, mockRes);
+
+      controller.handleError(new Error('Erro interno do Prisma'));
+
+      expect(mockRes.statusCode).toBe(500);
+      expect(mockRes.data).toEqual({ message: 'Erro interno do servidor' });
+      expect(mockRes.data.error).toBeUndefined();
+    });
+
+    test('status 500 em development ainda inclui error na resposta', () => {
+      Constants.env = 'development';
+
+      const mockReq = {};
+      const mockRes = buildMockRes();
+      const controller = new TestController(mockReq, mockRes);
+
+      controller.handleError(new Error('Erro interno do Prisma'));
+
+      expect(mockRes.statusCode).toBe(500);
+      expect(mockRes.data.error).toBe('Erro interno do Prisma');
+    });
+
+    test('status diferente de 500 continua incluindo error mesmo fora de development', () => {
+      Constants.env = 'test';
+
+      const mockReq = {};
+      const mockRes = buildMockRes();
+      const controller = new TestController(mockReq, mockRes);
+
+      controller.handleError(new Error('Valor inválido'), 'validation.aula.invalidFilter', 400);
+
+      expect(mockRes.statusCode).toBe(400);
+      expect(mockRes.data.error).toBe('Valor inválido');
+    });
   });
 
   describe('getWhereClauseByQuerySearch()', () => {

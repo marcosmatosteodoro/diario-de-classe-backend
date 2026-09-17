@@ -145,9 +145,9 @@ describe('GetAlunoListController', () => {
       expect(statusCalled).toBe(true);
       expect(statusCode).toBe(500);
       expect(jsonCalled).toBe(true);
+      // Ambiente de teste não é 'development': erro 500 não deve vazar error.message
       expect(responseData).toEqual({
-        message: 'alunos.list.error',
-        error: 'Test error'
+        message: 'alunos.list.error'
       });
     });
   });
@@ -361,7 +361,8 @@ describe('GetAlunoListController', () => {
       expect(statusCode).toBe(500);
       expect(jsonCalled).toBe(true);
       expect(responseData.message).toBe('alunos.list.error');
-      expect(responseData.error).toBe('Database connection failed');
+      // Ambiente de teste não é 'development': erro 500 não deve vazar error.message
+      expect(responseData.error).toBeUndefined();
     });
 
     test('deve usar handleError com erro genérico', () => {
@@ -401,7 +402,8 @@ describe('GetAlunoListController', () => {
       expect(statusCalled).toBe(true);
       expect(statusCode).toBe(500);
       expect(responseData.message).toBe('alunos.list.error');
-      expect(responseData.error).toBe('Access denied to students data');
+      // Ambiente de teste não é 'development': erro 500 não deve vazar error.message
+      expect(responseData.error).toBeUndefined();
     });
   });
 
