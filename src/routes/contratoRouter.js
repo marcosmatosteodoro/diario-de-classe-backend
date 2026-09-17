@@ -18,12 +18,13 @@ import { validateUpdateContrato } from '../middlewares/contrato/validateUpdateCo
 import { validateCreateManyDiaAula } from '../middlewares/diaAula/validateCreateManyDiaAula.js';
 import { validateCreateManyAula } from '../middlewares/aula/validateCreateManyAula.js';
 import { validateGenerateAula } from '../middlewares/aula/validateGenerateAula.js';
+import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 import adminOnly from '../middlewares/adminOnly.js';
 
 const router = express.Router();
 
 // GET /api/contratos - Buscar todos os contratos
-router.get('/', GetContratoListController.handle);
+router.get('/', validateSearchQuery, GetContratoListController.handle);
 
 // GET /api/contratos/:id - Buscar contrato por ID
 router.get('/:id', validateId, GetContratoController.handle);
