@@ -27,6 +27,10 @@
     "max_length": "Não pode ter mais de {{count}} caracteres",
     "no_credentials": "Credenciais não fornecidas",
     "refresh_token_required": "Refresh token é obrigatório",
+    "search": {
+      "invalidType": "Parâmetro de busca deve ser uma string",
+      "tooLong": "Parâmetro de busca muito longo"
+    },
     "id": {
       "required": "ID é obrigatório",
       "invalid": "ID deve ser um identificador válido"
