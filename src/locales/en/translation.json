@@ -339,5 +339,10 @@
       "contrato_not_exists": "Contract not found for this student",
       "livro_not_exists": "Book not found"
     }
+  },
+  "relatorios": {
+    "validate": {
+      "invalid_dates": "The dates provided are invalid"
+    }
   }
 }

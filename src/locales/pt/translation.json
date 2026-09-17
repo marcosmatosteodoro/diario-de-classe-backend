@@ -339,5 +339,10 @@
       "contrato_not_exists": "Contrato não encontrado para este aluno",
       "livro_not_exists": "Livro não encontrado"
     }
+  },
+  "relatorios": {
+    "validate": {
+      "invalid_dates": "Datas informadas são inválidas"
+    }
   }
 }
