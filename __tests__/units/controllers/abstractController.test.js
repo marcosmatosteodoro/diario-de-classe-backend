@@ -183,4 +183,61 @@ describe('AbstractController', () => {
       expect(mockRes.data.error).toBe('Valor inválido');
     });
   });
+
+  describe('getWhereClauseByQuerySearch()', () => {
+    class TestController extends AbstractController {
+      async execute() {
+        return 'test';
+      }
+
+      static async handle(req, res) {
+        const controller = new TestController(req, res);
+        return await controller.execute();
+      }
+    }
+
+    test('BI-31: quando já existe OR de autorização, combina com o OR da busca via AND (não sobrescreve)', () => {
+      const mockReq = {};
+      const mockRes = {};
+      const controller = new TestController(mockReq, mockRes);
+
+      controller.where = { OR: [{ a: 1 }] };
+
+      controller.getWhereClauseByQuerySearch({ query: 'x', fields: ['nome'] });
+
+      expect(controller.where).toEqual({
+        AND: [{ OR: [{ a: 1 }] }, { OR: [{ nome: { contains: 'x' } }] }]
+      });
+    });
+
+    test('BI-31: preserva demais chaves de this.where ao combinar autorização com busca', () => {
+      const mockReq = {};
+      const mockRes = {};
+      const controller = new TestController(mockReq, mockRes);
+
+      controller.where = { OR: [{ a: 1 }], ativo: true };
+
+      controller.getWhereClauseByQuerySearch({ query: 'y', fields: ['nome'] });
+
+      expect(controller.where).toEqual({
+        ativo: true,
+        AND: [{ OR: [{ a: 1 }] }, { OR: [{ nome: { contains: 'y' } }] }]
+      });
+    });
+
+    test('sem OR prévio, mantém o comportamento antigo (atribuição direta)', () => {
+      const mockReq = {};
+      const mockRes = {};
+      const controller = new TestController(mockReq, mockRes);
+
+      controller.getWhereClauseByQuerySearch({
+        query: 'z',
+        fields: ['nome', 'email']
+      });
+
+      expect(controller.where).toEqual({
+        OR: [{ nome: { contains: 'z' } }, { email: { contains: 'z' } }]
+      });
+    });
+  });
 });

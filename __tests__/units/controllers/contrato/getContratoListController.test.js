@@ -157,6 +157,27 @@ describe('GetContratoListController', () => {
       });
     });
 
+    test('deve configurar filtro idAluno quando fornecido, com usuário admin', () => {
+      mockReq.user.isAdmin = true;
+      mockReq.query.idAluno = 'aluno-abc';
+
+      const controller = new GetContratoListController(mockReq, mockRes);
+
+      expect(controller.where.idAluno).toBe('aluno-abc');
+    });
+
+    test('deve configurar filtro idAluno quando fornecido, com usuário não admin', () => {
+      mockReq.user.isAdmin = false;
+      mockReq.query.idAluno = 'aluno-abc';
+
+      const controller = new GetContratoListController(mockReq, mockRes);
+
+      expect(controller.where.idAluno).toBe('aluno-abc');
+      // idAluno é chave própria: não deve apagar a restrição de dono que
+      // AbstractContratoController já gravou em where.aulas para não-admin.
+      expect(controller.where.aulas).toEqual({ some: { idProfessor: '1' } });
+    });
+
     test('deve configurar filtro q com OR para busca em aluno.nome', () => {
       mockReq.query.q = 'Maria';
 

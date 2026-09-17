@@ -27,6 +27,10 @@
     "max_length": "Cannot have more than {{count}} characters",
     "no_credentials": "Credentials not provided",
     "refresh_token_required": "Refresh token is required",
+    "search": {
+      "invalidType": "Search parameter must be a string",
+      "tooLong": "Search parameter too long"
+    },
     "id": {
       "required": "ID is required",
       "invalid": "ID must be a valid identifier"
@@ -342,6 +346,11 @@
       "aluno_not_exists": "Student not found",
       "contrato_not_exists": "Contract not found for this student",
       "livro_not_exists": "Book not found"
+    }
+  },
+  "relatorios": {
+    "validate": {
+      "invalid_dates": "The dates provided are invalid"
     }
   }
 }

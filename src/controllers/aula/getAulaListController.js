@@ -91,6 +91,24 @@ export class GetAulaListController extends AbstractAulaController {
         }
       ];
     }
+
+    this.bindIdFilters();
+  }
+
+  bindIdFilters() {
+    const { idAluno, idProfessor } = this.req.query;
+
+    if (idAluno) {
+      this.where.idAluno = idAluno;
+    }
+
+    // AbstractAulaController ja grava this.where.idProfessor = req.user.id para
+    // usuario nao-admin (restricao de dono). So aplicar o idProfessor vindo da
+    // query quando isAdmin evita sobrescrever essa restricao com o id de outro
+    // professor (mesma classe de bug do BI-31/D1, so que nesta chave).
+    if (idProfessor && this.req.user.isAdmin) {
+      this.where.idProfessor = idProfessor;
+    }
   }
 
   getParams() {

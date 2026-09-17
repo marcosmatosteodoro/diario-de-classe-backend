@@ -68,6 +68,14 @@ export default class AbstractController {
   }
 
   getWhereClauseByQuerySearch({ query, fields }) {
-    this.where.OR = fields.map(field => ({ [field]: { contains: query } }));
+    const searchOr = fields.map(field => ({ [field]: { contains: query } }));
+
+    if (this.where.OR) {
+      const { OR: authOr, ...rest } = this.where;
+      this.where = { ...rest, AND: [{ OR: authOr }, { OR: searchOr }] };
+      return;
+    }
+
+    this.where.OR = searchOr;
   }
 }
