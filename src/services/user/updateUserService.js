@@ -16,6 +16,8 @@ export class UpdateUserService extends AbstractService {
       nomeCompleto: getNomeCompleto(this.data),
       email: this.data.email,
       telefone: this.data.telefone,
+      // DEC-002-001: senha ausente/vazia/só-espaços/null é "não fornecida" e nunca
+      // sobrescreve a senha existente; guarda precede qualquer hash futuro (BI-22).
       senha:
         typeof this.data.senha === 'string' && this.data.senha.trim() !== ''
           ? this.data.senha
