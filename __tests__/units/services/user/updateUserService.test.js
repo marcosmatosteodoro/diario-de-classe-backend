@@ -385,6 +385,130 @@ function describeUpdateScenarios() {
       expect(passedData.nome).toBe('Pedro');
       expect(passedData.sobrenome).toBe('Oliveira');
     });
+
+    test('senha ausente no payload nunca chega ao data de atualização (AC-001-011)', async () => {
+      const mockData = {
+        nome: 'João',
+        email: 'joao@email.com'
+      };
+
+      class MockRepository {
+        constructor() {
+          this.updateCalls = [];
+          this.selectFields = {};
+        }
+
+        async update(where, data, options) {
+          this.updateCalls.push({ where, data, options });
+          return { id: where.id, ...data };
+        }
+      }
+
+      const service = new UpdateUserService(MockRepository, 'user-id-1', mockData);
+      await service.execute();
+
+      expect(service.repository.updateCalls[0].data).not.toHaveProperty('senha');
+    });
+
+    test('senha vazia ("") no payload nunca chega ao data de atualização (AC-001-011)', async () => {
+      const mockData = {
+        nome: 'João',
+        email: 'joao@email.com',
+        senha: ''
+      };
+
+      class MockRepository {
+        constructor() {
+          this.updateCalls = [];
+          this.selectFields = {};
+        }
+
+        async update(where, data, options) {
+          this.updateCalls.push({ where, data, options });
+          return { id: where.id, ...data };
+        }
+      }
+
+      const service = new UpdateUserService(MockRepository, 'user-id-1', mockData);
+      await service.execute();
+
+      expect(service.repository.updateCalls[0].data).not.toHaveProperty('senha');
+    });
+
+    test('senha só com espaços (" ") no payload nunca chega ao data de atualização (AC-001-011)', async () => {
+      const mockData = {
+        nome: 'João',
+        email: 'joao@email.com',
+        senha: '   '
+      };
+
+      class MockRepository {
+        constructor() {
+          this.updateCalls = [];
+          this.selectFields = {};
+        }
+
+        async update(where, data, options) {
+          this.updateCalls.push({ where, data, options });
+          return { id: where.id, ...data };
+        }
+      }
+
+      const service = new UpdateUserService(MockRepository, 'user-id-1', mockData);
+      await service.execute();
+
+      expect(service.repository.updateCalls[0].data).not.toHaveProperty('senha');
+    });
+
+    test('senha null no payload nunca chega ao data de atualização (AC-001-011)', async () => {
+      const mockData = {
+        nome: 'João',
+        email: 'joao@email.com',
+        senha: null
+      };
+
+      class MockRepository {
+        constructor() {
+          this.updateCalls = [];
+          this.selectFields = {};
+        }
+
+        async update(where, data, options) {
+          this.updateCalls.push({ where, data, options });
+          return { id: where.id, ...data };
+        }
+      }
+
+      const service = new UpdateUserService(MockRepository, 'user-id-1', mockData);
+      await service.execute();
+
+      expect(service.repository.updateCalls[0].data).not.toHaveProperty('senha');
+    });
+
+    test('senha presente e não-vazia é preservada no data de atualização (caso positivo)', async () => {
+      const mockData = {
+        nome: 'João',
+        email: 'joao@email.com',
+        senha: 'novaSenhaForte123'
+      };
+
+      class MockRepository {
+        constructor() {
+          this.updateCalls = [];
+          this.selectFields = {};
+        }
+
+        async update(where, data, options) {
+          this.updateCalls.push({ where, data, options });
+          return { id: where.id, ...data };
+        }
+      }
+
+      const service = new UpdateUserService(MockRepository, 'user-id-1', mockData);
+      await service.execute();
+
+      expect(service.repository.updateCalls[0].data.senha).toBe('novaSenhaForte123');
+    });
   });
 }
 

@@ -16,7 +16,10 @@ export class UpdateUserService extends AbstractService {
       nomeCompleto: getNomeCompleto(this.data),
       email: this.data.email,
       telefone: this.data.telefone,
-      senha: this.data.senha,
+      senha:
+        typeof this.data.senha === 'string' && this.data.senha.trim() !== ''
+          ? this.data.senha
+          : undefined,
       resetarSenha: this.data.resetarSenha,
       permissao: this.data.permissao,
       idiomas: this.data.idiomas
