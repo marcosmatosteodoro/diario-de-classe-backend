@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import util from 'node:util';
 import { CreateUserService } from '../../../../src/services/user/createUserService.js';
 import { UpdateUserService } from '../../../../src/services/user/updateUserService.js';
 import { CreateUserController } from '../../../../src/controllers/user/createUserController.js';
@@ -77,24 +78,38 @@ describe('Ausência de senha em log (NFR-001-001, metade backend)', () => {
     CreateDisponibilidadeProfessorService.handle = originalCreateDisponibilidadeHandle;
   });
 
+  // JSON.stringify(new Error(...)) vira '{}' — ausência infalsificável; util.inspect
+  // com depth: null serializa mensagem, stack e propriedades próprias do erro.
   function capturedLogText() {
     return [logSpy, warnSpy, errorSpy]
       .flatMap(spy => spy.mock.calls)
       .flat()
-      .map(arg => {
-        if (typeof arg === 'string') return arg;
-        try {
-          return JSON.stringify(arg);
-        } catch {
-          return String(arg);
-        }
-      })
+      .map(arg => util.inspect(arg, { depth: null }))
       .join(' ');
   }
 
   function expectNoSenhaLogged() {
     expect(capturedLogText()).not.toContain(SENHA);
   }
+
+  // Lição controle-positivo-e-por-assercao-nao-por-mecanismo: cada spy de ausência
+  // (log/warn/error) tem seu próprio controle positivo nesta suíte.
+  test('controle positivo: console.log dispara e é capturado pelo spy', () => {
+    const marcador = 'controle-positivo-console-log';
+    console.log(marcador);
+    expect(logSpy).toHaveBeenCalledWith(marcador);
+  });
+
+  test('controle positivo: console.warn dispara e é capturado pelo spy', () => {
+    const marcador = 'controle-positivo-console-warn';
+    console.warn(marcador);
+    expect(warnSpy).toHaveBeenCalledWith(marcador);
+  });
+
+  test('controle de detecção: argumento logado contendo a senha faz o texto capturado conter a senha (a ausência não é vácua)', () => {
+    console.log(`valor logado de exemplo: ${SENHA}`);
+    expect(capturedLogText()).toContain(SENHA);
+  });
 
   test('CreateUserService.handle com senha preenchida não loga a senha', async () => {
     const data = {
@@ -164,13 +179,11 @@ describe('Ausência de senha em log (NFR-001-001, metade backend)', () => {
     expectNoSenhaLogged();
   });
 
-  test('controle positivo: console.error captura o erro do handleError, e o argumento capturado também não contém a senha', async () => {
-    // Lição controle-positivo-e-por-assercao-nao-por-mecanismo: primeiro provamos
-    // que o mecanismo de captura realmente pega uma chamada real de log (por
-    // asserção sobre o spy), só depois essa mesma captura conta como prova de
-    // ausência de senha.
+  test('caso de produção: PrismaClientValidationError com a senha na message é redigido antes de chegar ao console.error (DEC-002-006)', async () => {
     GetUserService.handle = async () => {
-      throw new Error('erro forçado no fluxo para exercitar handleError');
+      const erro = new Error(`Invalid \`prisma.user.update()\` invocation: senha: "${SENHA}"`);
+      erro.name = 'PrismaClientValidationError';
+      throw erro;
     };
 
     const req = buildReq();
@@ -179,6 +192,7 @@ describe('Ausência de senha em log (NFR-001-001, metade backend)', () => {
     await UpdateUserController.handle(req, res);
 
     expect(res.statusCode).toBe(500);
+    // controle positivo de console.error: o handleError realmente chamou o spy.
     expect(errorSpy).toHaveBeenCalledTimes(1);
 
     expectNoSenhaLogged();
