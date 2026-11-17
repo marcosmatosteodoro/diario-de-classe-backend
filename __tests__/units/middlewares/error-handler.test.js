@@ -10,13 +10,15 @@ jest.mock('http-status', () => ({
   INTERNAL_SERVER_ERROR: 500
 }));
 
-jest.mock('../../../src/utilities/constants.js', () => ({
-  isProduction: false,
-  env: 'test'
-}));
-
 describe('ErrorHandler Middleware', () => {
+  const originalEnv = Constants.env;
+  const originalIsProduction = Constants.isProduction;
   let req, res, err;
+
+  afterEach(() => {
+    Constants.env = originalEnv;
+    Constants.isProduction = originalIsProduction;
+  });
 
   beforeEach(() => {
     req = {
@@ -36,6 +38,8 @@ describe('ErrorHandler Middleware', () => {
     };
 
     err = new Error('Test error');
+    Constants.env = 'test';
+    Constants.isProduction = false;
 
     // Mock console.log para evitar logs durante testes
     jest.spyOn(console, 'log').mockImplementation(() => {});
@@ -305,17 +309,23 @@ describe('ErrorHandler - detalhe do erro interno na resposta', () => {
     Constants.isProduction = originalIsProduction;
   });
 
-  test('fora de development responde 500 com texto fixo e sem a mensagem interna', () => {
-    Constants.env = 'production';
-    Constants.isProduction = true;
+  test.each(['production', 'test', 'homolog'])(
+    'fora de development (%s) responde 500 com texto fixo e sem a mensagem interna',
+    env => {
+      Constants.env = env;
+      Constants.isProduction = env === 'production';
 
-    ErrorHandler(prismaError(), req, res);
+      ErrorHandler(prismaError(), req, res);
 
-    expect(res.status).toHaveBeenCalledWith(500);
-    const body = res.json.mock.calls[0][0];
-    expect(body).toEqual({ error: 'Internal Server Error', message: 'Erro interno do servidor' });
-    expect(JSON.stringify(body)).not.toContain('secreta_xyz');
-  });
+      expect(res.status).toHaveBeenCalledWith(500);
+      const body = res.json.mock.calls[0][0];
+      expect(body).toEqual({
+        error: 'Internal Server Error',
+        message: 'Erro interno do servidor'
+      });
+      expect(JSON.stringify(body)).not.toContain('secreta_xyz');
+    }
+  );
 
   test('em produção registra o erro redigido, sem message nem valores', () => {
     Constants.env = 'production';
@@ -350,6 +360,17 @@ describe('ErrorHandler - detalhe do erro interno na resposta', () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
       error: mensagemInterna,
+      message: 'Erro interno do servidor'
+    });
+  });
+
+  test('em development com erro sem mensagem usa Internal Server Error', () => {
+    Constants.env = 'development';
+
+    ErrorHandler(new Error(), req, res);
+
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'Internal Server Error',
       message: 'Erro interno do servidor'
     });
   });

@@ -331,16 +331,19 @@ describe('validateSearchQuery middleware', () => {
         Constants.env = originalEnv;
       });
 
-      test('fora de development responde 500 sem o texto interno em nenhum campo', () => {
-        Constants.env = 'production';
-        forcaCatch();
+      test.each(['production', 'test', 'homolog'])(
+        'fora de development (%s) responde 500 sem o texto interno em nenhum campo',
+        env => {
+          Constants.env = env;
+          forcaCatch();
 
-        validateSearchQuery(mockReq, mockRes, callNext);
+          validateSearchQuery(mockReq, mockRes, callNext);
 
-        expect(mockRes.statusCode).toBe(500);
-        expect(mockRes.data).toEqual({ message: 'Erro interno do servidor' });
-        expect(JSON.stringify(mockRes.data)).not.toContain('secreta_xyz');
-      });
+          expect(mockRes.statusCode).toBe(500);
+          expect(mockRes.data).toEqual({ message: 'Erro interno do servidor' });
+          expect(JSON.stringify(mockRes.data)).not.toContain('secreta_xyz');
+        }
+      );
 
       test('registra o erro redigido, sem message nem valores', () => {
         Constants.env = 'production';

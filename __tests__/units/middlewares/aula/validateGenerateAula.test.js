@@ -676,15 +676,18 @@ describe('validateGenerateAula - detalhe do erro interno na resposta', () => {
     Constants.env = originalEnv;
   });
 
-  test('fora de development responde 500 sem o texto interno em nenhum campo', async () => {
-    Constants.env = 'production';
+  test.each(['production', 'test', 'homolog'])(
+    'fora de development (%s) responde 500 sem o texto interno em nenhum campo',
+    async env => {
+      Constants.env = env;
 
-    await validateGenerateAula(req, res, () => {});
+      await validateGenerateAula(req, res, () => {});
 
-    expect(res.statusCode).toBe(500);
-    expect(res.jsonData).toEqual({ message: 'Erro interno do servidor' });
-    expect(JSON.stringify(res.jsonData)).not.toContain('secreta_xyz');
-  });
+      expect(res.statusCode).toBe(500);
+      expect(res.jsonData).toEqual({ message: 'Erro interno do servidor' });
+      expect(JSON.stringify(res.jsonData)).not.toContain('secreta_xyz');
+    }
+  );
 
   test('registra o erro redigido, sem message nem valores', async () => {
     Constants.env = 'production';
