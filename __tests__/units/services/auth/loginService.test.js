@@ -162,6 +162,25 @@ describe('LoginService', () => {
     expect(refreshParts.length).toBe(3);
   });
 
+  test('o refresh emitido leva a claim de tipo da sessão e o sub do usuário', async () => {
+    UserRepository.prototype.selectOne = async () => ({
+      id: 'user-123',
+      email: 'test@example.com',
+      nome: 'Test User',
+      senha: SENHA_HASH
+    });
+
+    const result = await new LoginService(
+      UserRepository,
+      'test@example.com',
+      'password123'
+    ).execute();
+    const { payload } = parseJwt(result.refreshToken);
+
+    expect(payload.typ).toBe(Constants.refreshTokenType);
+    expect(payload.sub).toBe('user-123');
+  });
+
   test('should call selectOne with correct email filter', async () => {
     let capturedParams = null;
     UserRepository.prototype.selectOne = async params => {
