@@ -53,7 +53,8 @@
   "auth": {
     "login": {
       "unauthorized": "Email ou senha inválidos",
-      "error": "Erro ao fazer login"
+      "error": "Erro ao fazer login",
+      "too_many_attempts": "Muitas tentativas de login. Tente novamente mais tarde."
     },
     "logout": {
       "success": "Logout realizado com sucesso",
@@ -128,7 +129,9 @@
     },
     "upload": {
       "repeated_emails": "Emails repetidos encontrados no arquivo",
-      "error": "Erro ao fazer upload do arquivo"
+      "error": "Erro ao fazer upload do arquivo",
+      "too_many": "A planilha tem mais de {{max}} alunos",
+      "line_too_long": "O aluno da linha {{linha}} excede o tamanho permitido"
     }
   },
   "configuracaos": {
@@ -188,7 +191,8 @@
     "create": {
       "success": "Aula criada com sucesso",
       "error": "Erro ao criar aula",
-      "ids_exists": "Já existe uma aula para este dia"
+      "ids_exists": "Já existe uma aula para este dia",
+      "contrato_nao_pertence_ao_aluno": "O contrato informado não pertence ao aluno"
     },
     "update": {
       "success": "Aula atualizada com sucesso",
@@ -257,7 +261,8 @@
   "disponibilidadeProfessors": {
     "update": {
       "success": "Disponibilidade do professor atualizada com sucesso",
-      "error": "Erro ao atualizar disponibilidade do professor"
+      "error": "Erro ao atualizar disponibilidade do professor",
+      "forbidden": "Disponibilidade não pertence ao professor informado"
     }
   },
   "excel_file": {

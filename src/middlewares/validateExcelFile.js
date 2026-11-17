@@ -1,3 +1,34 @@
+import fs from 'fs';
+
+const assinaturas = {
+  '.xlsx': Buffer.from([0x50, 0x4b, 0x03, 0x04]),
+  '.xls': Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1])
+};
+const bytesInspecionadosCsv = 8 * 1024;
+
+/**
+ * Confere os primeiros bytes do arquivo gravado contra a extensão declarada.
+ * Qualquer falha de leitura recusa (fail secure).
+ */
+const conteudoCombinaComExtensao = (caminho, extensao) => {
+  let fd;
+  try {
+    fd = fs.openSync(caminho, 'r');
+    const buffer = Buffer.alloc(extensao === '.csv' ? bytesInspecionadosCsv : 8);
+    const lidos = fs.readSync(fd, buffer, 0, buffer.length, 0);
+    const inicio = buffer.subarray(0, lidos);
+    if (extensao === '.csv') {
+      return !inicio.includes(0x00);
+    }
+    const assinatura = assinaturas[extensao];
+    return Boolean(assinatura) && inicio.subarray(0, assinatura.length).equals(assinatura);
+  } catch {
+    return false;
+  } finally {
+    if (fd !== undefined) fs.closeSync(fd);
+  }
+};
+
 /**
  * Middleware para validar se o parâmetro ID é válido
  * @param {Object} req - Request object
@@ -32,16 +63,16 @@ export const validateExcelFile = (req, res, next) => {
   const isMimeTypeValid = allowedMimeTypes.includes(mimeType);
 
   // Verifica a extensão do arquivo
-  const hasValidExtension = allowedExtensions.some(ext => originalName.endsWith(ext));
+  const extension = allowedExtensions.find(ext => originalName.endsWith(ext));
+  const hasValidExtension = extension !== undefined;
 
-  // Se o tipo MIME ou extensão não forem válidos, retorna erro
-  if (!isMimeTypeValid && !hasValidExtension) {
+  // MIME e extensão são escolhidos pelo cliente: os dois precisam estar nas listas e o
+  // conteúdo gravado precisa bater com a extensão declarada.
+  if (!isMimeTypeValid || !hasValidExtension || !conteudoCombinaComExtensao(file.path, extension)) {
     return res.status(400).json({
       message: req.t
         ? req.t('validation.excel_file.invalid_type')
         : 'Tipo de arquivo inválido. Apenas arquivos Excel ou CSV são permitidos',
-      receivedMimeType: mimeType,
-      receivedFileName: file.originalname,
       allowedFormats: ['CSV', 'XLS', 'XLSX']
     });
   }

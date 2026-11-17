@@ -1,18 +1,22 @@
+import fs from 'fs';
 import XLSX from 'xlsx';
 import AbstractController from '../abstractController.js';
 import AlunoRepository from '../../repositories/alunoRepository.js';
 import { CreateAlunoService } from '../../services/aluno/createAlunoService.js';
 import { UpdateAlunoService } from '../../services/aluno/updateAlunoService.js';
 import { GetAlunoListController } from './getAlunoListController.js';
+import LoggerManager from '../../utilities/loggerManager.js';
 
 export class UploadAlunoExcelController extends AbstractController {
   constructor(req, res) {
     super(req, res);
+    this.maxAlunos = 500;
+    this.maxCaracteres = 255;
   }
 
   getXLSXDataByFile(file) {
     // Lê o arquivo Excel
-    const workbook = XLSX.readFile(file);
+    const workbook = XLSX.read(fs.readFileSync(file), { type: 'buffer' });
     // Pega a primeira planilha
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
@@ -54,12 +58,29 @@ export class UploadAlunoExcelController extends AbstractController {
     return uniqueData;
   }
 
+  /**
+   * Rejeita a planilha inteira em vez de truncar. A linha reportada é a posição
+   * 1-based entre as linhas processadas.
+   */
+  validarLimites(data) {
+    if (data.length > this.maxAlunos) {
+      return { chave: 'alunos.upload.too_many' };
+    }
+
+    const indice = data.findIndex(({ nome, sobrenome, email }) => {
+      const nomeCompleto = sobrenome ? `${nome} ${sobrenome}` : nome;
+      return nomeCompleto.length > this.maxCaracteres || String(email).length > this.maxCaracteres;
+    });
+
+    return indice >= 0 ? { chave: 'alunos.upload.line_too_long', linha: indice + 1 } : null;
+  }
+
   isThereRepeatedEmail(data) {
     const emailSet = new Set();
-    for (const row of data) {
+    for (const [index, row] of data.entries()) {
       const email = row.email;
       if (emailSet.has(email)) {
-        console.log('Email repetido encontrado:', email);
+        LoggerManager.warn('aluno.upload.email_duplicado', { linha: index + 1 });
         return true; // Email repetido encontrado
       }
       emailSet.add(email);
@@ -92,6 +113,13 @@ export class UploadAlunoExcelController extends AbstractController {
       // Lê o arquivo Excel
       const fileData = this.getXLSXDataByFile(file);
       const data = this.prepareData(fileData);
+
+      const limite = this.validarLimites(data);
+      if (limite) {
+        return this.res.status(400).json({
+          message: this.req.t(limite.chave, { max: this.maxAlunos, linha: limite.linha })
+        });
+      }
 
       if (this.isThereRepeatedEmail(data)) {
         return this.res.status(400).json({

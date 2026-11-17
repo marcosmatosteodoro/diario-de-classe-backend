@@ -53,7 +53,8 @@
   "auth": {
     "login": {
       "unauthorized": "Invalid email or password",
-      "error": "Login error"
+      "error": "Login error",
+      "too_many_attempts": "Too many login attempts. Please try again later."
     },
     "logout": {
       "success": "Logout successful",
@@ -128,7 +129,9 @@
     },
     "upload": {
       "repeated_emails": "Repeated emails found in file",
-      "error": "Error uploading file"
+      "error": "Error uploading file",
+      "too_many": "The spreadsheet has more than {{max}} students",
+      "line_too_long": "The student on line {{linha}} exceeds the allowed size"
     }
   },
   "configuracaos": {
@@ -188,7 +191,8 @@
     "create": {
       "success": "Class created successfully",
       "error": "Error creating class",
-      "ids_exists": "There is already a class scheduled for today."
+      "ids_exists": "There is already a class scheduled for today.",
+      "contrato_nao_pertence_ao_aluno": "The given contract does not belong to the student"
     },
     "update": {
       "success": "Class updated successfully",
@@ -257,7 +261,8 @@
   "disponibilidadeProfessors": {
     "update": {
       "success": "Teacher availability updated successfully",
-      "error": "Error updating teacher availability"
+      "error": "Error updating teacher availability",
+      "forbidden": "Availability does not belong to the given teacher"
     }
   },
   "excel_file": {

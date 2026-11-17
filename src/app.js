@@ -1,7 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import compress from 'compression';
-import methodOverride from 'method-override';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -30,6 +29,11 @@ const BODY_LIMIT = '3mb';
 
 const app = express();
 
+// Atrás de proxy, só com TRUST_PROXY definido o req.ip passa a ser o IP do cliente.
+if (Constants.trustProxy !== undefined) {
+  app.set('trust proxy', Constants.trustProxy);
+}
+
 if (!Constants.isProduction) {
   app.use(
     morgan('combined', {
@@ -44,7 +48,6 @@ if (!Constants.isProduction) {
 
 // Middleware de internacionalização - deve vir antes das rotas
 app.use(i18nMiddleware);
-app.use('/api/stripe', bodyParser.raw({ type: '*/*' })); // Configura endpoint específico do Stripe para receber dados brutos (webhooks)
 app.use(responseTime({ header: 'execution-time' })); // Adiciona header com tempo de execução das requisições
 app.use(bodyParser.json({ limit: BODY_LIMIT })); // Permite parsing de JSON com limite de BODY_LIMIT
 app.use(
@@ -54,7 +57,6 @@ app.use(
   })
 );
 app.use(compress()); // Habilita compressão gzip/deflate nas respostas
-app.use(methodOverride()); // Permite override de métodos HTTP (PUT, DELETE via POST)
 app.use(cookieParser()); // Habilita parsing de cookies nas requisições
 app.use(helmet()); // Adiciona headers de segurança para proteger a aplicação
 app.use(cors({ origin: Constants.corsOrigins, methods: ['GET', 'POST', 'PUT', 'DELETE'] })); // Restringe o CORS às origens configuradas em CORS_ORIGINS

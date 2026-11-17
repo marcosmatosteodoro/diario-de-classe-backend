@@ -1,4 +1,5 @@
 import httpStatus from 'http-status';
+import multer from 'multer';
 import UnauthorizedError from '../utilities/errors/unauthorized.js';
 import Constants from '../utilities/constants.js';
 import { redactErrorForLog } from '../utilities/redactErrorForLog.js';
@@ -14,6 +15,23 @@ function clientErrorResponse(err, t) {
       ? { error: 'PayloadTooLarge', message: t('api.errors.payload_too_large') }
       : { error: 'BadRequest', message: t('api.errors.bad_request') };
   return { statusCode: status, response };
+}
+
+// Limite do multer (upload): resposta fixa, sem nada vindo do cliente (ex.: err.field).
+function multerErrorResponse(err, t) {
+  if (!(err instanceof multer.MulterError)) {
+    return null;
+  }
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return {
+      statusCode: httpStatus.REQUEST_ENTITY_TOO_LARGE,
+      response: { error: 'PayloadTooLarge', message: t('api.errors.payload_too_large') }
+    };
+  }
+  return {
+    statusCode: httpStatus.BAD_REQUEST,
+    response: { error: 'BadRequest', message: t('api.errors.bad_request') }
+  };
 }
 
 // Fora de desenvolvimento a mensagem crua do erro (ex.: Prisma) não vai ao cliente.
@@ -52,7 +70,7 @@ export default function ErrorHandler(err, req, res) {
     return fallbacks[key] || key;
   };
 
-  const clientError = clientErrorResponse(err, t);
+  const clientError = multerErrorResponse(err, t) ?? clientErrorResponse(err, t);
 
   if (err.errors && err.errors.length > 0) {
     statusCode = httpStatus.BAD_REQUEST;

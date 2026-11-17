@@ -19,10 +19,10 @@ export class CreateManyAulaController extends AbstractController {
       const idAluno = this.req.body.idAluno;
       const idProfessor = this.req.body.idProfessor;
       const aulas = this.req.body.aulas;
-      const isContratoExists = await this.isContratoExists(idContrato);
+      const isContratoExists =
+        !!idContrato && !!idAluno && (await this.isContratoExists(idContrato, idAluno));
       const isAlunoExists = await this.isAlunoExists(idAluno);
       const isProfessorExists = await this.isProfessorExists(idProfessor);
-      const aulasExisted = await GetAulaListService.handle({ idContrato, idAluno, idProfessor });
 
       if (!isAlunoExists) {
         return this.res.status(422).json({
@@ -32,7 +32,7 @@ export class CreateManyAulaController extends AbstractController {
 
       if (!isContratoExists) {
         return this.res.status(422).json({
-          message: this.req.t('diaAulas.error.contrato_not_exists')
+          message: this.req.t('aulas.create.contrato_nao_pertence_ao_aluno')
         });
       }
 
@@ -41,6 +41,8 @@ export class CreateManyAulaController extends AbstractController {
           message: this.req.t('aulas.error.professor_not_exists')
         });
       }
+
+      const aulasExisted = await GetAulaListService.handle({ idContrato, idAluno, idProfessor });
 
       // Delete // Update
       await Promise.all(
@@ -100,8 +102,8 @@ export class CreateManyAulaController extends AbstractController {
     return !!aluno;
   }
 
-  async isContratoExists(id) {
-    const contrato = await GetContratoService.handle(id);
+  async isContratoExists(id, idAluno) {
+    const contrato = await GetContratoService.handle(id, { additionalWhere: { idAluno } });
     return !!contrato;
   }
 

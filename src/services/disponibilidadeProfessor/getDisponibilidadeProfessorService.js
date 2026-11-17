@@ -15,8 +15,7 @@ export class GetDisponibilidadeProfessorService extends AbstractService {
   }
 
   /**
-   * Versão singular — sem rota nem controller que a chame hoje; quem roda é
-   * `GetDisponibilidadeProfessorListService`.
+   * Versão singular, busca por id.
    * @param {string} id
    * @returns {Promise<Object|null>} disponibilidade projetada pela whitelist padrao, ou `null`
    */

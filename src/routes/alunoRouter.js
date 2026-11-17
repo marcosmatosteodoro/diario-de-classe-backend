@@ -1,7 +1,4 @@
 import express from 'express';
-import multer from 'multer';
-import os from 'os';
-import path from 'path';
 // Controladores
 import { GetAlunoListController } from '../controllers/aluno/getAlunoListController.js';
 import { GetAlunoController } from '../controllers/aluno/getAlunoController.js';
@@ -18,19 +15,16 @@ import { GetProjecaoCronogramaController } from '../controllers/cronograma/getPr
 import { GetProjecaoCronogramaExcelController } from '../controllers/cronograma/getProjecaoCronogramaExcelController.js';
 import { GetCronogramaListByAlunoController } from '../controllers/cronograma/getCronogramaListByAlunoController.js';
 // Middlewares de validação
+import adminOnly from '../middlewares/adminOnly.js';
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateAluno } from '../middlewares/aluno/validateCreateAluno.js';
 import { validateUpdateAluno } from '../middlewares/aluno/validateUpdateAluno.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 import { validateExcelFile } from '../middlewares/validateExcelFile.js';
+import { uploadPlanilha } from '../utilities/planilhaUpload.js';
 import { validateCreateCronograma } from '../middlewares/cronograma/validateCreateCronograma.js';
 
 const router = express.Router();
-
-// Usa /tmp tanto em produção quanto local
-const uploadDir = path.join(os.tmpdir(), 'uploads');
-
-const upload = multer({ dest: uploadDir });
 
 // GET /api/alunos - Buscar todos os alunos
 router.get('/', validateSearchQuery, GetAlunoListController.handle);
@@ -60,7 +54,13 @@ router.get('/:id/contratos', validateId, GetContratosByAlunoController.handle);
 router.get('/:id/aulas', validateId, GetAulasByAlunoController.handle);
 
 // POST /api/alunos/upload - Gerar alunos de acordo com lista de excel
-router.post('/upload', upload.single('file'), validateExcelFile, UploadAlunoExcelController.handle);
+router.post(
+  '/upload',
+  adminOnly,
+  uploadPlanilha.single('file'),
+  validateExcelFile,
+  UploadAlunoExcelController.handle
+);
 
 // GET /api/alunos/:id/cronograma - Cronograma do livro em curso (a "planilha")
 router.get('/:id/cronograma', validateId, GetProjecaoCronogramaController.handle);

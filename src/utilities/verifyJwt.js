@@ -31,7 +31,8 @@ export function verifyJwt(token, secret) {
       .replace(/\+/g, '-')
       .replace(/\//g, '_');
     if (!textoIgualEmTempoConstante(signature, expectedSig)) return false;
-    if (payload.exp && Math.floor(Date.now() / 1000) > payload.exp) return false;
+    if (typeof payload.exp !== 'number' || Math.floor(Date.now() / 1000) > payload.exp)
+      return false;
     return payload;
   } catch {
     return false;

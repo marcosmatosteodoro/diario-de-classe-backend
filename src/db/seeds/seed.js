@@ -1,3 +1,4 @@
+import './guardOnLoad.js';
 import { PrismaClient } from '../generated/client/index.js';
 import { ProfessoresSeed } from './models/professoresSeed.js';
 import { DisponibilidadeProfessorSeed } from './models/disponibilidadeProfessorSeed.js';

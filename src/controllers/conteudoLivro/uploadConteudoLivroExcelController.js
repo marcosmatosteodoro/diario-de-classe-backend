@@ -1,4 +1,5 @@
 import fs from 'fs/promises';
+import { readFileSync } from 'fs';
 import XLSX from 'xlsx';
 import AbstractController from '../abstractController.js';
 import { GetLivroService } from '../../services/livro/getLivroService.js';
@@ -44,7 +45,7 @@ export class UploadConteudoLivroExcelController extends AbstractController {
   }
 
   getXLSXDataByFile(file) {
-    const workbook = XLSX.readFile(file);
+    const workbook = XLSX.read(readFileSync(file), { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     return XLSX.utils.sheet_to_json(worksheet, { header: 1 });
