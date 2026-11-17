@@ -1,7 +1,17 @@
 import { GetContratoService } from '../../services/contrato/getContratoService.js';
 import { BaseValidateEntity } from '../../utilities/baseValidateEntity.js';
 import { ValidateData } from '../../utilities/validateData.js';
+import Constants from '../../utilities/constants.js';
+import { redactErrorForLog } from '../../utilities/redactErrorForLog.js';
 import { startOfTodayUTC } from '../../utilities/startOfTodayUTC.js';
+
+function internalErrorBody(req, error) {
+  const body = { message: req.t ? req.t('error.internal') : 'Erro interno do servidor' };
+  if (Constants.env === 'development') {
+    body.error = error.message;
+  }
+  return body;
+}
 
 class ValidateGenerateAula extends BaseValidateEntity {
   constructor(req, res, next) {
@@ -149,10 +159,8 @@ class ValidateGenerateAula extends BaseValidateEntity {
 
       return this.handleSingleValidation();
     } catch (error) {
-      return this.res.status(500).json({
-        message: this.req.t ? this.req.t('error.internal') : 'Erro interno do servidor',
-        error: error.message
-      });
+      console.error('[validateGenerateAula] Erro:', redactErrorForLog(error));
+      return this.res.status(500).json(internalErrorBody(this.req, error));
     }
   }
 }

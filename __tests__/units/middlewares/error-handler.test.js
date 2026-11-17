@@ -1,5 +1,6 @@
-import { describe, test, expect, jest, beforeEach } from '@jest/globals';
+import { describe, test, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import ErrorHandler, { ThrowErrors } from '../../../src/middlewares/error-handler.js';
+import Constants from '../../../src/utilities/constants.js';
 import UnauthorizedError from '../../../src/utilities/errors/unauthorized.js';
 
 // Mock das dependências
@@ -10,7 +11,8 @@ jest.mock('http-status', () => ({
 }));
 
 jest.mock('../../../src/utilities/constants.js', () => ({
-  isProduction: false
+  isProduction: false,
+  env: 'test'
 }));
 
 describe('ErrorHandler Middleware', () => {
@@ -59,7 +61,7 @@ describe('ErrorHandler Middleware', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Test error',
+        error: 'Internal Server Error',
         message: 'Erro interno do servidor'
       });
     });
@@ -87,7 +89,7 @@ describe('ErrorHandler Middleware', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Erro customizado',
+        error: 'Internal Server Error',
         message: 'Erro interno do servidor'
       });
     });
@@ -111,7 +113,7 @@ describe('ErrorHandler Middleware', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Erro personalizado',
+        error: 'Internal Server Error',
         message: 'Erro interno do servidor'
       });
     });
@@ -126,7 +128,7 @@ describe('ErrorHandler Middleware', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Test error',
+        error: 'Internal Server Error',
         message: 'Erro interno do servidor'
       });
     });
@@ -139,7 +141,7 @@ describe('ErrorHandler Middleware', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Test error',
+        error: 'Internal Server Error',
         message: 'Erro interno do servidor'
       });
     });
@@ -271,6 +273,84 @@ describe('ErrorHandler - erros HTTP 4xx expostos', () => {
     expect(res.json).toHaveBeenCalledWith({
       error: 'PayloadTooLarge',
       message: 'Corpo da requisição excede o tamanho permitido'
+    });
+  });
+});
+
+describe('ErrorHandler - detalhe do erro interno na resposta', () => {
+  const originalEnv = Constants.env;
+  const originalIsProduction = Constants.isProduction;
+  const mensagemInterna = 'Invalid `prisma.aluno.create()` coluna secreta_xyz';
+  let req, res, errorSpy, logSpy;
+
+  function prismaError() {
+    return Object.assign(new Error(mensagemInterna), {
+      name: 'PrismaClientKnownRequestError',
+      code: 'P2002',
+      meta: { target: 'valor-sensivel' }
+    });
+  }
+
+  beforeEach(() => {
+    req = {
+      t: jest.fn(key => (key === 'api.errors.internal_error' ? 'Erro interno do servidor' : key))
+    };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    Constants.env = originalEnv;
+    Constants.isProduction = originalIsProduction;
+  });
+
+  test('fora de development responde 500 com texto fixo e sem a mensagem interna', () => {
+    Constants.env = 'production';
+    Constants.isProduction = true;
+
+    ErrorHandler(prismaError(), req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    const body = res.json.mock.calls[0][0];
+    expect(body).toEqual({ error: 'Internal Server Error', message: 'Erro interno do servidor' });
+    expect(JSON.stringify(body)).not.toContain('secreta_xyz');
+  });
+
+  test('em produção registra o erro redigido, sem message nem valores', () => {
+    Constants.env = 'production';
+    Constants.isProduction = true;
+
+    ErrorHandler(prismaError(), req, res);
+
+    expect(errorSpy).toHaveBeenCalledWith('[ErrorHandler] Erro:', {
+      name: 'PrismaClientKnownRequestError',
+      code: 'P2002',
+      meta: ['target']
+    });
+    expect(logSpy).not.toHaveBeenCalled();
+  });
+
+  test('fora de produção mantém o log do erro completo', () => {
+    Constants.env = 'test';
+    Constants.isProduction = false;
+    const err = prismaError();
+
+    ErrorHandler(err, req, res);
+
+    expect(logSpy).toHaveBeenCalledWith(err);
+    expect(errorSpy).not.toHaveBeenCalled();
+  });
+
+  test('em development inclui error com a mensagem', () => {
+    Constants.env = 'development';
+
+    ErrorHandler(prismaError(), req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+    expect(res.json).toHaveBeenCalledWith({
+      error: mensagemInterna,
+      message: 'Erro interno do servidor'
     });
   });
 });

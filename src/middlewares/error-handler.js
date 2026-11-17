@@ -1,6 +1,7 @@
 import httpStatus from 'http-status';
 import UnauthorizedError from '../utilities/errors/unauthorized.js';
 import Constants from '../utilities/constants.js';
+import { redactErrorForLog } from '../utilities/redactErrorForLog.js';
 
 // Erro 4xx que o emissor marcou como exponível (ex.: body-parser).
 function clientErrorResponse(err, t) {
@@ -13,6 +14,23 @@ function clientErrorResponse(err, t) {
       ? { error: 'PayloadTooLarge', message: t('api.errors.payload_too_large') }
       : { error: 'BadRequest', message: t('api.errors.bad_request') };
   return { statusCode: status, response };
+}
+
+// Fora de desenvolvimento a mensagem crua do erro (ex.: Prisma) não vai ao cliente.
+function internalErrorBody(err, t) {
+  const exposeDetail = Constants.env === 'development';
+  return {
+    error: exposeDetail ? err.message || 'Internal Server Error' : 'Internal Server Error',
+    message: t('api.errors.internal_error')
+  };
+}
+
+function logInternalError(err) {
+  if (!Constants.isProduction) {
+    console.log(err);
+  } else {
+    console.error('[ErrorHandler] Erro:', redactErrorForLog(err));
+  }
 }
 
 export default function ErrorHandler(err, req, res) {
@@ -51,14 +69,9 @@ export default function ErrorHandler(err, req, res) {
   } else if (clientError) {
     ({ statusCode, response } = clientError);
   } else {
-    if (!Constants.isProduction) {
-      console.log(err);
-    }
+    logInternalError(err);
     statusCode = httpStatus.INTERNAL_SERVER_ERROR;
-    response = {
-      error: err.message || 'Internal Server Error',
-      message: t('api.errors.internal_error')
-    };
+    response = internalErrorBody(err, t);
   }
 
   res.status(statusCode);

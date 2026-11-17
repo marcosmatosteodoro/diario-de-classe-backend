@@ -1,4 +1,6 @@
+import { jest } from '@jest/globals';
 import { validateSearchQuery } from '../../../src/middlewares/validateSearchQuery.js';
+import Constants from '../../../src/utilities/constants.js';
 
 describe('validateSearchQuery middleware', () => {
   let mockReq, mockRes, mockNext;
@@ -299,9 +301,70 @@ describe('validateSearchQuery middleware', () => {
       validateSearchQuery(mockReq, mockRes, callNext);
 
       expect(mockRes.statusCode).toBe(500);
-      expect(mockRes.data.message).toBe('Erro interno do servidor');
-      expect(mockRes.data.error).toBe('Erro interno na query');
+      expect(mockRes.data).toEqual({ message: 'Erro interno do servidor' });
       expect(mockNext.called).toBe(false);
+    });
+
+    describe('detalhe do erro interno na resposta', () => {
+      const originalEnv = Constants.env;
+      const mensagemInterna = 'Invalid `prisma.contrato.findMany()` coluna secreta_xyz';
+      let errorSpy;
+
+      function forcaCatch() {
+        const erro = Object.assign(new Error(mensagemInterna), {
+          name: 'PrismaClientKnownRequestError',
+          code: 'P2002',
+          meta: { target: 'valor-sensivel' }
+        });
+        Object.defineProperty(mockReq, 'query', {
+          get() {
+            throw erro;
+          }
+        });
+      }
+
+      beforeEach(() => {
+        errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      });
+
+      afterEach(() => {
+        Constants.env = originalEnv;
+      });
+
+      test('fora de development responde 500 sem o texto interno em nenhum campo', () => {
+        Constants.env = 'production';
+        forcaCatch();
+
+        validateSearchQuery(mockReq, mockRes, callNext);
+
+        expect(mockRes.statusCode).toBe(500);
+        expect(mockRes.data).toEqual({ message: 'Erro interno do servidor' });
+        expect(JSON.stringify(mockRes.data)).not.toContain('secreta_xyz');
+      });
+
+      test('registra o erro redigido, sem message nem valores', () => {
+        Constants.env = 'production';
+        forcaCatch();
+
+        validateSearchQuery(mockReq, mockRes, callNext);
+
+        expect(errorSpy).toHaveBeenCalledWith('[validateSearchQuery] Erro:', {
+          name: 'PrismaClientKnownRequestError',
+          code: 'P2002',
+          meta: ['target']
+        });
+      });
+
+      test('em development inclui error com a mensagem', () => {
+        Constants.env = 'development';
+        forcaCatch();
+
+        validateSearchQuery(mockReq, mockRes, callNext);
+
+        expect(mockRes.statusCode).toBe(500);
+        expect(mockRes.data.message).toBe('Erro interno do servidor');
+        expect(mockRes.data.error).toBe(mensagemInterna);
+      });
     });
 
     test('deve usar tradução quando req.t existe para erro interno', () => {
