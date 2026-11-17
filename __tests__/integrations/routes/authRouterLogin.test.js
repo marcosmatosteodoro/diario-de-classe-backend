@@ -14,6 +14,7 @@ describe('POST /api/auth/login (app real)', () => {
   let app;
   let Constants;
   let LoginService;
+  let TentativaLoginRepository;
   let original;
   let isProductionOriginal;
 
@@ -24,10 +25,31 @@ describe('POST /api/auth/login (app real)', () => {
     }));
     ({ default: Constants } = await import('../../../src/utilities/constants.js'));
     ({ LoginService } = await import('../../../src/services/auth/loginService.js'));
+    ({ default: TentativaLoginRepository } = await import(
+      '../../../src/repositories/tentativaLoginRepository.js'
+    ));
     ({ default: app } = await import('../../../src/app.js?login'));
     original = LoginService.handle;
     isProductionOriginal = Constants.isProduction;
   }, TIMEOUT_IMPORT_FRIO);
+
+  // O limitador persiste em TentativaLogin: o dublê dá estado limpo por caso e deixa o
+  // teto controlável. A regra da janela em SQL é provada em tentativaLoginRepository.test.js.
+  let contagens;
+  beforeEach(() => {
+    contagens = new Map();
+    jest
+      .spyOn(TentativaLoginRepository.prototype, 'incrementar')
+      .mockImplementation(async chave => {
+        const contagem = (contagens.get(chave) ?? 0) + 1;
+        contagens.set(chave, contagem);
+        return { contagem, segundosRestantes: 900, expiraEm: '1' };
+      });
+    jest.spyOn(TentativaLoginRepository.prototype, 'decrementar').mockResolvedValue(1);
+    jest
+      .spyOn(TentativaLoginRepository.prototype, 'removerPorChave')
+      .mockResolvedValue({ count: 1 });
+  });
 
   afterEach(() => {
     LoginService.handle = original;
@@ -117,6 +139,15 @@ describe('POST /api/auth/login (app real)', () => {
             )
           )
       );
+      // Sinks do caminho de login: console.* (LoggerManager, morgan do app, handleError do
+      // controller, limitador) e escrita direta em stdout/stderr (logger de query do Prisma).
+      for (const fluxo of [process.stdout, process.stderr]) {
+        const spy = jest.spyOn(fluxo, 'write').mockImplementation(chunk => {
+          textos.push(String(chunk));
+          return true;
+        });
+        spies.push(spy);
+      }
       return { textos, spies, texto: () => textos.join('\n') };
     };
 
@@ -127,7 +158,57 @@ describe('POST /api/auth/login (app real)', () => {
     ])('controle de detecção: a captura enxerga o sentinela de %s', (_, sentinela) => {
       const cap = capturar();
       console.error({ aninhado: { valor: sentinela } });
-      expect(cap.texto()).toContain(sentinela);
+      process.stdout.write(`${sentinela}\n`);
+      process.stderr.write(`${sentinela}\n`);
+      expect(cap.textos).toHaveLength(3);
+      for (const t of cap.textos) expect(t).toContain(sentinela);
+    });
+
+    const semSentinelas = (cap, res) => {
+      for (const sentinela of [AT, RT, COOKIE_RECEBIDO]) {
+        expect(cap.texto()).not.toContain(sentinela);
+        expect(JSON.stringify(res.body)).not.toContain(sentinela);
+      }
+    };
+
+    test('401: o warn de falha de login (limitador + controller) não carrega credenciais', async () => {
+      LoginService.handle = jest.fn(async () => null);
+      const cap = capturar();
+
+      const res = await entrar();
+
+      expect(res.status).toBe(401);
+      expect(cap.texto()).toContain('Falha de login');
+      semSentinelas(cap, res);
+    });
+
+    test('429: o warn de bloqueio do limitador não carrega credenciais', async () => {
+      LoginService.handle = jest.fn(async () => null);
+      for (let i = 0; i < 5; i += 1) await entrar();
+      const cap = capturar();
+
+      const res = await entrar();
+
+      expect(res.status).toBe(429);
+      expect(cap.texto()).toContain('Login bloqueado');
+      semSentinelas(cap, res);
+    });
+
+    test('503: erro do contador (ORM com argumentos embutidos) loga só name/code', async () => {
+      TentativaLoginRepository.prototype.incrementar.mockImplementation(async () => {
+        const erro = new Error(`argumentos ${AT} ${RT} ${COOKIE_RECEBIDO}`);
+        erro.name = 'PrismaClientKnownRequestError';
+        erro.code = 'P2002';
+        erro.meta = { campo: `${AT} ${RT} ${COOKIE_RECEBIDO}` };
+        throw erro;
+      });
+      const cap = capturar();
+
+      const res = await entrar();
+
+      expect(res.status).toBe(503);
+      expect(cap.texto()).toContain('Erro ao consultar o limite');
+      semSentinelas(cap, res);
     });
 
     test('falha inesperada do service: 500 sem credenciais no log nem no corpo (log)', async () => {
