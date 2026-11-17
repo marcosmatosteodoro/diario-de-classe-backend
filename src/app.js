@@ -18,7 +18,12 @@ import i18nMiddleware from './middlewares/i18n.js';
 
 import { InitialSetting } from './InitialSetting.js';
 
-InitialSetting.handle();
+try {
+  await InitialSetting.handle();
+} catch (error) {
+  LoggerManager.error('Falha no setup de inicialização', error);
+  throw error;
+}
 
 const app = express();
 

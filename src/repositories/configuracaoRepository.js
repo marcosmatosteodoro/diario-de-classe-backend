@@ -29,4 +29,22 @@ export default class ConfiguracaoRepository extends AbstractRepository {
       diasDeFuncionamento: true
     };
   }
+
+  /**
+   * Remove as configurações indicadas e cria a nova em uma única transação:
+   * se a criação falha, as removidas continuam no banco.
+   * @param {string[]} idsParaRemover - ids das configurações a remover
+   * @param {Object} data - dados da configuração a criar
+   * @param {Object} [options]
+   * @param {Object} [options.select] - campos retornados (padrão: getSelectFields())
+   * @returns {Promise<Object>} configuração criada
+   */
+  async substituir(idsParaRemover, data, options = {}) {
+    const { select = this.selectFields } = options;
+
+    return await prisma.$transaction(async tx => {
+      await tx.configuracao.deleteMany({ where: { id: { in: idsParaRemover } } });
+      return await tx.configuracao.create({ data, select });
+    });
+  }
 }
