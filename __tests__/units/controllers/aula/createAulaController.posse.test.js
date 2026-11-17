@@ -3,6 +3,7 @@ import { CreateAulaController } from '../../../../src/controllers/aula/createAul
 import { CreateAulaService } from '../../../../src/services/aula/createAulaService.js';
 import { IsAulaExistsService } from '../../../../src/services/aula/isAulaExistsService.js';
 import { GetContratoListService } from '../../../../src/services/contrato/getContratoListService.js';
+import { GetContratoService } from '../../../../src/services/contrato/getContratoService.js';
 import { UpdateAulasContratoService } from '../../../../src/services/contrato/updateAulasContratoService.js';
 
 describe('CreateAulaController - professor da aula', () => {
@@ -20,6 +21,7 @@ describe('CreateAulaController - professor da aula', () => {
     jest.spyOn(IsAulaExistsService, 'handle').mockResolvedValue(false);
     jest.spyOn(CreateAulaService, 'handle').mockResolvedValue({ id: 'a1', idContrato: 'ctr-1' });
     jest.spyOn(UpdateAulasContratoService, 'handle').mockResolvedValue();
+    jest.spyOn(GetContratoService, 'handle').mockResolvedValue({ id: 'ctr-1' });
     jest.spyOn(GetContratoListService, 'handle').mockResolvedValue([{ id: 'ctr-1' }]);
   });
 
