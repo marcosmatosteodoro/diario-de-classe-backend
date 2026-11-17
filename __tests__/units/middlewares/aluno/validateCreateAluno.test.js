@@ -461,133 +461,24 @@ describe('validateCreateAluno middleware', () => {
     });
   });
 
-  describe('Validação do campo criador (opcional)', () => {
-    test('deve aceitar criador válido', () => {
+  describe('Campo criador não é aceito do body', () => {
+    test.each([
+      ['valor válido de outro usuário', 'outro-usuario-123'],
+      ['valor curto demais', 'abc'],
+      ['valor não string', 123456],
+      ['null', null]
+    ])('descarta criador (%s) em req.validatedData', (_rotulo, criador) => {
       mockReq.body = {
         nome: 'João',
         sobrenome: 'Silva',
         email: 'joao@exemplo.com',
-        criador: 'admin-123'
+        criador
       };
 
       validateCreateAluno(mockReq, mockRes, callNext);
 
       expect(mockNext.called).toBe(true);
-      expect(mockRes.statusCode).toBeNull();
-    });
-
-    test('deve aceitar quando criador não é fornecido (opcional)', () => {
-      mockReq.body = {
-        nome: 'João',
-        sobrenome: 'Silva',
-        email: 'joao@exemplo.com'
-      };
-
-      validateCreateAluno(mockReq, mockRes, callNext);
-
-      expect(mockNext.called).toBe(true);
-      expect(mockRes.statusCode).toBeNull();
-    });
-
-    test('deve rejeitar criador muito curto (menos de 6 caracteres)', () => {
-      mockReq.body = {
-        nome: 'João',
-        sobrenome: 'Silva',
-        email: 'joao@exemplo.com',
-        criador: 'admin'
-      };
-
-      validateCreateAluno(mockReq, mockRes, callNext);
-
-      expect(mockRes.statusCode).toBe(422);
-      expect(mockRes.data.message).toBe('Erro de validação');
-      expect(mockNext.called).toBe(false);
-    });
-
-    test('deve rejeitar criador muito longo (mais de 50 caracteres)', () => {
-      mockReq.body = {
-        nome: 'João',
-        sobrenome: 'Silva',
-        email: 'joao@exemplo.com',
-        criador: 'a'.repeat(51)
-      };
-
-      validateCreateAluno(mockReq, mockRes, callNext);
-
-      expect(mockRes.statusCode).toBe(422);
-      expect(mockRes.data.message).toBe('Erro de validação');
-      expect(mockNext.called).toBe(false);
-    });
-
-    test('deve aceitar criador no limite mínimo (6 caracteres)', () => {
-      mockReq.body = {
-        nome: 'João',
-        sobrenome: 'Silva',
-        email: 'joao@exemplo.com',
-        criador: 'admin1'
-      };
-
-      validateCreateAluno(mockReq, mockRes, callNext);
-
-      expect(mockNext.called).toBe(true);
-      expect(mockRes.statusCode).toBeNull();
-    });
-
-    test('deve aceitar criador no limite máximo (50 caracteres)', () => {
-      mockReq.body = {
-        nome: 'João',
-        sobrenome: 'Silva',
-        email: 'joao@exemplo.com',
-        criador: 'a'.repeat(50)
-      };
-
-      validateCreateAluno(mockReq, mockRes, callNext);
-
-      expect(mockNext.called).toBe(true);
-      expect(mockRes.statusCode).toBeNull();
-    });
-
-    test('deve rejeitar criador que não é string', () => {
-      mockReq.body = {
-        nome: 'João',
-        sobrenome: 'Silva',
-        email: 'joao@exemplo.com',
-        criador: 123456
-      };
-
-      validateCreateAluno(mockReq, mockRes, callNext);
-
-      expect(mockRes.statusCode).toBe(422);
-      expect(mockRes.data.message).toBe('Erro de validação');
-      expect(mockNext.called).toBe(false);
-    });
-
-    test('deve aceitar criador undefined (opcional)', () => {
-      mockReq.body = {
-        nome: 'João',
-        sobrenome: 'Silva',
-        email: 'joao@exemplo.com',
-        criador: undefined
-      };
-
-      validateCreateAluno(mockReq, mockRes, callNext);
-
-      expect(mockNext.called).toBe(true);
-      expect(mockRes.statusCode).toBeNull();
-    });
-
-    test('deve aceitar criador null (opcional)', () => {
-      mockReq.body = {
-        nome: 'João',
-        sobrenome: 'Silva',
-        email: 'joao@exemplo.com',
-        criador: null
-      };
-
-      validateCreateAluno(mockReq, mockRes, callNext);
-
-      expect(mockNext.called).toBe(true);
-      expect(mockRes.statusCode).toBeNull();
+      expect(mockReq.validatedData).not.toHaveProperty('criador');
     });
   });
 
@@ -774,7 +665,7 @@ describe('validateCreateAluno middleware', () => {
       expect(mockReq.validatedData.sobrenome).toBe('Silva');
       expect(mockReq.validatedData.email).toBe('joao@escola.com');
       expect(mockReq.validatedData.telefone).toBe('11999999999');
-      expect(mockReq.validatedData.criador).toBe('professor-123');
+      expect(mockReq.validatedData).not.toHaveProperty('criador');
     });
 
     test('não deve definir req.validatedData quando validação falha', () => {
