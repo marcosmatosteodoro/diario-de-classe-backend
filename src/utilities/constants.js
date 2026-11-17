@@ -6,6 +6,15 @@ if (process.env.NODE_ENV !== 'production') {
   env.env(true);
 }
 
+export function requireSecret(value, name) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new Error(
+      `A variável de ambiente ${name} é obrigatória. Defina-a no ambiente (veja o .env.example).`
+    );
+  }
+  return value;
+}
+
 export default class Constants {
   /* Config */
   static env = process.env.NODE_ENV;
@@ -18,9 +27,9 @@ export default class Constants {
 
   static port = process.env.PORT;
 
-  static jwtSecret = process.env.JWT_SECRET_TOKEN || 'dev-secret';
+  static jwtSecret = requireSecret(process.env.JWT_SECRET_TOKEN, 'JWT_SECRET_TOKEN');
 
-  static jwtRefreshSecret = process.env.JWT_REFRESH_TOKEN || `${Constants.jwtSecret}-refresh`;
+  static jwtRefreshSecret = requireSecret(process.env.JWT_REFRESH_TOKEN, 'JWT_REFRESH_TOKEN');
 
   static accessExp = Number(process.env.JWT_EXP_SECONDS) || 60 * 60 * 24 * 7; // 7d
 
