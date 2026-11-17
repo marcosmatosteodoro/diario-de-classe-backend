@@ -52,7 +52,8 @@
   "auth": {
     "login": {
       "unauthorized": "Invalid email or password",
-      "error": "Login error"
+      "error": "Login error",
+      "too_many_attempts": "Too many login attempts. Please try again later."
     },
     "logout": {
       "success": "Logout successful",
