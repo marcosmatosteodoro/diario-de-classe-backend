@@ -1,16 +1,25 @@
 import { jest } from '@jest/globals';
-import { passwordCustoBarato } from '../../../mocks/passwordCustoBarato.js';
+import { CUSTO_BARATO, passwordCustoBarato } from '../../../mocks/passwordCustoBarato.js';
 import util from 'node:util';
 import UserRepository from '../../../../src/repositories/userRepository.js';
 import Constants from '../../../../src/utilities/constants.js';
 import { GetConfiguracaoService } from '../../../../src/services/configuracao/getConfiguracaoService.js';
 
-// O custo de produção é provado em password.test.js; aqui o módulo troca o custo
-// (regravação do legado e hash fictício chamam hashSenha sem params / com SCRYPT_PARAMS).
+// O custo de produção é provado em password.test.js; aqui a regravação do legado
+// (hashSenha sem params) usa custo barato. SCRYPT_PARAMS segue o de produção: o hash
+// fictício é gerado com ele e o teste compara os parâmetros gravados com a constante real.
+// Contador manual: a config do Jest reseta a implementação de jest.fn entre testes.
 const passwordReal = await import('../../../../src/utilities/password.js');
-jest.unstable_mockModule('../../../../src/utilities/password.js', () =>
-  passwordCustoBarato(passwordReal)
-);
+const verificacoes = [];
+jest.unstable_mockModule('../../../../src/utilities/password.js', () => ({
+  ...passwordCustoBarato(passwordReal),
+  SCRYPT_PARAMS: passwordReal.SCRYPT_PARAMS,
+  hashSenha: (senha, params = CUSTO_BARATO) => passwordReal.hashSenha(senha, params),
+  verificarSenha: (senha, gravada) => {
+    verificacoes.push({ senha, gravada });
+    return passwordReal.verificarSenha(senha, gravada);
+  }
+}));
 const { hashSenha, isHash } = await import('../../../../src/utilities/password.js');
 const { LoginService } = await import('../../../../src/services/auth/loginService.js');
 
@@ -589,11 +598,27 @@ describe('LoginService', () => {
         expect(ficticio).not.toHaveBeenCalled();
       });
 
-      test('verificarContraHashFicticio deriva de verdade e descarta o resultado', async () => {
-        const service = new LoginService(UserRepository, 'a@example.com', 'qualquer');
+      describe('a verificação contra o hash fictício é observável na fronteira', () => {
+        const { N, r, p } = passwordReal.SCRYPT_PARAMS;
 
-        await expect(service.verificarContraHashFicticio()).resolves.toBeUndefined();
-        await expect(service.verificarContraHashFicticio()).resolves.toBeUndefined();
+        beforeEach(() => {
+          verificacoes.length = 0;
+        });
+
+        test.each([
+          ['e-mail inexistente', null, 'password123'],
+          ['senha gravada nula', { id: 'u1', senha: null }, 'password123'],
+          ['legado em texto puro errado', { id: 'u1', senha: 'legada-123' }, 'errada']
+        ])('%s: 1 verificação, hash válido com o custo de produção', async (_, user, senha) => {
+          UserRepository.prototype.selectOne = async () => user;
+
+          expect(await LoginService.handle('a@example.com', senha)).toBeNull();
+
+          expect(verificacoes).toHaveLength(1);
+          expect(verificacoes[0].senha).toBe(senha);
+          expect(isHash(verificacoes[0].gravada)).toBe(true);
+          expect(verificacoes[0].gravada.split('$').slice(1, 4)).toEqual([N, r, p].map(String));
+        });
       });
     });
   });
