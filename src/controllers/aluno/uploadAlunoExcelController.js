@@ -10,6 +10,8 @@ import LoggerManager from '../../utilities/loggerManager.js';
 export class UploadAlunoExcelController extends AbstractController {
   constructor(req, res) {
     super(req, res);
+    this.maxAlunos = 500;
+    this.maxCaracteres = 255;
   }
 
   getXLSXDataByFile(file) {
@@ -56,6 +58,23 @@ export class UploadAlunoExcelController extends AbstractController {
     return uniqueData;
   }
 
+  /**
+   * Rejeita a planilha inteira em vez de truncar. A linha reportada e a posicao
+   * 1-based entre as linhas processadas.
+   */
+  validarLimites(data) {
+    if (data.length > this.maxAlunos) {
+      return { chave: 'alunos.upload.too_many' };
+    }
+
+    const indice = data.findIndex(({ nome, sobrenome, email }) => {
+      const nomeCompleto = sobrenome ? `${nome} ${sobrenome}` : nome;
+      return nomeCompleto.length > this.maxCaracteres || String(email).length > this.maxCaracteres;
+    });
+
+    return indice >= 0 ? { chave: 'alunos.upload.line_too_long', linha: indice + 1 } : null;
+  }
+
   isThereRepeatedEmail(data) {
     const emailSet = new Set();
     for (const [index, row] of data.entries()) {
@@ -94,6 +113,13 @@ export class UploadAlunoExcelController extends AbstractController {
       // Lê o arquivo Excel
       const fileData = this.getXLSXDataByFile(file);
       const data = this.prepareData(fileData);
+
+      const limite = this.validarLimites(data);
+      if (limite) {
+        return this.res.status(400).json({
+          message: this.req.t(limite.chave, { max: this.maxAlunos, linha: limite.linha })
+        });
+      }
 
       if (this.isThereRepeatedEmail(data)) {
         return this.res.status(400).json({

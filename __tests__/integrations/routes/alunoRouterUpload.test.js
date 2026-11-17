@@ -19,11 +19,11 @@ import { GetAlunoListController } from '../../../src/controllers/aluno/getAlunoL
 
 const uploadDir = path.join(os.tmpdir(), 'uploads');
 
-function buildApp() {
+function buildApp(t = key => key) {
   const app = express();
   app.use(express.json());
   app.use((req, res, next) => {
-    req.t = key => key;
+    req.t = t;
     next();
   });
   app.use('/', routes);
@@ -170,5 +170,104 @@ describe('POST /alunos/upload com e-mail repetido', () => {
     expect(saida).toContain('aluno.upload.email_duplicado');
     expect(saida).toContain('linha: 3');
     expect(saida.includes(email)).toBe(false);
+  });
+});
+
+describe('POST /alunos/upload com teto de linhas e caracteres', () => {
+  let app;
+  const originals = {};
+  let arquivoRecebido;
+
+  beforeEach(() => {
+    app = buildApp((key, opcoes) => (opcoes ? `${key}|${JSON.stringify(opcoes)}` : key));
+    originals.execute = UploadAlunoExcelController.prototype.execute;
+    originals.selectOne = AlunoRepository.prototype.selectOne;
+    originals.create = CreateAlunoService.handle;
+    originals.update = UpdateAlunoService.handle;
+    originals.list = GetAlunoListController.handle;
+    arquivoRecebido = undefined;
+    UploadAlunoExcelController.prototype.execute = jest.fn(function execute(...args) {
+      arquivoRecebido = this.req.file?.path;
+      return originals.execute.apply(this, args);
+    });
+    AlunoRepository.prototype.selectOne = jest.fn().mockResolvedValue(null);
+    CreateAlunoService.handle = jest.fn().mockResolvedValue({ id: 'aluno-1' });
+    UpdateAlunoService.handle = jest.fn();
+    GetAlunoListController.handle = jest.fn(async (req, res) => res.status(200).json([]));
+  });
+
+  afterEach(() => {
+    if (arquivoRecebido) fs.rmSync(arquivoRecebido, { force: true });
+    UploadAlunoExcelController.prototype.execute = originals.execute;
+    AlunoRepository.prototype.selectOne = originals.selectOne;
+    CreateAlunoService.handle = originals.create;
+    UpdateAlunoService.handle = originals.update;
+    GetAlunoListController.handle = originals.list;
+  });
+
+  const linhasValidas = quantidade =>
+    Array.from({ length: quantidade }, (_, i) => [`Aluno${i} Teste`, `aluno${i}@example.com`]);
+
+  const enviar = linhas =>
+    request(app)
+      .post('/alunos/upload')
+      .set('Authorization', token('admin'))
+      .attach('file', planilhaXlsx(linhas), 'alunos.xlsx');
+
+  const nadaGravado = () => {
+    expect(AlunoRepository.prototype.selectOne).not.toHaveBeenCalled();
+    expect(CreateAlunoService.handle).not.toHaveBeenCalled();
+    expect(UpdateAlunoService.handle).not.toHaveBeenCalled();
+  };
+
+  test('501 alunos recusam a planilha inteira com too_many', async () => {
+    const response = await enviar(linhasValidas(501));
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ message: 'alunos.upload.too_many|{"max":500}' });
+    nadaGravado();
+  });
+
+  test('500 alunos seguem o fluxo normal', async () => {
+    const response = await enviar(linhasValidas(500));
+
+    expect(response.status).toBe(200);
+    expect(CreateAlunoService.handle).toHaveBeenCalledTimes(500);
+  });
+
+  test('nome completo com 256 caracteres recusa com a linha certa', async () => {
+    const linhas = linhasValidas(3);
+    linhas[1][0] = `Ana ${'x'.repeat(252)}`;
+    expect(linhas[1][0]).toHaveLength(256);
+
+    const response = await enviar(linhas);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ message: 'alunos.upload.line_too_long|{"max":500,"linha":2}' });
+    nadaGravado();
+  });
+
+  test('e-mail com 256 caracteres recusa a planilha', async () => {
+    const linhas = linhasValidas(3);
+    linhas[2][1] = `${'x'.repeat(256 - '@example.com'.length)}@example.com`;
+    expect(linhas[2][1]).toHaveLength(256);
+
+    const response = await enviar(linhas);
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ message: 'alunos.upload.line_too_long|{"max":500,"linha":3}' });
+    nadaGravado();
+  });
+
+  test('nome completo e e-mail com 255 caracteres seguem o fluxo normal', async () => {
+    const nome = `Ana ${'x'.repeat(251)}`;
+    const email = `${'x'.repeat(255 - '@example.com'.length)}@example.com`;
+    expect(nome).toHaveLength(255);
+    expect(email).toHaveLength(255);
+
+    const response = await enviar([[nome, email]]);
+
+    expect(response.status).toBe(200);
+    expect(CreateAlunoService.handle).toHaveBeenCalledTimes(1);
   });
 });
