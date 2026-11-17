@@ -1,5 +1,6 @@
 import AbstractController from '../abstractController.js';
 import { CreateAulaService } from '../../services/aula/createAulaService.js';
+import { GetContratoService } from '../../services/contrato/getContratoService.js';
 import { IsAulaExistsService } from '../../services/aula/isAulaExistsService.js';
 import { UpdateAulasContratoService } from '../../services/contrato/updateAulasContratoService.js';
 
@@ -10,6 +11,15 @@ export class CreateAulaController extends AbstractController {
 
   async execute() {
     try {
+      const contratoDoAluno = await GetContratoService.handle(this.req.body.idContrato, {
+        additionalWhere: { idAluno: this.req.body.idAluno }
+      });
+      if (!contratoDoAluno) {
+        return this.res.status(422).json({
+          message: this.req.t('aulas.create.contrato_nao_pertence_ao_aluno')
+        });
+      }
+
       if (await IsAulaExistsService.handle(this.req.body)) {
         return this.res.status(422).json({
           message: this.req.t('aulas.create.ids_exists')

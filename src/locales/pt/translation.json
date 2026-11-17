@@ -188,7 +188,8 @@
     "create": {
       "success": "Aula criada com sucesso",
       "error": "Erro ao criar aula",
-      "ids_exists": "Já existe uma aula para este dia"
+      "ids_exists": "Já existe uma aula para este dia",
+      "contrato_nao_pertence_ao_aluno": "O contrato informado não pertence ao aluno"
     },
     "update": {
       "success": "Aula atualizada com sucesso",
