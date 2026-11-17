@@ -20,12 +20,7 @@ export class CreateAulaController extends AbstractAulaController {
         return this.res.status(403).json({ message: this.req.t('api.errors.forbidden') });
       }
 
-      const { idContrato, idAluno } = body;
-      const contratoDoAluno =
-        idContrato && idAluno
-          ? await GetContratoService.handle(idContrato, { additionalWhere: { idAluno } })
-          : null;
-      if (!contratoDoAluno) {
+      if (!(await this.isContratoDoAluno(body))) {
         return this.res.status(422).json({
           message: this.req.t('aulas.create.contrato_nao_pertence_ao_aluno')
         });
@@ -57,6 +52,11 @@ export class CreateAulaController extends AbstractAulaController {
       AND: [{ aulas: { some: { idProfessor: this.req.user.id } } }, { id: idContrato, idAluno }]
     });
     return Array.isArray(contratos) && contratos.length > 0;
+  }
+
+  async isContratoDoAluno({ idContrato, idAluno }) {
+    if (!idContrato || !idAluno) return false;
+    return !!(await GetContratoService.handle(idContrato, { additionalWhere: { idAluno } }));
   }
 
   static async handle(req, res) {
