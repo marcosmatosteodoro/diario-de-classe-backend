@@ -18,6 +18,7 @@ import { GetProjecaoCronogramaController } from '../controllers/cronograma/getPr
 import { GetProjecaoCronogramaExcelController } from '../controllers/cronograma/getProjecaoCronogramaExcelController.js';
 import { GetCronogramaListByAlunoController } from '../controllers/cronograma/getCronogramaListByAlunoController.js';
 // Middlewares de validação
+import adminOnly from '../middlewares/adminOnly.js';
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateAluno } from '../middlewares/aluno/validateCreateAluno.js';
 import { validateUpdateAluno } from '../middlewares/aluno/validateUpdateAluno.js';
@@ -60,7 +61,13 @@ router.get('/:id/contratos', validateId, GetContratosByAlunoController.handle);
 router.get('/:id/aulas', validateId, GetAulasByAlunoController.handle);
 
 // POST /api/alunos/upload - Gerar alunos de acordo com lista de excel
-router.post('/upload', upload.single('file'), validateExcelFile, UploadAlunoExcelController.handle);
+router.post(
+  '/upload',
+  adminOnly,
+  upload.single('file'),
+  validateExcelFile,
+  UploadAlunoExcelController.handle
+);
 
 // GET /api/alunos/:id/cronograma - Cronograma do livro em curso (a "planilha")
 router.get('/:id/cronograma', validateId, GetProjecaoCronogramaController.handle);
