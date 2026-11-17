@@ -153,6 +153,13 @@ describe('UpdateDisponibilidadeProfessorController', () => {
       expect(writes.create).toEqual([{ diaSemana: 'seg', horaInicial: '08:00', userId: 'u1' }]);
     });
 
+    test('criação com userId null no body grava o userId da rota', async () => {
+      await run([{ diaSemana: 'seg', userId: null }]);
+
+      expect(res._status).toBe(200);
+      expect(writes.create).toEqual([{ diaSemana: 'seg', userId: 'u1' }]);
+    });
+
     test('criação com userId igual ao da rota e update próprio seguem normalmente', async () => {
       await run([
         { diaSemana: 'seg', userId: 'u1' },
