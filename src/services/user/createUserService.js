@@ -1,6 +1,7 @@
 import AbstractService from '../abstractService.js';
 import UserRepository from '../../repositories/userRepository.js';
 import { getNomeCompleto } from '../../utilities/getNomeCompleto.js';
+import { hashSenha } from '../../utilities/password.js';
 
 export class CreateUserService extends AbstractService {
   constructor(Repository, data) {
@@ -9,6 +10,11 @@ export class CreateUserService extends AbstractService {
   }
 
   async execute() {
+    const senha =
+      typeof this.data.senha === 'string' && this.data.senha !== ''
+        ? await hashSenha(this.data.senha)
+        : this.data.senha;
+
     return await this.repository.create(
       {
         nome: this.data.nome,
@@ -16,7 +22,7 @@ export class CreateUserService extends AbstractService {
         nomeCompleto: getNomeCompleto(this.data),
         email: this.data.email,
         telefone: this.data.telefone,
-        senha: this.data.senha,
+        senha,
         resetarSenha: this.data.resetarSenha,
         permissao: this.data.permissao,
         idiomas: this.data.idiomas

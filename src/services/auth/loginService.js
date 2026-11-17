@@ -4,6 +4,13 @@ import { createJwt } from '../../utilities/createJwt.js';
 import Constants from '../../utilities/constants.js';
 import { GetConfiguracaoService } from '../configuracao/getConfiguracaoService.js';
 import { generatePayload } from '../../utilities/generatePayload.js';
+import LoggerManager from '../../utilities/loggerManager.js';
+import {
+  hashSenha,
+  isHash,
+  textoIgualEmTempoConstante,
+  verificarSenha
+} from '../../utilities/password.js';
 
 export class LoginService extends AbstractService {
   constructor(Repository, email, senha) {
@@ -21,7 +28,7 @@ export class LoginService extends AbstractService {
       where: { email: this.email }
     });
 
-    if (!user || user.senha !== this.senha) {
+    if (!user || !(await this.senhaConfere(user))) {
       return null;
     }
 
@@ -45,6 +52,42 @@ export class LoginService extends AbstractService {
       user,
       configuracao
     };
+  }
+
+  /**
+   * Fail secure: qualquer exceção na verificação nega o login.
+   * Senha gravada em texto puro (legado) é comparada uma última vez e, se
+   * bater, regravada como hash; falha na regravação não derruba o login.
+   * @returns {Promise<boolean>}
+   */
+  async senhaConfere(user) {
+    try {
+      if (isHash(user.senha)) {
+        return await verificarSenha(this.senha, user.senha);
+      }
+
+      if (!textoIgualEmTempoConstante(user.senha, this.senha)) {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+
+    await this.regravarComoHash(user);
+    return true;
+  }
+
+  async regravarComoHash(user) {
+    try {
+      const senha = await hashSenha(this.senha);
+      await this.repository.update({ id: user.id }, { senha }, { select: { id: true } });
+    } catch (error) {
+      // Só name/code: a mensagem de erro do ORM pode embutir os argumentos da chamada.
+      LoggerManager.error('[LoginService] Falha ao regravar credencial como hash', {
+        name: error?.name,
+        code: error?.code
+      });
+    }
   }
 
   buildToken(user) {

@@ -1,6 +1,7 @@
 import { CreateUserService } from '../../../../src/services/user/createUserService.js';
 import UserRepository from '../../../../src/repositories/userRepository.js';
 import AbstractService from '../../../../src/services/abstractService.js';
+import { isHash, verificarSenha } from '../../../../src/utilities/password.js';
 
 describe('CreateUserService', () => {
   describe('Inicialização', testInicializacao);
@@ -96,6 +97,10 @@ function testExecuteMethod() {
 
     expect(service.repository.createCalls).toHaveLength(1);
     expect(service.repository.createCalls[0].data.nomeCompleto).toBe('João Silva');
+    const gravada = service.repository.createCalls[0].data.senha;
+    expect(gravada).not.toBe('senha123');
+    expect(isHash(gravada)).toBe(true);
+    expect(await verificarSenha('senha123', gravada)).toBe(true);
     expect(service.repository.createCalls[0]).toEqual({
       data: {
         nome: mockData.nome,
@@ -103,7 +108,7 @@ function testExecuteMethod() {
         nomeCompleto: 'João Silva',
         email: mockData.email,
         telefone: mockData.telefone,
-        senha: mockData.senha,
+        senha: gravada,
         resetarSenha: mockData.resetarSenha,
         permissao: mockData.permissao,
         idiomas: undefined
