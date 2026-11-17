@@ -30,6 +30,11 @@ const BODY_LIMIT = '3mb';
 
 const app = express();
 
+// Atrás de proxy, só com TRUST_PROXY definido o req.ip passa a ser o IP do cliente.
+if (Constants.trustProxy !== undefined) {
+  app.set('trust proxy', Constants.trustProxy);
+}
+
 if (!Constants.isProduction) {
   app.use(
     morgan('combined', {

@@ -53,7 +53,8 @@
   "auth": {
     "login": {
       "unauthorized": "Email ou senha inválidos",
-      "error": "Erro ao fazer login"
+      "error": "Erro ao fazer login",
+      "too_many_attempts": "Muitas tentativas de login. Tente novamente mais tarde."
     },
     "logout": {
       "success": "Logout realizado com sucesso",

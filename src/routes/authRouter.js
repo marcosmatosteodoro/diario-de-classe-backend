@@ -5,12 +5,13 @@ import { LogoutController } from '../controllers/auth/logoutController.js';
 import { RefreshTokenController } from '../controllers/auth/refreshTokenController.js';
 // Middlewares de validação
 import { validateLoginParams } from '../middlewares/auth/validateLoginParams.js';
+import { limitLoginAttempts } from '../middlewares/auth/limitLoginAttempts.js';
 import { validateRefreshTokenParams } from '../middlewares/auth/validateRefreshTokenParams.js';
 
 const router = express.Router();
 
 // POST /auth/login
-router.post('/login', validateLoginParams, LoginController.handle);
+router.post('/login', validateLoginParams, limitLoginAttempts, LoginController.handle);
 
 // POST /auth/logout
 router.post('/logout', validateRefreshTokenParams, LogoutController.handle);

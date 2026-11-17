@@ -289,3 +289,14 @@ model CronogramaAluno {
   @@index([idContrato])
   @@map("cronogramas_aluno")
 }
+
+model TentativaLogin {
+  id              String   @id @default(cuid())
+  chave           String   @unique // IP ou IP + hash do e-mail normalizado (sem e-mail em claro)
+  contagem        Int
+  expiraEm        DateTime
+  dataCriacao     DateTime @default(now())
+  dataAtualizacao DateTime @updatedAt
+
+  @@map("tentativas_login")
+}
