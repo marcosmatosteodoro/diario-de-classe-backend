@@ -9,7 +9,7 @@ export class GetDiaAulaListByAlunoController extends AbstractDiaAulaController {
 
   async execute() {
     try {
-      if (!this.req.user.isAdmin && this.req.user.id == null) {
+      if (!this.req.user.isAdmin && !this.req.user.id) {
         return this.res.status(403).json({ message: this.req.t('api.errors.forbidden') });
       }
 

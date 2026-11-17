@@ -6,7 +6,7 @@ import { UpdateAulasContratoService } from '../../services/contrato/updateAulasC
 export class CreateAulaController extends AbstractAulaController {
   async execute() {
     try {
-      if (!this.req.user.isAdmin && this.req.user.id == null) {
+      if (!this.req.user.isAdmin && !this.req.user.id) {
         return this.res.status(403).json({ message: this.req.t('api.errors.forbidden') });
       }
 
