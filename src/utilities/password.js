@@ -12,7 +12,8 @@ export const SCRYPT_PARAMS = Object.freeze({ N: 2 ** 17, r: 8, p: 1 });
 
 // Teto do custo AGREGADO aceito ao ler parâmetros gravados (não por eixo): um valor
 // adulterado no banco não força mais memória nem CPU do que o padrão de produção
-// já usa (memória: 128·N·r ≤ 256 MiB; CPU: N·r·p ≤ 2× a do padrão).
+// já usa (CPU: N·r·p ≤ 2× a do padrão; memória: 128·N·r ≤ 256 MiB). Hoje o teto de
+// CPU já implica o de memória; o de memória é a defesa para quando MAX_CUSTO_CPU mudar.
 const MAX_MEMORIA_BYTES = 256 * 1024 * 1024;
 const MAX_CUSTO_CPU = 2 * SCRYPT_PARAMS.N * SCRYPT_PARAMS.r * SCRYPT_PARAMS.p;
 const NUMERO_DECIMAL = /^\d+$/;
@@ -55,7 +56,7 @@ export function isHash(gravada) {
 
 /**
  * @param {string} senha
- * @param {{N:number,r:number,p:number}} [params] custo; os testes passam um custo barato
+ * @param {{N:number,r:number,p:number}} [params] custo scrypt; padrão SCRYPT_PARAMS
  * @returns {Promise<string>} hash autodescritivo com salt aleatório por senha
  */
 export async function hashSenha(senha, params = SCRYPT_PARAMS) {

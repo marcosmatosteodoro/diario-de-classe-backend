@@ -12,7 +12,10 @@ import { textoIgualEmTempoConstante } from '../../utilities/textoIgualEmTempoCon
 // não derivariam scrypt (usuário inexistente, senha gravada inválida, legado errado).
 let hashFicticio;
 const obterHashFicticio = () => {
-  hashFicticio ??= hashSenha('senha-ficticia-sem-uso', SCRYPT_PARAMS);
+  hashFicticio ??= hashSenha('senha-ficticia-sem-uso', SCRYPT_PARAMS).catch(error => {
+    hashFicticio = undefined;
+    throw error;
+  });
   return hashFicticio;
 };
 
@@ -87,9 +90,19 @@ export class LoginService extends AbstractService {
     return true;
   }
 
-  /** Paga uma derivação scrypt e descarta o resultado (anti enumeração por tempo). */
+  /**
+   * Paga uma derivação scrypt e descarta o resultado (anti enumeração por tempo).
+   * Nunca lança: uma falha aqui não pode virar resposta diferente do 401.
+   */
   async verificarContraHashFicticio() {
-    await verificarSenha(this.senha, await obterHashFicticio());
+    try {
+      await verificarSenha(this.senha, await obterHashFicticio());
+    } catch (error) {
+      LoggerManager.error('[LoginService] Falha ao verificar contra o hash fictício', {
+        name: error?.name,
+        code: error?.code
+      });
+    }
   }
 
   async regravarComoHash(user) {
