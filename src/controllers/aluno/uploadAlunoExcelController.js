@@ -59,7 +59,7 @@ export class UploadAlunoExcelController extends AbstractController {
   }
 
   /**
-   * Rejeita a planilha inteira em vez de truncar. A linha reportada e a posicao
+   * Rejeita a planilha inteira em vez de truncar. A linha reportada é a posição
    * 1-based entre as linhas processadas.
    */
   validarLimites(data) {

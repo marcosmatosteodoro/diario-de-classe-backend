@@ -2,7 +2,7 @@ import multer from 'multer';
 import os from 'os';
 import path from 'path';
 
-export const tamanhoMaximoPlanilha = 10 * 1024 * 1024;
+const tamanhoMaximoPlanilha = 10 * 1024 * 1024;
 
 // Usa /tmp tanto em produção quanto local
 export const uploadDir = path.join(os.tmpdir(), 'uploads');
