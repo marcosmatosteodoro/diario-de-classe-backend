@@ -1,7 +1,15 @@
-import { CreateUserService } from '../../../../src/services/user/createUserService.js';
+import { jest } from '@jest/globals';
+import { passwordCustoBarato } from '../../../mocks/passwordCustoBarato.js';
 import UserRepository from '../../../../src/repositories/userRepository.js';
 import AbstractService from '../../../../src/services/abstractService.js';
-import { isHash, verificarSenha } from '../../../../src/utilities/password.js';
+
+// O service chama hashSenha sem params; o módulo troca o custo (provado em password.test.js).
+const passwordReal = await import('../../../../src/utilities/password.js');
+jest.unstable_mockModule('../../../../src/utilities/password.js', () =>
+  passwordCustoBarato(passwordReal)
+);
+const { isHash, verificarSenha } = await import('../../../../src/utilities/password.js');
+const { CreateUserService } = await import('../../../../src/services/user/createUserService.js');
 
 describe('CreateUserService', () => {
   describe('Inicialização', testInicializacao);
