@@ -1,4 +1,8 @@
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { UploadConteudoLivroExcelController } from '../../../../src/controllers/conteudoLivro/uploadConteudoLivroExcelController.js';
+import { planilhaXlsx } from '../../../mocks/planilhaXlsx.js';
 
 /**
  * Cobre a leitura da planilha (prepareData) e os limites (validarConteudos),
@@ -11,6 +15,34 @@ describe('UploadConteudoLivroExcelController', () => {
     const req = { params: { id: 'livro-1' }, body: {}, t: key => key };
     const res = { status: () => res, json: () => res };
     controller = new UploadConteudoLivroExcelController(req, res);
+  });
+
+  describe('getXLSXDataByFile', () => {
+    let dir;
+
+    beforeEach(() => {
+      dir = fs.mkdtempSync(path.join(os.tmpdir(), 'upload-livro-'));
+    });
+
+    afterEach(() => {
+      fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('lê uma planilha .xlsx real e devolve array de arrays', () => {
+      const arquivo = path.join(dir, 'conteudos.xlsx');
+      fs.writeFileSync(
+        arquivo,
+        planilhaXlsx([
+          ['Título', 'Descrição'],
+          ['Unit 1', 'Greetings']
+        ])
+      );
+
+      expect(controller.getXLSXDataByFile(arquivo)).toEqual([
+        ['Título', 'Descrição'],
+        ['Unit 1', 'Greetings']
+      ]);
+    });
   });
 
   describe('prepareData', () => {

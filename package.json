@@ -60,7 +60,7 @@
     "multer": "^2.0.2",
     "prisma": "^6.18.0",
     "response-time": "^2.3.4",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@eslint/js": "^9.38.0",

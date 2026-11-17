@@ -1,3 +1,4 @@
+import fs from 'fs';
 import XLSX from 'xlsx';
 import AbstractController from '../abstractController.js';
 import AlunoRepository from '../../repositories/alunoRepository.js';
@@ -12,7 +13,7 @@ export class UploadAlunoExcelController extends AbstractController {
 
   getXLSXDataByFile(file) {
     // Lê o arquivo Excel
-    const workbook = XLSX.readFile(file);
+    const workbook = XLSX.read(fs.readFileSync(file), { type: 'buffer' });
     // Pega a primeira planilha
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
