@@ -25,6 +25,11 @@ try {
   throw error;
 }
 
+const corsOptions = {
+  origin: Constants.corsOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE']
+};
+
 const app = express();
 
 if (!Constants.isProduction) {
@@ -54,7 +59,7 @@ app.use(compress()); // Habilita compressão gzip/deflate nas respostas
 app.use(methodOverride()); // Permite override de métodos HTTP (PUT, DELETE via POST)
 app.use(cookieParser()); // Habilita parsing de cookies nas requisições
 app.use(helmet()); // Adiciona headers de segurança para proteger a aplicação
-app.use(cors()); // Habilita Cross-Origin Resource Sharing (requisições entre domínios)
+app.use(cors(corsOptions)); // Restringe o CORS às origens configuradas em CORS_ORIGINS
 app.use(cleanRequest); // Middleware customizado para limpeza/sanitização das requisições
 
 // Definir rotas

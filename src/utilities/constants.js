@@ -1,3 +1,4 @@
+import { URL } from 'node:url';
 import env from 'custom-env';
 
 // Só carrega custom-env em desenvolvimento/test
@@ -15,6 +16,42 @@ export function requireSecret(value, name) {
   return value;
 }
 
+const CORS_ORIGINS_PADRAO_DEV = ['http://localhost:3001'];
+
+function erroCorsOrigins(detalhe) {
+  return new Error(`A variável de ambiente CORS_ORIGINS ${detalhe} (veja o .env.example).`);
+}
+
+function ehOrigemExata(entrada) {
+  try {
+    const url = new URL(entrada);
+    return ['http:', 'https:'].includes(url.protocol) && url.origin === entrada;
+  } catch {
+    return false;
+  }
+}
+
+export function parseCorsOrigins(value, isProduction) {
+  const origens = String(value ?? '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(item => item !== '');
+
+  if (origens.length === 0) {
+    if (isProduction) {
+      throw erroCorsOrigins('é obrigatória em produção. Defina-a no ambiente');
+    }
+    return [...CORS_ORIGINS_PADRAO_DEV];
+  }
+
+  if (!origens.every(ehOrigemExata)) {
+    throw erroCorsOrigins(
+      'deve conter apenas origens exatas (esquema://host[:porta], sem caminho, barra final ou *)'
+    );
+  }
+  return origens;
+}
+
 export default class Constants {
   /* Config */
   static env = process.env.NODE_ENV;
@@ -22,6 +59,8 @@ export default class Constants {
   static envCheck = process.env.ENV_CHECK;
 
   static isProduction = String(Constants.env).toLowerCase().startsWith('prod');
+
+  static corsOrigins = parseCorsOrigins(process.env.CORS_ORIGINS, Constants.isProduction);
 
   static serviceName = process.env.NAME;
 
