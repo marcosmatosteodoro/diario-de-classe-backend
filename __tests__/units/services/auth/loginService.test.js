@@ -1,12 +1,19 @@
 import { jest } from '@jest/globals';
+import { passwordCustoBarato } from '../../../mocks/passwordCustoBarato.js';
 import util from 'node:util';
-import { hashSenha, isHash } from '../../../../src/utilities/password.js';
-import { LoginService } from '../../../../src/services/auth/loginService.js';
 import UserRepository from '../../../../src/repositories/userRepository.js';
 import Constants from '../../../../src/utilities/constants.js';
 import { GetConfiguracaoService } from '../../../../src/services/configuracao/getConfiguracaoService.js';
 
-// Um único hash no custo real de produção, calculado uma vez para a suíte.
+// O custo de produção é provado em password.test.js; aqui o módulo troca o custo
+// (regravação do legado e hash fictício chamam hashSenha sem params / com SCRYPT_PARAMS).
+const passwordReal = await import('../../../../src/utilities/password.js');
+jest.unstable_mockModule('../../../../src/utilities/password.js', () =>
+  passwordCustoBarato(passwordReal)
+);
+const { hashSenha, isHash } = await import('../../../../src/utilities/password.js');
+const { LoginService } = await import('../../../../src/services/auth/loginService.js');
+
 let SENHA_HASH;
 
 beforeAll(async () => {
@@ -545,6 +552,49 @@ describe('LoginService', () => {
       UserRepository.prototype.selectOne = async () => ({ id: 'u1', senha: null });
 
       expect(await LoginService.handle('a@example.com', 'password123')).toBeNull();
+    });
+
+    describe('custo igualado nos caminhos de falha (hash ficticio)', () => {
+      let ficticio;
+
+      beforeEach(() => {
+        ficticio = jest.spyOn(LoginService.prototype, 'verificarContraHashFicticio');
+      });
+
+      test('e-mail inexistente paga a derivação 1 vez', async () => {
+        UserRepository.prototype.selectOne = async () => null;
+
+        expect(await LoginService.handle('x@example.com', 'password123')).toBeNull();
+        expect(ficticio).toHaveBeenCalledTimes(1);
+      });
+
+      test('senha gravada nula paga a derivação 1 vez', async () => {
+        UserRepository.prototype.selectOne = async () => ({ id: 'u1', senha: null });
+
+        expect(await LoginService.handle('a@example.com', 'password123')).toBeNull();
+        expect(ficticio).toHaveBeenCalledTimes(1);
+      });
+
+      test('legado em texto puro errado paga a derivação 1 vez', async () => {
+        UserRepository.prototype.selectOne = async () => ({ id: 'u1', senha: 'legada-123' });
+
+        expect(await LoginService.handle('a@example.com', 'errada')).toBeNull();
+        expect(ficticio).toHaveBeenCalledTimes(1);
+      });
+
+      test('hash correto não paga a derivação extra', async () => {
+        UserRepository.prototype.selectOne = async () => ({ id: 'u1', senha: SENHA_HASH });
+
+        expect(await LoginService.handle('a@example.com', 'password123')).not.toBeNull();
+        expect(ficticio).not.toHaveBeenCalled();
+      });
+
+      test('verificarContraHashFicticio deriva de verdade e descarta o resultado', async () => {
+        const service = new LoginService(UserRepository, 'a@example.com', 'qualquer');
+
+        await expect(service.verificarContraHashFicticio()).resolves.toBeUndefined();
+        await expect(service.verificarContraHashFicticio()).resolves.toBeUndefined();
+      });
     });
   });
 });
