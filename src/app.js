@@ -18,7 +18,12 @@ import i18nMiddleware from './middlewares/i18n.js';
 
 import { InitialSetting } from './InitialSetting.js';
 
-InitialSetting.handle();
+try {
+  await InitialSetting.handle();
+} catch (error) {
+  LoggerManager.error('Falha no setup de inicialização', error);
+  throw error;
+}
 
 // Limite único do corpo JSON e urlencoded; dimensionado pelo salvamento do contrato com até 1.800 aulas
 const BODY_LIMIT = '3mb';

@@ -1,9 +1,9 @@
 import { CreateConfiguracaoService } from './services/configuracao/createConfiguracaoService.js';
-import { DeleteConfiguracaoService } from './services/configuracao/deleteConfiguracaoService.js';
 import { GetConfiguracaoService } from './services/configuracao/getConfiguracaoService.js';
+import { SubstituirConfiguracaoService } from './services/configuracao/substituirConfiguracaoService.js';
 import { CreateDiaDeFuncionamentoService } from './services/diaDeFuncionamento/createDiaDeFuncionamentoService.js';
-import { DeleteDiaDeFuncionamentoService } from './services/diaDeFuncionamento/deleteDiaDeFuncionamentoService.js';
 import { GetDiaDeFuncionamentoListService } from './services/diaDeFuncionamento/getDiaDeFuncionamentoListService.js';
+import { SubstituirDiasDeFuncionamentoService } from './services/diaDeFuncionamento/substituirDiasDeFuncionamentoService.js';
 
 export class InitialSetting {
   constructor() {
@@ -16,7 +16,6 @@ export class InitialSetting {
   }
 
   async start() {
-    const isDiaDeFuncionamentoExists = await this.isDiaDeFuncionamentoExists();
     const isConfiguracaoExists = await this.isConfiguracaoExists();
 
     if (!isConfiguracaoExists) {
@@ -26,6 +25,10 @@ export class InitialSetting {
     if (!this.isConfiguracaoValid()) {
       await this.fixConfiguracao();
     }
+
+    // Os dias são lidos depois da configuração resolvida: remover uma
+    // configuração remove seus dias em cascata, e a leitura precisa refletir isso.
+    const isDiaDeFuncionamentoExists = await this.isDiaDeFuncionamentoExists();
 
     if (!isDiaDeFuncionamentoExists) {
       await this.createDiaDeFuncionamento();
@@ -42,18 +45,21 @@ export class InitialSetting {
     return diasDeFuncionamento && diasDeFuncionamento.length > 0;
   }
 
+  diasPadrao() {
+    return this.dias.map(dia => ({
+      diaSemana: dia,
+      horaInicial: '08:00',
+      horaFinal: '18:00',
+      ativo: true,
+      configuracaoId: this.configuracao.id
+    }));
+  }
+
   async createDiaDeFuncionamento() {
-    const dias = this.dias;
     const diasDeFuncionamento = [];
 
-    for (const dia of dias) {
-      const diaDeFuncionamento = await CreateDiaDeFuncionamentoService.handle({
-        diaSemana: dia,
-        horaInicial: '08:00',
-        horaFinal: '18:00',
-        ativo: true,
-        configuracaoId: this.configuracao.id
-      });
+    for (const dia of this.diasPadrao()) {
+      const diaDeFuncionamento = await CreateDiaDeFuncionamentoService.handle(dia);
 
       diasDeFuncionamento.push(diaDeFuncionamento);
     }
@@ -81,13 +87,12 @@ export class InitialSetting {
     );
 
     if (this.diaDeFuncionamentoError === '!==7' || this.diaDeFuncionamentoError === 'diaInvalido') {
-      const diasDeFuncionamento = this.diasDeFuncionamento;
+      const ids = this.diasDeFuncionamento.map(dia => dia.id);
 
-      for (const diaDeFuncionamento of diasDeFuncionamento) {
-        await DeleteDiaDeFuncionamentoService.handle(diaDeFuncionamento.id);
-      }
-
-      await this.createDiaDeFuncionamento();
+      this.diasDeFuncionamento = await SubstituirDiasDeFuncionamentoService.handle(
+        ids,
+        this.diasPadrao()
+      );
     }
   }
 
@@ -124,13 +129,16 @@ export class InitialSetting {
 
   async fixConfiguracao() {
     if (this.configuracaoError === 'maisDeUmaConfiguracao') {
-      const configuracoes = this.configuracoes;
+      const ids = this.configuracoes.map(configuracao => configuracao.id);
 
-      for (const configuracao of configuracoes) {
-        await DeleteConfiguracaoService.handle(configuracao.id);
-      }
+      const newConfiguracao = await SubstituirConfiguracaoService.handle(ids, {
+        duracaoAula: 40,
+        tolerancia: 10
+      });
 
-      await this.createConfiguracao();
+      this.log(`Configuração inicial recriada com sucesso${JSON.stringify(newConfiguracao)}`);
+      this.configuracao = newConfiguracao;
+      this.configuracoes = [newConfiguracao];
     }
   }
 
