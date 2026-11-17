@@ -1,12 +1,12 @@
-import fs from 'fs';
-import { randomUUID } from 'crypto';
-import os from 'os';
+import { randomBytes, randomUUID } from 'crypto';
 import path from 'path';
 import util from 'util';
 import express from 'express';
 import request from 'supertest';
 import { jest } from '@jest/globals';
 import { planilhaXlsx } from '../../mocks/planilhaXlsx.js';
+import { arquivosComConteudo, registroDeEnvios } from '../../mocks/arquivosUpload.js';
+import { uploadDir } from '../../../src/utilities/planilhaUpload.js';
 import routes from '../../../src/routes.js';
 import Constants from '../../../src/utilities/constants.js';
 import { createJwt } from '../../../src/utilities/createJwt.js';
@@ -16,8 +16,6 @@ import { UpdateAlunoService } from '../../../src/services/aluno/updateAlunoServi
 import { UploadAlunoExcelController } from '../../../src/controllers/aluno/uploadAlunoExcelController.js';
 import LoggerManager from '../../../src/utilities/loggerManager.js';
 import { GetAlunoListController } from '../../../src/controllers/aluno/getAlunoListController.js';
-
-const uploadDir = path.join(os.tmpdir(), 'uploads');
 
 function buildApp(t = key => key) {
   const app = express();
@@ -32,21 +30,11 @@ function buildApp(t = key => key) {
 
 const token = role => `Bearer ${createJwt({ sub: `${role}-1`, role }, Constants.jwtSecret)}`;
 
-const arquivosComConteudo = buffer =>
-  fs.existsSync(uploadDir)
-    ? fs.readdirSync(uploadDir).filter(nome => {
-        try {
-          return fs.readFileSync(path.join(uploadDir, nome)).equals(buffer);
-        } catch {
-          return false;
-        }
-      })
-    : [];
-
 describe('POST /alunos/upload (router real de src/routes.js)', () => {
   let app;
   const originals = {};
   let arquivoRecebido;
+  const envios = registroDeEnvios();
 
   beforeEach(() => {
     app = buildApp();
@@ -67,7 +55,7 @@ describe('POST /alunos/upload (router real de src/routes.js)', () => {
   });
 
   afterEach(() => {
-    if (arquivoRecebido) fs.rmSync(arquivoRecebido, { force: true });
+    envios.limpar();
     UploadAlunoExcelController.prototype.execute = originals.execute;
     AlunoRepository.prototype.selectOne = originals.selectOne;
     CreateAlunoService.handle = originals.create;
@@ -76,7 +64,7 @@ describe('POST /alunos/upload (router real de src/routes.js)', () => {
   });
 
   test('upload de alunos exige admin: professor recebe 403 e nenhum arquivo é gravado', async () => {
-    const conteudo = planilhaXlsx([['Ana Lima', `${randomUUID()}@example.com`]]);
+    const conteudo = envios.registrar(planilhaXlsx([['Ana Lima', `${randomUUID()}@example.com`]]));
 
     const response = await request(app)
       .post('/alunos/upload')
@@ -94,7 +82,11 @@ describe('POST /alunos/upload (router real de src/routes.js)', () => {
     const response = await request(app)
       .post('/alunos/upload')
       .set('Authorization', token('admin'))
-      .attach('file', planilhaXlsx([['Ana Lima', 'ana.lima@example.com']]), 'alunos.xlsx');
+      .attach(
+        'file',
+        envios.registrar(planilhaXlsx([['Ana Lima', `${randomUUID()}@example.com`]])),
+        'alunos.xlsx'
+      );
 
     expect(response.status).toBe(200);
     expect(UploadAlunoExcelController.prototype.execute).toHaveBeenCalledTimes(1);
@@ -102,7 +94,7 @@ describe('POST /alunos/upload (router real de src/routes.js)', () => {
     expect(CreateAlunoService.handle).toHaveBeenCalledWith({
       nome: 'Ana',
       sobrenome: 'Lima',
-      email: 'ana.lima@example.com',
+      email: expect.stringMatching(/^[0-9a-f-]{36}@example\.com$/),
       criador: 'admin-1'
     });
   });
@@ -111,7 +103,7 @@ describe('POST /alunos/upload (router real de src/routes.js)', () => {
 describe('POST /alunos/upload com e-mail repetido', () => {
   let app;
   const originals = {};
-  let arquivoRecebido;
+  const envios = registroDeEnvios();
   let consoleSpies;
 
   beforeEach(() => {
@@ -120,9 +112,7 @@ describe('POST /alunos/upload com e-mail repetido', () => {
     originals.selectOne = AlunoRepository.prototype.selectOne;
     originals.create = CreateAlunoService.handle;
     originals.warn = LoggerManager.warn;
-    arquivoRecebido = undefined;
     UploadAlunoExcelController.prototype.execute = jest.fn(function execute(...args) {
-      arquivoRecebido = this.req.file?.path;
       return originals.execute.apply(this, args);
     });
     AlunoRepository.prototype.selectOne = jest.fn().mockResolvedValue(null);
@@ -134,7 +124,7 @@ describe('POST /alunos/upload com e-mail repetido', () => {
   });
 
   afterEach(() => {
-    if (arquivoRecebido) fs.rmSync(arquivoRecebido, { force: true });
+    envios.limpar();
     UploadAlunoExcelController.prototype.execute = originals.execute;
     AlunoRepository.prototype.selectOne = originals.selectOne;
     CreateAlunoService.handle = originals.create;
@@ -152,11 +142,13 @@ describe('POST /alunos/upload com e-mail repetido', () => {
       .set('Authorization', token('admin'))
       .attach(
         'file',
-        planilhaXlsx([
-          ['Ana Lima', 'outra@example.com'],
-          ['Bia Souza', email],
-          ['Caio Souza', email]
-        ]),
+        envios.registrar(
+          planilhaXlsx([
+            ['Ana Lima', `${randomUUID()}@example.com`],
+            ['Bia Souza', email],
+            ['Caio Souza', email]
+          ])
+        ),
         'alunos.xlsx'
       );
 
@@ -176,7 +168,7 @@ describe('POST /alunos/upload com e-mail repetido', () => {
 describe('POST /alunos/upload com teto de linhas e caracteres', () => {
   let app;
   const originals = {};
-  let arquivoRecebido;
+  const envios = registroDeEnvios();
 
   beforeEach(() => {
     app = buildApp((key, opcoes) => (opcoes ? `${key}|${JSON.stringify(opcoes)}` : key));
@@ -185,9 +177,7 @@ describe('POST /alunos/upload com teto de linhas e caracteres', () => {
     originals.create = CreateAlunoService.handle;
     originals.update = UpdateAlunoService.handle;
     originals.list = GetAlunoListController.handle;
-    arquivoRecebido = undefined;
     UploadAlunoExcelController.prototype.execute = jest.fn(function execute(...args) {
-      arquivoRecebido = this.req.file?.path;
       return originals.execute.apply(this, args);
     });
     AlunoRepository.prototype.selectOne = jest.fn().mockResolvedValue(null);
@@ -197,7 +187,7 @@ describe('POST /alunos/upload com teto de linhas e caracteres', () => {
   });
 
   afterEach(() => {
-    if (arquivoRecebido) fs.rmSync(arquivoRecebido, { force: true });
+    envios.limpar();
     UploadAlunoExcelController.prototype.execute = originals.execute;
     AlunoRepository.prototype.selectOne = originals.selectOne;
     CreateAlunoService.handle = originals.create;
@@ -205,14 +195,28 @@ describe('POST /alunos/upload com teto de linhas e caracteres', () => {
     GetAlunoListController.handle = originals.list;
   });
 
-  const linhasValidas = quantidade =>
-    Array.from({ length: quantidade }, (_, i) => [`Aluno${i} Teste`, `aluno${i}@example.com`]);
+  const preenchimento = tamanho => randomBytes(tamanho).toString('hex').slice(0, tamanho);
+
+  const linhasValidas = quantidade => {
+    const marca = randomUUID();
+    return Array.from({ length: quantidade }, (_, i) => [
+      `Aluno${i} Teste`,
+      `${marca}-${i}@example.com`
+    ]);
+  };
 
   const enviar = linhas =>
     request(app)
       .post('/alunos/upload')
       .set('Authorization', token('admin'))
-      .attach('file', planilhaXlsx(linhas), 'alunos.xlsx');
+      .attach('file', envios.registrar(planilhaXlsx(linhas)), 'alunos.xlsx');
+
+  // Aluno já existente: sem ele, o ramo de update é inalcançável e "update não chamado" não prova nada.
+  const existente = email => ({ id: 'aluno-existente', nome: 'Velho', sobrenome: 'Nome', email });
+  const comAlunosExistentes = () =>
+    AlunoRepository.prototype.selectOne.mockImplementation(async ({ where }) =>
+      existente(where.email)
+    );
 
   const nadaGravado = () => {
     expect(AlunoRepository.prototype.selectOne).not.toHaveBeenCalled();
@@ -221,6 +225,8 @@ describe('POST /alunos/upload com teto de linhas e caracteres', () => {
   };
 
   test('501 alunos recusam a planilha inteira com too_many', async () => {
+    comAlunosExistentes();
+
     const response = await enviar(linhasValidas(501));
 
     expect(response.status).toBe(400);
@@ -228,16 +234,21 @@ describe('POST /alunos/upload com teto de linhas e caracteres', () => {
     nadaGravado();
   });
 
-  test('500 alunos seguem o fluxo normal', async () => {
+  test('500 alunos existentes seguem o fluxo normal e todos são atualizados', async () => {
+    comAlunosExistentes();
+
     const response = await enviar(linhasValidas(500));
 
     expect(response.status).toBe(200);
-    expect(CreateAlunoService.handle).toHaveBeenCalledTimes(500);
+    expect(AlunoRepository.prototype.selectOne).toHaveBeenCalledTimes(500);
+    expect(UpdateAlunoService.handle).toHaveBeenCalledTimes(500);
+    expect(CreateAlunoService.handle).not.toHaveBeenCalled();
   });
 
   test('nome completo com 256 caracteres recusa com a linha certa', async () => {
+    comAlunosExistentes();
     const linhas = linhasValidas(3);
-    linhas[1][0] = `Ana ${'x'.repeat(252)}`;
+    linhas[1][0] = `Ana ${preenchimento(252)}`;
     expect(linhas[1][0]).toHaveLength(256);
 
     const response = await enviar(linhas);
@@ -248,8 +259,9 @@ describe('POST /alunos/upload com teto de linhas e caracteres', () => {
   });
 
   test('e-mail com 256 caracteres recusa a planilha', async () => {
+    comAlunosExistentes();
     const linhas = linhasValidas(3);
-    linhas[2][1] = `${'x'.repeat(256 - '@example.com'.length)}@example.com`;
+    linhas[2][1] = `${preenchimento(256 - '@example.com'.length)}@example.com`;
     expect(linhas[2][1]).toHaveLength(256);
 
     const response = await enviar(linhas);
@@ -259,15 +271,24 @@ describe('POST /alunos/upload com teto de linhas e caracteres', () => {
     nadaGravado();
   });
 
-  test('nome completo e e-mail com 255 caracteres seguem o fluxo normal', async () => {
-    const nome = `Ana ${'x'.repeat(251)}`;
-    const email = `${'x'.repeat(255 - '@example.com'.length)}@example.com`;
+  test('nome completo e e-mail com 255 caracteres, de aluno existente, seguem o fluxo e atualizam', async () => {
+    comAlunosExistentes();
+    const sobrenome = preenchimento(251);
+    const nome = `Ana ${sobrenome}`;
+    const email = `${preenchimento(255 - '@example.com'.length)}@example.com`;
     expect(nome).toHaveLength(255);
     expect(email).toHaveLength(255);
 
     const response = await enviar([[nome, email]]);
 
     expect(response.status).toBe(200);
-    expect(CreateAlunoService.handle).toHaveBeenCalledTimes(1);
+    expect(UpdateAlunoService.handle).toHaveBeenCalledTimes(1);
+    expect(UpdateAlunoService.handle).toHaveBeenCalledWith('aluno-existente', {
+      id: 'aluno-existente',
+      nome: 'Ana',
+      sobrenome,
+      email
+    });
+    expect(CreateAlunoService.handle).not.toHaveBeenCalled();
   });
 });

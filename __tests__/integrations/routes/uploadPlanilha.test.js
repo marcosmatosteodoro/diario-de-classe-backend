@@ -1,15 +1,14 @@
-import fs from 'fs';
-import { randomBytes } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import express from 'express';
 import multer from 'multer';
 import request from 'supertest';
 import XLSX from 'xlsx';
 import { jest } from '@jest/globals';
 import { planilhaXlsx } from '../../mocks/planilhaXlsx.js';
+import { arquivosComConteudo, registroDeEnvios } from '../../mocks/arquivosUpload.js';
 import routes from '../../../src/routes.js';
 import Constants from '../../../src/utilities/constants.js';
 import { createJwt } from '../../../src/utilities/createJwt.js';
-import { uploadDir } from '../../../src/utilities/planilhaUpload.js';
 import ErrorHandler from '../../../src/middlewares/error-handler.js';
 import { UploadAlunoExcelController } from '../../../src/controllers/aluno/uploadAlunoExcelController.js';
 import { UploadConteudoLivroExcelController } from '../../../src/controllers/conteudoLivro/uploadConteudoLivroExcelController.js';
@@ -44,20 +43,13 @@ function buildApp() {
 
 const token = `Bearer ${createJwt({ sub: 'admin-1', role: 'admin' }, Constants.jwtSecret)}`;
 
-const arquivosComConteudo = buffer =>
-  fs.existsSync(uploadDir)
-    ? fs.readdirSync(uploadDir).filter(nome => {
-        try {
-          return fs.readFileSync(`${uploadDir}/${nome}`).equals(buffer);
-        } catch {
-          return false;
-        }
-      })
-    : [];
-
 const xlsReal = () => {
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Ana Lima', 'a@example.com']]), 'P');
+  XLSX.utils.book_append_sheet(
+    wb,
+    XLSX.utils.aoa_to_sheet([['Ana Lima', `${randomUUID()}@example.com`]]),
+    'P'
+  );
   return XLSX.write(wb, { type: 'buffer', bookType: 'xls' });
 };
 
@@ -65,6 +57,7 @@ describe.each(rotas)('upload de planilha em $nome (router real de src/routes.js)
   let app;
   let original;
   let recebidos;
+  const envios = registroDeEnvios();
 
   beforeEach(() => {
     app = buildApp();
@@ -78,17 +71,17 @@ describe.each(rotas)('upload de planilha em $nome (router real de src/routes.js)
 
   afterEach(() => {
     rota.controller.prototype.execute = original;
-    recebidos.forEach(caminho => fs.rmSync(caminho, { force: true }));
+    envios.limpar();
   });
 
   const enviar = (conteudo, nome, mime) =>
     request(app)
       .post(rota.url)
       .set('Authorization', token)
-      .attach('file', conteudo, { filename: nome, contentType: mime });
+      .attach('file', envios.registrar(conteudo), { filename: nome, contentType: mime });
 
   test('upload rejects files above the size limit while streaming (413, nothing left on disk)', async () => {
-    const conteudo = Buffer.alloc(LIMITE + 1, 0x41);
+    const conteudo = Buffer.concat([randomBytes(16), Buffer.alloc(LIMITE + 1, 0x41)]);
 
     const response = await enviar(conteudo, 'grande.xlsx', XLSX_MIME);
 
@@ -123,7 +116,7 @@ describe.each(rotas)('upload de planilha em $nome (router real de src/routes.js)
   });
 
   test('MIME válido com extensão .exe devolve 400', async () => {
-    const response = await enviar(planilhaXlsx([['a', 'b']]), 'planilha.exe', XLSX_MIME);
+    const response = await enviar(planilhaXlsx([['a', randomUUID()]]), 'planilha.exe', XLSX_MIME);
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('validation.excel_file.invalid_type');
@@ -132,7 +125,7 @@ describe.each(rotas)('upload de planilha em $nome (router real de src/routes.js)
 
   test('.xlsx real com MIME application/octet-stream devolve 400', async () => {
     const response = await enviar(
-      planilhaXlsx([['a', 'b']]),
+      planilhaXlsx([['a', randomUUID()]]),
       'planilha.xlsx',
       'application/octet-stream'
     );
@@ -143,9 +136,14 @@ describe.each(rotas)('upload de planilha em $nome (router real de src/routes.js)
   });
 
   test.each([
-    ['.xlsx real', () => planilhaXlsx([['Ana Lima', 'a@example.com']]), 'a.xlsx', XLSX_MIME],
+    [
+      '.xlsx real',
+      () => planilhaXlsx([['Ana Lima', `${randomUUID()}@example.com`]]),
+      'a.xlsx',
+      XLSX_MIME
+    ],
     ['.xls real', xlsReal, 'a.xls', 'application/vnd.ms-excel'],
-    ['.csv texto', () => Buffer.from('Ana Lima,a@example.com\n'), 'a.csv', 'text/csv']
+    ['.csv texto', () => Buffer.from(`Ana Lima,${randomUUID()}@example.com\n`), 'a.csv', 'text/csv']
   ])('%s é aceito', async (_nome, gerar, arquivo, mime) => {
     const response = await enviar(gerar(), arquivo, mime);
 
@@ -155,7 +153,11 @@ describe.each(rotas)('upload de planilha em $nome (router real de src/routes.js)
   });
 
   test('.csv com byte nulo no começo devolve 400', async () => {
-    const response = await enviar(Buffer.from([0x41, 0x2c, 0x00, 0x42]), 'a.csv', 'text/csv');
+    const response = await enviar(
+      Buffer.concat([Buffer.from([0x41, 0x2c, 0x00, 0x42]), randomBytes(8)]),
+      'a.csv',
+      'text/csv'
+    );
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe('validation.excel_file.invalid_type');
@@ -163,6 +165,21 @@ describe.each(rotas)('upload de planilha em $nome (router real de src/routes.js)
 });
 
 describe('ErrorHandler com erro do multer', () => {
+  let consoleSpies;
+
+  beforeEach(() => {
+    consoleSpies = ['log', 'error'].map(metodo =>
+      jest.spyOn(console, metodo).mockImplementation(() => {})
+    );
+  });
+
+  afterEach(() => {
+    consoleSpies.forEach(spy => spy.mockRestore());
+  });
+
+  const chamadasDeConsole = () =>
+    consoleSpies.reduce((total, spy) => total + spy.mock.calls.length, 0);
+
   const executar = err => {
     const res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
     ErrorHandler(err, { t: key => key }, res);
@@ -189,5 +206,14 @@ describe('ErrorHandler com erro do multer', () => {
       error: 'PayloadTooLarge',
       message: 'api.errors.payload_too_large'
     });
+  });
+
+  test('erro do multer não escreve em console.*, e o erro genérico escreve (controle positivo)', () => {
+    executar(new multer.MulterError('LIMIT_FILE_SIZE', 'file'));
+    executar(new multer.MulterError('LIMIT_FILE_COUNT', 'campo-do-cliente'));
+    expect(chamadasDeConsole()).toBe(0);
+
+    executar(new Error('falha inesperada'));
+    expect(chamadasDeConsole()).toBeGreaterThan(0);
   });
 });
