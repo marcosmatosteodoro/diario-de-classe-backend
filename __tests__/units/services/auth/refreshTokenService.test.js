@@ -8,7 +8,11 @@ import Constants from '../../../../src/utilities/constants.js';
 import { base64url } from '../../../../src/utilities/base64url.js';
 
 const makeRefreshToken = sub =>
-  createJwt({ sub }, Constants.jwtRefreshSecret, Constants.refreshExp);
+  createJwt(
+    { sub, typ: Constants.refreshTokenType },
+    Constants.jwtRefreshSecret,
+    Constants.refreshExp
+  );
 
 const decodificar = jwt => JSON.parse(Buffer.from(jwt.split('.')[1], 'base64').toString('utf8'));
 

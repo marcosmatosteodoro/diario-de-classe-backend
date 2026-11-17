@@ -81,6 +81,7 @@ function installStore() {
 const login = async (app, { email = EMAIL, senha = 'errada', ip = IP } = {}) => {
   const r = await request(app)
     .post('/auth/login')
+    .set('Origin', Constants.corsOrigins[0])
     .set('X-Forwarded-For', ip)
     .send({ email, senha });
   if (r.status !== 200) expect(cookiesDaSessao(r)).toEqual([]);
@@ -366,7 +367,11 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
   });
 
   test('credencial ausente segue sem chegar ao serviço (validação existente) e não consome o contador', async () => {
-    const r = await request(app).post('/auth/login').set('X-Forwarded-For', IP).send({});
+    const r = await request(app)
+      .post('/auth/login')
+      .set('Origin', Constants.corsOrigins[0])
+      .set('X-Forwarded-For', IP)
+      .send({});
     expect(r.status).toBe(422);
     expect(cookiesDaSessao(r)).toEqual([]);
     expect(loginSpy).not.toHaveBeenCalled();

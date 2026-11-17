@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import request from 'supertest';
-import util from 'node:util';
 import { cookiesDaSessao } from '../../mocks/cookiesDaSessao.js';
+import { capturarLog } from '../../mocks/capturaDeLog.js';
 
 // O import a frio da árvore de app.js chega perto do testTimeout global (10s).
 const TIMEOUT_IMPORT_FRIO = 30000;
@@ -77,7 +77,7 @@ describe('POST /api/auth/login (app real)', () => {
   const entrar = () =>
     request(app)
       .post('/api/auth/login')
-
+      .set('Origin', Constants.corsOrigins[0])
       .set('Cookie', `bls_sessao=${COOKIE_RECEBIDO}`)
       .send(CREDENCIAIS);
 
@@ -129,40 +129,47 @@ describe('POST /api/auth/login (app real)', () => {
     expect(cookiesDaSessao(res)).toEqual([]);
   });
 
-  describe('credenciais fora de log e de corpo de erro', () => {
-    const METODOS = ['log', 'info', 'warn', 'error', 'debug'];
+  describe('login cross-site (DEC-003-017)', () => {
+    const tentativas = () => TentativaLoginRepository.prototype.incrementar.mock.calls.length;
 
-    const capturar = () => {
-      const textos = [];
-      const spies = METODOS.map(m =>
-        jest
-          .spyOn(console, m)
-          .mockImplementation((...args) =>
-            textos.push(
-              args
-                .map(a => (typeof a === 'string' ? a : util.inspect(a, { depth: null })))
-                .join(' ')
-            )
-          )
-      );
-      // Sinks do caminho de login: console.* (LoggerManager, morgan do app, handleError do
-      // controller, limitador) e escrita direta em stdout/stderr (logger de query do Prisma).
-      for (const fluxo of [process.stdout, process.stderr]) {
-        const spy = jest.spyOn(fluxo, 'write').mockImplementation(chunk => {
-          textos.push(String(chunk));
-          return true;
-        });
-        spies.push(spy);
+    test.each([
+      ['Origin fora da lista', req => req.set('Origin', 'https://evil.example.com')],
+      ['sem Origin', req => req],
+      [
+        'Sec-Fetch-Site cross-site com Origin listada',
+        req => req.set('Origin', Constants.corsOrigins[0]).set('Sec-Fetch-Site', 'cross-site')
+      ]
+    ])(
+      '%s: 403, nenhum bls_sessao, nenhuma tentativa consumida, serviço intocado',
+      async (_n, montar) => {
+        mockarSucesso();
+        const req = request(app).post('/api/auth/login');
+        const res = await montar(req).type('form').send(CREDENCIAIS);
+
+        expect(res.status).toBe(403);
+        expect(cookiesDaSessao(res)).toEqual([]);
+        expect(res.body).not.toHaveProperty('accessToken');
+        expect(tentativas()).toBe(0);
+        expect(LoginService.handle).not.toHaveBeenCalled();
       }
-      return { textos, spies, texto: () => textos.join('\n') };
-    };
+    );
 
+    test('mesma origem segue 200 e consome a tentativa', async () => {
+      mockarSucesso();
+      const res = await entrar();
+
+      expect(res.status).toBe(200);
+      expect(tentativas()).toBeGreaterThan(0);
+    });
+  });
+
+  describe('credenciais fora de log e de corpo de erro', () => {
     test.each([
       ['access', AT],
       ['refresh', RT],
       ['cookie', COOKIE_RECEBIDO]
     ])('controle de detecção: a captura enxerga o sentinela de %s', (_, sentinela) => {
-      const cap = capturar();
+      const cap = capturarLog();
       console.error({ aninhado: { valor: sentinela } });
       process.stdout.write(`${sentinela}\n`);
       process.stderr.write(`${sentinela}\n`);
@@ -179,7 +186,7 @@ describe('POST /api/auth/login (app real)', () => {
 
     test('401: o warn de falha de login (limitador + controller) não carrega credenciais', async () => {
       LoginService.handle = jest.fn(async () => null);
-      const cap = capturar();
+      const cap = capturarLog();
 
       const res = await entrar();
 
@@ -191,7 +198,7 @@ describe('POST /api/auth/login (app real)', () => {
     test('429: o warn de bloqueio do limitador não carrega credenciais', async () => {
       LoginService.handle = jest.fn(async () => null);
       for (let i = 0; i < 5; i += 1) await entrar();
-      const cap = capturar();
+      const cap = capturarLog();
 
       const res = await entrar();
 
@@ -208,7 +215,7 @@ describe('POST /api/auth/login (app real)', () => {
         erro.meta = { campo: `${AT} ${RT} ${COOKIE_RECEBIDO}` };
         throw erro;
       });
-      const cap = capturar();
+      const cap = capturarLog();
 
       const res = await entrar();
 
@@ -227,7 +234,7 @@ describe('POST /api/auth/login (app real)', () => {
         erro.meta = { campo: `${AT} ${RT} ${COOKIE_RECEBIDO}` };
         throw erro;
       });
-      const cap = capturar();
+      const cap = capturarLog();
 
       const res = await entrar();
 
@@ -241,7 +248,7 @@ describe('POST /api/auth/login (app real)', () => {
 
     test('sucesso: nenhuma credencial em log (log)', async () => {
       mockarSucesso();
-      const cap = capturar();
+      const cap = capturarLog();
 
       const res = await entrar();
 

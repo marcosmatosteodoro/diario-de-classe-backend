@@ -1,7 +1,7 @@
 import { jest } from '@jest/globals';
 import request from 'supertest';
-import util from 'node:util';
 import { cookiesDaSessao } from '../../mocks/cookiesDaSessao.js';
+import { capturarLog } from '../../mocks/capturaDeLog.js';
 
 // O import a frio da árvore de app.js chega perto do testTimeout global (10s).
 const TIMEOUT_IMPORT_FRIO = 30000;
@@ -76,7 +76,9 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
   // `sub` próprio por caso: JWTs do mesmo `sub` no mesmo segundo são idênticos.
   const subDoCaso = () => `usuario-${sequencia}`;
   const refreshDe = (sub = subDoCaso(), segredo = Constants.jwtRefreshSecret, exp) =>
-    createJwt({ sub }, segredo, exp ?? Constants.refreshExp);
+    createJwt({ sub, typ: Constants.refreshTokenType }, segredo, exp ?? Constants.refreshExp);
+  const refreshLegado = (sub = subDoCaso()) =>
+    createJwt({ sub }, Constants.jwtRefreshSecret, Constants.refreshExp);
 
   const chamar = (rota, { cookie, origem = ORIGEM, corpo } = {}) => {
     let req = request(app).post(rota);
@@ -162,6 +164,27 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
       expect(cookiesDaSessao(res)).toEqual([]);
     });
 
+    test('refresh legado sem a claim de tipo: 401 com remoção do cookie', async () => {
+      const res = await chamar(RENOVAR, { cookie: refreshLegado() });
+
+      expect(res.status).toBe(401);
+      removeCookie(res);
+      expect(res.body).not.toHaveProperty('accessToken');
+      expect(selectOne).not.toHaveBeenCalled();
+    });
+
+    test('refresh com outro valor de tipo: 401 com remoção do cookie', async () => {
+      const cookie = createJwt(
+        { sub: subDoCaso(), typ: 'outro' },
+        Constants.jwtRefreshSecret,
+        Constants.refreshExp
+      );
+      const res = await chamar(RENOVAR, { cookie });
+
+      expect(res.status).toBe(401);
+      removeCookie(res);
+    });
+
     test('sem configuração, configuracao é null', async () => {
       configuracoes.mockResolvedValue([]);
 
@@ -245,6 +268,26 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
       expect(depois.body).not.toHaveProperty('accessToken');
     });
 
+    test.each([
+      ['não-JWT de 12 KB', () => 'x'.repeat(12 * 1024)],
+      ['JWT de assinatura errada', () => refreshDe(subDoCaso(), 'outro-segredo')],
+      ['JWT vencido', () => refreshDe(subDoCaso(), Constants.jwtRefreshSecret, -10)],
+      ['refresh legado sem a claim de tipo', () => refreshLegado()]
+    ])('%s: 204, cookie limpo e nada entra na lista de revogados', async (_n, valor) => {
+      const res = await chamar(SAIR, { cookie: valor() });
+
+      expect(res.status).toBe(204);
+      removeCookie(res);
+      expect(tokenRevocationManager.getCount()).toBe(0);
+    });
+
+    test('refresh válido revoga exatamente um valor', async () => {
+      const res = await chamar(SAIR, { cookie: refreshDe() });
+
+      expect(res.status).toBe(204);
+      expect(tokenRevocationManager.getCount()).toBe(1);
+    });
+
     test('duas vezes com o mesmo cookie: 204 e 204', async () => {
       const cookie = refreshDe();
 
@@ -277,32 +320,8 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
   });
 
   describe('credencial fora de log e de corpo de erro (NFR-002-001, AC-002-018)', () => {
-    const METODOS = ['log', 'info', 'warn', 'error', 'debug'];
-
-    const capturar = () => {
-      const textos = [];
-      for (const m of METODOS) {
-        jest
-          .spyOn(console, m)
-          .mockImplementation((...args) =>
-            textos.push(
-              args
-                .map(a => (typeof a === 'string' ? a : util.inspect(a, { depth: null })))
-                .join(' ')
-            )
-          );
-      }
-      for (const fluxo of [process.stdout, process.stderr]) {
-        jest.spyOn(fluxo, 'write').mockImplementation(chunk => {
-          textos.push(String(chunk));
-          return true;
-        });
-      }
-      return { textos, texto: () => textos.join('\n') };
-    };
-
     test('controle de detecção: a captura enxerga o sentinela aninhado e em stdout', () => {
-      const cap = capturar();
+      const cap = capturarLog();
       console.error({ aninhado: { valor: SENTINELA } });
       process.stdout.write(`${SENTINELA}\n`);
       expect(cap.textos).toHaveLength(2);
@@ -316,7 +335,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     };
 
     test('401: sem sentinela em log nem em corpo; captura ativa (controle positivo)', async () => {
-      const cap = capturar();
+      const cap = capturarLog();
 
       const res = await chamar(RENOVAR, { cookie: `${SENTINELA}.x.y` });
 
@@ -327,7 +346,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     });
 
     test('403: sem sentinela em log nem em corpo; captura ativa (controle positivo)', async () => {
-      const cap = capturar();
+      const cap = capturarLog();
 
       const res = await chamar(RENOVAR, { cookie: SENTINELA, origem: ORIGEM_FORJADA });
 
@@ -338,7 +357,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     });
 
     test('204: sem sentinela em log nem em corpo; captura ativa (controle positivo)', async () => {
-      const cap = capturar();
+      const cap = capturarLog();
 
       const res = await chamar(SAIR, { cookie: SENTINELA });
 
@@ -351,7 +370,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     test('500 fora de development: erro do ORM com o sentinela fica fora do log e do corpo', async () => {
       Constants.env = 'production-like';
       selectOne.mockRejectedValue(erroDoOrm());
-      const cap = capturar();
+      const cap = capturarLog();
 
       const res = await chamar(RENOVAR, { cookie: refreshDe() });
 
