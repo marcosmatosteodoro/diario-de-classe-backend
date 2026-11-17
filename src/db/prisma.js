@@ -1,11 +1,8 @@
 import { PrismaClient } from './generated/client/index.js';
-import Constants from '../utilities/constants.js';
-import { prismaLogLevels } from './prismaLogLevels.js';
+import { prismaClientOptions } from './prismaLogLevels.js';
 
 // Cria uma única instância do Prisma Client
-const prisma = new PrismaClient({
-  log: prismaLogLevels(Constants.isProduction)
-});
+const prisma = new PrismaClient(prismaClientOptions());
 
 // Conecta ao banco automaticamente
 await prisma.$connect();
