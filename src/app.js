@@ -20,8 +20,8 @@ import { InitialSetting } from './InitialSetting.js';
 
 InitialSetting.handle();
 
-// Limite único do corpo das requisições JSON e urlencoded
-export const BODY_LIMIT = '1mb';
+// Limite único do corpo JSON e urlencoded; dimensionado pelo salvamento do contrato com até 1.800 aulas
+const BODY_LIMIT = '3mb';
 
 const app = express();
 

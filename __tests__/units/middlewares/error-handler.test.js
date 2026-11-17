@@ -191,7 +191,7 @@ describe('ThrowErrors Function', () => {
   });
 });
 
-describe('ErrorHandler - erros HTTP de cliente expostos', () => {
+describe('ErrorHandler - erros HTTP 4xx expostos', () => {
   let req, res;
 
   beforeEach(() => {
@@ -239,7 +239,7 @@ describe('ErrorHandler - erros HTTP de cliente expostos', () => {
     expect(res.status).toHaveBeenCalledWith(415);
   });
 
-  test('a resposta não carrega o conteúdo da requisição nem a mensagem do erro', () => {
+  test('erro 4xx exposto responde status e mensagem traduzida fixa', () => {
     ErrorHandler(httpError(413, { body: 'conteudo-secreto' }), req, res);
 
     const serializado = JSON.stringify(res.json.mock.calls[0][0]);

@@ -2,10 +2,17 @@ import httpStatus from 'http-status';
 import UnauthorizedError from '../utilities/errors/unauthorized.js';
 import Constants from '../utilities/constants.js';
 
-// Erro HTTP 4xx que o emissor marcou como seguro para o cliente (ex.: body-parser).
-function isExposedClientError(err) {
+// Erro 4xx que o emissor marcou como exponível (ex.: body-parser).
+function clientErrorResponse(err, t) {
   const status = err.status ?? err.statusCode;
-  return err.expose === true && Number.isInteger(status) && status >= 400 && status < 500;
+  if (err.expose !== true || !Number.isInteger(status) || status < 400 || status >= 500) {
+    return null;
+  }
+  const response =
+    status === httpStatus.REQUEST_ENTITY_TOO_LARGE
+      ? { error: 'PayloadTooLarge', message: t('api.errors.payload_too_large') }
+      : { error: 'BadRequest', message: t('api.errors.bad_request') };
+  return { statusCode: status, response };
 }
 
 export default function ErrorHandler(err, req, res) {
@@ -27,6 +34,8 @@ export default function ErrorHandler(err, req, res) {
     return fallbacks[key] || key;
   };
 
+  const clientError = clientErrorResponse(err, t);
+
   if (err.errors && err.errors.length > 0) {
     statusCode = httpStatus.BAD_REQUEST;
     response = {
@@ -39,12 +48,8 @@ export default function ErrorHandler(err, req, res) {
       error: 'UnauthorizedError',
       message: t('api.errors.unauthorized')
     };
-  } else if (isExposedClientError(err)) {
-    statusCode = err.status ?? err.statusCode;
-    response =
-      statusCode === httpStatus.REQUEST_ENTITY_TOO_LARGE
-        ? { error: 'PayloadTooLarge', message: t('api.errors.payload_too_large') }
-        : { error: 'BadRequest', message: t('api.errors.bad_request') };
+  } else if (clientError) {
+    ({ statusCode, response } = clientError);
   } else {
     if (!Constants.isProduction) {
       console.log(err);
