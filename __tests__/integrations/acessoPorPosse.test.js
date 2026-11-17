@@ -258,7 +258,7 @@ describe('Negação de acesso pelo app.js real (integração)', () => {
       corpo: { observacao: 'observação de teste' }
     }
   ])(
-    'escrita em $dominio (sem rota restrita a administrador: n/a)',
+    'escrita em $dominio por professor que não é o dono',
     ({ modelo, base, whereComPosse, corpo }) => {
       beforeEach(() => simularBanco(modelo));
 
