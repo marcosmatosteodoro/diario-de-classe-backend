@@ -3,6 +3,7 @@ import UserRepository from '../../repositories/userRepository.js';
 import { createJwt } from '../../utilities/createJwt.js';
 import Constants from '../../utilities/constants.js';
 import tokenRevocationManager from './tokenRevocationManagerService.js';
+import { verifyJwt } from '../../utilities/verifyJwt.js';
 import { generatePayload } from '../../utilities/generatePayload.js';
 
 export class RefreshTokenService extends AbstractService {
@@ -48,27 +49,8 @@ export class RefreshTokenService extends AbstractService {
   }
 
   verifyRefreshToken() {
-    try {
-      // Decodifica o refresh token manualmente
-      const parts = this.refreshToken.split('.');
-      if (parts.length !== 3) {
-        return null;
-      }
-
-      const [, encodedPayload] = parts;
-      const payloadJson = Buffer.from(encodedPayload, 'base64').toString('utf8');
-      const payload = JSON.parse(payloadJson);
-
-      // Verifica se expirou
-      const now = Math.floor(Date.now() / 1000);
-      if (payload.exp && payload.exp < now) {
-        return null;
-      }
-
-      return payload;
-    } catch {
-      return null;
-    }
+    const payload = verifyJwt(this.refreshToken, Constants.jwtRefreshSecret);
+    return payload || null;
   }
 
   static async handle(refreshToken) {

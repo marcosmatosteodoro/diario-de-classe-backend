@@ -1,12 +1,23 @@
 import { jest } from '@jest/globals';
 import util from 'node:util';
-import { CreateUserService } from '../../../../src/services/user/createUserService.js';
-import { UpdateUserService } from '../../../../src/services/user/updateUserService.js';
-import { CreateUserController } from '../../../../src/controllers/user/createUserController.js';
-import { UpdateUserController } from '../../../../src/controllers/user/updateUserController.js';
+import { passwordCustoBarato } from '../../../mocks/passwordCustoBarato.js';
 import { GetUserService } from '../../../../src/services/user/getUserService.js';
 import { IsUserEmailExistsService } from '../../../../src/services/user/isUserEmailExistsService.js';
 import { CreateDisponibilidadeProfessorService } from '../../../../src/services/disponibilidadeProfessor/createDisponibilidadeProfessorService.js';
+
+// Os services chamam hashSenha sem params; o módulo troca o custo (provado em password.test.js).
+const passwordReal = await import('../../../../src/utilities/password.js');
+jest.unstable_mockModule('../../../../src/utilities/password.js', () =>
+  passwordCustoBarato(passwordReal)
+);
+const { CreateUserService } = await import('../../../../src/services/user/createUserService.js');
+const { UpdateUserService } = await import('../../../../src/services/user/updateUserService.js');
+const { CreateUserController } = await import(
+  '../../../../src/controllers/user/createUserController.js'
+);
+const { UpdateUserController } = await import(
+  '../../../../src/controllers/user/updateUserController.js'
+);
 
 // Valor sentinela: nunca deve aparecer, sob nenhuma forma, nos argumentos
 // capturados de console.log/console.warn/console.error (NFR-001-001, metade

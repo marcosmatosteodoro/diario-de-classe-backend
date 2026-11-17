@@ -1,7 +1,33 @@
-import { LoginService } from '../../../../src/services/auth/loginService.js';
+import { jest } from '@jest/globals';
+import { CUSTO_BARATO, passwordCustoBarato } from '../../../mocks/passwordCustoBarato.js';
+import util from 'node:util';
 import UserRepository from '../../../../src/repositories/userRepository.js';
 import Constants from '../../../../src/utilities/constants.js';
 import { GetConfiguracaoService } from '../../../../src/services/configuracao/getConfiguracaoService.js';
+
+// O custo de produção é provado em password.test.js; aqui a regravação do legado
+// (hashSenha sem params) usa custo barato. SCRYPT_PARAMS segue o de produção: o hash
+// fictício é gerado com ele e o teste compara os parâmetros gravados com a constante real.
+// Contador manual: a config do Jest reseta a implementação de jest.fn entre testes.
+const passwordReal = await import('../../../../src/utilities/password.js');
+const verificacoes = [];
+jest.unstable_mockModule('../../../../src/utilities/password.js', () => ({
+  ...passwordCustoBarato(passwordReal),
+  SCRYPT_PARAMS: passwordReal.SCRYPT_PARAMS,
+  hashSenha: (senha, params = CUSTO_BARATO) => passwordReal.hashSenha(senha, params),
+  verificarSenha: (senha, gravada) => {
+    verificacoes.push({ senha, gravada });
+    return passwordReal.verificarSenha(senha, gravada);
+  }
+}));
+const { hashSenha, isHash } = await import('../../../../src/utilities/password.js');
+const { LoginService } = await import('../../../../src/services/auth/loginService.js');
+
+let SENHA_HASH;
+
+beforeAll(async () => {
+  SENHA_HASH = await hashSenha('password123');
+});
 
 describe('LoginService', () => {
   let originalSelectOne;
@@ -75,7 +101,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     });
 
     const service = new LoginService(UserRepository, 'test@example.com', 'password123');
@@ -93,7 +119,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     });
 
     const service = new LoginService(UserRepository, 'test@example.com', 'password123');
@@ -107,7 +133,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     });
 
     const service = new LoginService(UserRepository, 'test@example.com', 'password123');
@@ -121,7 +147,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     });
 
     const service = new LoginService(UserRepository, 'test@example.com', 'password123');
@@ -143,7 +169,7 @@ describe('LoginService', () => {
         id: 'user-123',
         email: 'test@example.com',
         nome: 'Test User',
-        senha: 'password123'
+        senha: SENHA_HASH
       };
     };
 
@@ -158,7 +184,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     });
 
     const result = await LoginService.handle('test@example.com', 'password123');
@@ -185,14 +211,14 @@ describe('LoginService', () => {
           id: 'user-1',
           email: 'user1@example.com',
           nome: 'User One',
-          senha: 'password123'
+          senha: SENHA_HASH
         };
       } else {
         return {
           id: 'user-2',
           email: 'user2@example.com',
           nome: 'User Two',
-          senha: 'password123'
+          senha: SENHA_HASH
         };
       }
     };
@@ -211,7 +237,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     });
 
     const service = new LoginService(UserRepository, 'test@example.com', 'password123');
@@ -229,7 +255,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     });
 
     const service = new LoginService(UserRepository, 'test@example.com', 'password123');
@@ -247,7 +273,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     });
 
     const service = new LoginService(UserRepository, 'test@example.com', 'password123');
@@ -266,7 +292,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     };
 
     UserRepository.prototype.selectOne = async () => mockUser;
@@ -282,7 +308,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     };
 
     const mockConfiguracao = {
@@ -306,7 +332,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     });
 
     GetConfiguracaoService.handle = async () => {
@@ -331,7 +357,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     });
 
     GetConfiguracaoService.handle = async () => null;
@@ -363,7 +389,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     });
 
     GetConfiguracaoService.handle = async () => [];
@@ -395,7 +421,7 @@ describe('LoginService', () => {
       id: 'user-123',
       email: 'test@example.com',
       nome: 'Test User',
-      senha: 'password123'
+      senha: SENHA_HASH
     };
 
     const mockConfiguracoes = [
@@ -418,5 +444,182 @@ describe('LoginService', () => {
     const result = await service.execute();
 
     expect(result.configuracao).toEqual(mockConfiguracoes[0]);
+  });
+
+  describe('senha gravada: hash, legado em texto puro e fail secure', () => {
+    let originalUpdate;
+    let errorSpy;
+
+    beforeEach(() => {
+      originalUpdate = UserRepository.prototype.update;
+      errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      UserRepository.prototype.update = originalUpdate;
+      errorSpy.mockRestore();
+    });
+
+    const capturado = () =>
+      errorSpy.mock.calls
+        .flat()
+        .map(a => util.inspect(a, { depth: null }))
+        .join(' ');
+
+    test('hash gravado + senha correta autentica, devolve tokens e não regrava', async () => {
+      const updates = [];
+      UserRepository.prototype.selectOne = async () => ({ id: 'u1', senha: SENHA_HASH });
+      UserRepository.prototype.update = async (...args) => updates.push(args);
+
+      const result = await LoginService.handle('a@example.com', 'password123');
+
+      expect(result.accessToken.split('.')).toHaveLength(3);
+      expect(result.refreshToken.split('.')).toHaveLength(3);
+      expect(result.user).not.toHaveProperty('senha');
+      expect(updates).toHaveLength(0);
+    });
+
+    test('hash gravado + senha errada devolve null', async () => {
+      UserRepository.prototype.selectOne = async () => ({ id: 'u1', senha: SENHA_HASH });
+
+      expect(await LoginService.handle('a@example.com', 'errada')).toBeNull();
+    });
+
+    test('hash gravado não aceita o próprio hash como senha (pass-the-hash)', async () => {
+      UserRepository.prototype.selectOne = async () => ({ id: 'u1', senha: SENHA_HASH });
+
+      expect(await LoginService.handle('a@example.com', SENHA_HASH)).toBeNull();
+    });
+
+    test('legado em texto puro correto autentica e regrava hash da senha informada', async () => {
+      const updates = [];
+      UserRepository.prototype.selectOne = async () => ({ id: 'u-legado', senha: 'legada-123' });
+      UserRepository.prototype.update = async (where, data, options) => {
+        updates.push({ where, data, options });
+      };
+
+      const result = await LoginService.handle('a@example.com', 'legada-123');
+
+      expect(result.accessToken).toEqual(expect.any(String));
+      expect(result.user).not.toHaveProperty('senha');
+      expect(updates).toHaveLength(1);
+      expect(updates[0].where).toEqual({ id: 'u-legado' });
+      expect(Object.keys(updates[0].data)).toEqual(['senha']);
+      expect(updates[0].data.senha).not.toBe('legada-123');
+      expect(isHash(updates[0].data.senha)).toBe(true);
+      expect(updates[0].options).toEqual({ select: { id: true } });
+    });
+
+    test('legado em texto puro com senha errada devolve null e não regrava', async () => {
+      const updates = [];
+      UserRepository.prototype.selectOne = async () => ({ id: 'u-legado', senha: 'legada-123' });
+      UserRepository.prototype.update = async (...args) => updates.push(args);
+
+      expect(await LoginService.handle('a@example.com', 'legada-124')).toBeNull();
+      expect(await LoginService.handle('a@example.com', 'legada-1234')).toBeNull();
+      expect(updates).toHaveLength(0);
+    });
+
+    test('falha na regravação não derruba o login e o log não contém senha nem hash', async () => {
+      const SENTINELA = 'sentinela-senha-legada-xyz';
+      UserRepository.prototype.selectOne = async () => ({ id: 'u-legado', senha: SENTINELA });
+      UserRepository.prototype.update = async () => {
+        const erro = new Error(
+          `Invalid prisma.user.update() invocation: data: { senha: "${SENTINELA}" }`
+        );
+        erro.name = 'PrismaClientValidationError';
+        erro.code = 'P2000';
+        throw erro;
+      };
+
+      const result = await LoginService.handle('a@example.com', SENTINELA);
+
+      expect(result.accessToken).toEqual(expect.any(String));
+      expect(errorSpy).toHaveBeenCalled();
+      expect(capturado()).toContain('P2000');
+      expect(capturado()).not.toContain(SENTINELA);
+      expect(capturado()).not.toContain('scrypt$');
+    });
+
+    test('exceção na verificação nega o login (fail secure)', async () => {
+      UserRepository.prototype.selectOne = async () => ({
+        id: 'u1',
+        senha: 'scrypt$131072$8$1$c2FsdA==$aGFzaA=='
+      });
+      const spy = jest.spyOn(Buffer, 'from').mockImplementation(() => {
+        throw new Error('falha simulada');
+      });
+
+      try {
+        expect(await LoginService.handle('a@example.com', 'password123')).toBeNull();
+      } finally {
+        spy.mockRestore();
+      }
+    });
+
+    test('senha gravada nula ou não-string nega o login', async () => {
+      UserRepository.prototype.selectOne = async () => ({ id: 'u1', senha: null });
+
+      expect(await LoginService.handle('a@example.com', 'password123')).toBeNull();
+    });
+
+    describe('custo igualado nos caminhos de falha (hash ficticio)', () => {
+      let ficticio;
+
+      beforeEach(() => {
+        ficticio = jest.spyOn(LoginService.prototype, 'verificarContraHashFicticio');
+      });
+
+      test('e-mail inexistente paga a derivação 1 vez', async () => {
+        UserRepository.prototype.selectOne = async () => null;
+
+        expect(await LoginService.handle('x@example.com', 'password123')).toBeNull();
+        expect(ficticio).toHaveBeenCalledTimes(1);
+      });
+
+      test('senha gravada nula paga a derivação 1 vez', async () => {
+        UserRepository.prototype.selectOne = async () => ({ id: 'u1', senha: null });
+
+        expect(await LoginService.handle('a@example.com', 'password123')).toBeNull();
+        expect(ficticio).toHaveBeenCalledTimes(1);
+      });
+
+      test('legado em texto puro errado paga a derivação 1 vez', async () => {
+        UserRepository.prototype.selectOne = async () => ({ id: 'u1', senha: 'legada-123' });
+
+        expect(await LoginService.handle('a@example.com', 'errada')).toBeNull();
+        expect(ficticio).toHaveBeenCalledTimes(1);
+      });
+
+      test('hash correto não paga a derivação extra', async () => {
+        UserRepository.prototype.selectOne = async () => ({ id: 'u1', senha: SENHA_HASH });
+
+        expect(await LoginService.handle('a@example.com', 'password123')).not.toBeNull();
+        expect(ficticio).not.toHaveBeenCalled();
+      });
+
+      describe('a verificação contra o hash fictício é observável na fronteira', () => {
+        const { N, r, p } = passwordReal.SCRYPT_PARAMS;
+
+        beforeEach(() => {
+          verificacoes.length = 0;
+        });
+
+        test.each([
+          ['e-mail inexistente', null, 'password123'],
+          ['senha gravada nula', { id: 'u1', senha: null }, 'password123'],
+          ['legado em texto puro errado', { id: 'u1', senha: 'legada-123' }, 'errada']
+        ])('%s: 1 verificação, hash válido com o custo de produção', async (_, user, senha) => {
+          UserRepository.prototype.selectOne = async () => user;
+
+          expect(await LoginService.handle('a@example.com', senha)).toBeNull();
+
+          expect(verificacoes).toHaveLength(1);
+          expect(verificacoes[0].senha).toBe(senha);
+          expect(isHash(verificacoes[0].gravada)).toBe(true);
+          expect(verificacoes[0].gravada.split('$').slice(1, 4)).toEqual([N, r, p].map(String));
+        });
+      });
+    });
   });
 });

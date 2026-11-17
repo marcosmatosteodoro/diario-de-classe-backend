@@ -134,4 +134,20 @@ describe('validateLoginParams middleware', () => {
     expect(mockNext.called).toBe(true);
     expect(mockRes.statusCode).toBe(null);
   });
+
+  test.each([
+    ['email objeto', { email: { startsWith: 'a' }, senha: 'password123' }],
+    ['email array', { email: ['a@example.com'], senha: 'password123' }],
+    ['email número', { email: 123, senha: 'password123' }],
+    ['senha objeto', { email: 'user@example.com', senha: { not: '' } }],
+    ['email acima de 200 caracteres', { email: `${'a'.repeat(200)}@example.com`, senha: 'x' }],
+    ['senha acima de 200 caracteres', { email: 'user@example.com', senha: 'x'.repeat(201) }]
+  ])('should return 422 and not call next when %s', (_nome, body) => {
+    mockReq.body = body;
+
+    validateLoginParams(mockReq, mockRes, () => mockNext.call());
+
+    expect(mockRes.statusCode).toBe(422);
+    expect(mockNext.called).toBe(false);
+  });
 });

@@ -15,9 +15,9 @@ class ValidateLoginParams extends BaseValidateEntity {
 
     return {
       // Validar campo email
-      email: ValidateData.require().validate(email, 'email'),
-      // Validar campo telefone
-      senha: ValidateData.require().validate(senha, 'senha')
+      email: ValidateData.require().isString().maxCharacters(200).validate(email, 'email'),
+      // Validar campo senha
+      senha: ValidateData.require().isString().maxCharacters(200).validate(senha, 'senha')
     };
   }
 }

@@ -101,7 +101,6 @@ function describeExecuteMethod() {
           nomeCompleto: 'João Silva',
           email: mockData.email,
           telefone: mockData.telefone,
-          criador: mockData.criador,
           material: undefined
         },
         options: { select: service.repository.selectFields }
@@ -237,7 +236,7 @@ function describeExecuteMethod() {
 
       const actualData = service.repository.updateCalls[0].data;
       expect(actualData.telefone).toBeNull();
-      expect(actualData.criador).toBeNull();
+      expect(actualData).not.toHaveProperty('criador');
       expect(actualData.nome).toBe('João');
     });
   });
@@ -436,7 +435,7 @@ function describeUpdateScenarios() {
       expect(result.nome).toBe('Pedro');
       expect(result.sobrenome).toBe('Costa');
       expect(result.telefone).toBe('11888888888');
-      expect(result.criador).toBe('professor-456');
+      expect(result).not.toHaveProperty('criador');
     });
 
     test('deve funcionar com atualização de nome completo', async () => {
@@ -459,7 +458,7 @@ function describeUpdateScenarios() {
       const service = new UpdateAlunoService(MockRepository, 'aluno-id-3', mockData);
       const result = await service.execute();
 
-      expect(result.criador).toBeNull();
+      expect(result).not.toHaveProperty('criador');
       expect(result.nome).toBe('Ana');
       expect(result.sobrenome).toBe('Oliveira');
       expect(result.nomeCompleto).toBe('Ana Oliveira');
@@ -527,7 +526,7 @@ function describeFieldValidation() {
       expect(actualData).toHaveProperty('sobrenome');
       expect(actualData).toHaveProperty('email');
       expect(actualData).toHaveProperty('telefone');
-      expect(actualData).toHaveProperty('criador');
+      expect(actualData).not.toHaveProperty('criador');
 
       // Campos que não são do modelo Aluno não devem estar presentes
       expect(actualData).not.toHaveProperty('senha');
@@ -563,7 +562,7 @@ function describeFieldValidation() {
       expect(result.sobrenome).toBe('Santos');
       expect(result.email).toBe('maria@escola.com');
       expect(result.telefone).toBe('11777777777');
-      expect(result.criador).toBe('diretor-789');
+      expect(result).not.toHaveProperty('criador');
     });
   });
 }

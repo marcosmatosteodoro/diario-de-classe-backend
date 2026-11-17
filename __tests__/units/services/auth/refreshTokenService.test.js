@@ -2,6 +2,7 @@ import { RefreshTokenService } from '../../../../src/services/auth/refreshTokenS
 import UserRepository from '../../../../src/repositories/userRepository.js';
 import { createJwt } from '../../../../src/utilities/createJwt.js';
 import Constants from '../../../../src/utilities/constants.js';
+import { base64url } from '../../../../src/utilities/base64url.js';
 
 // Gera um refresh token válido diretamente (sem passar pelo LoginService, que
 // depende de banco), isolando o RefreshTokenService no teste unitário.
@@ -165,5 +166,71 @@ describe('RefreshTokenService', () => {
     // Os tokens podem ser diferentes se gerados em segundos diferentes
     expect(result1).toHaveProperty('accessToken');
     expect(result2).toHaveProperty('accessToken');
+  });
+
+  describe('assinatura e expiração', () => {
+    const selectOneSpy = () => {
+      const calls = [];
+      UserRepository.prototype.selectOne = async arg => {
+        calls.push(arg);
+        return { id: 'user-123', email: 'test@example.com', nome: 'Test User' };
+      };
+      return calls;
+    };
+
+    test('should return null when signature is arbitrary', async () => {
+      const calls = selectOneSpy();
+      const exp = Math.floor(Date.now() / 1000) + 3600;
+      const header = base64url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+      const body = base64url(JSON.stringify({ sub: 'user-123', exp }));
+      const forged = `${header}.${body}.assinatura-forjada`;
+
+      const result = await new RefreshTokenService(UserRepository, forged).execute();
+
+      expect(result).toBeNull();
+      expect(calls).toHaveLength(0);
+    });
+
+    test('should return null when signed with the wrong secret', async () => {
+      const calls = selectOneSpy();
+      const token = createJwt({ sub: 'user-123' }, Constants.jwtSecret, Constants.refreshExp);
+
+      const result = await new RefreshTokenService(UserRepository, token).execute();
+
+      expect(result).toBeNull();
+      expect(calls).toHaveLength(0);
+    });
+
+    test('should return null when payload is tampered after signing', async () => {
+      const calls = selectOneSpy();
+      const token = makeRefreshToken('user-123');
+      const [h, , s] = token.split('.');
+      const body = base64url(
+        JSON.stringify({ sub: 'outro', exp: Math.floor(Date.now() / 1000) + 3600 })
+      );
+
+      const result = await new RefreshTokenService(UserRepository, `${h}.${body}.${s}`).execute();
+
+      expect(result).toBeNull();
+      expect(calls).toHaveLength(0);
+    });
+
+    test('should return null when signature has different length', async () => {
+      selectOneSpy();
+      const token = makeRefreshToken('user-123');
+
+      const result = await new RefreshTokenService(UserRepository, `${token}x`).execute();
+
+      expect(result).toBeNull();
+    });
+
+    test('should return null when token is expired', async () => {
+      selectOneSpy();
+      const token = createJwt({ sub: 'user-123' }, Constants.jwtRefreshSecret, -10);
+
+      const result = await new RefreshTokenService(UserRepository, token).execute();
+
+      expect(result).toBeNull();
+    });
   });
 });
