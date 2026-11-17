@@ -1,6 +1,15 @@
-import { UpdateUserService } from '../../../../src/services/user/updateUserService.js';
+import { jest } from '@jest/globals';
+import { passwordCustoBarato } from '../../../mocks/passwordCustoBarato.js';
 import UserRepository from '../../../../src/repositories/userRepository.js';
 import AbstractService from '../../../../src/services/abstractService.js';
+
+// O service chama hashSenha sem params; o módulo troca o custo (provado em password.test.js).
+const passwordReal = await import('../../../../src/utilities/password.js');
+jest.unstable_mockModule('../../../../src/utilities/password.js', () =>
+  passwordCustoBarato(passwordReal)
+);
+const { isHash, verificarSenha } = await import('../../../../src/utilities/password.js');
+const { UpdateUserService } = await import('../../../../src/services/user/updateUserService.js');
 
 function describeUpdateUserServiceInitialization() {
   describe('Inicialização', () => {
@@ -95,6 +104,10 @@ function describeExecuteMethod() {
 
       expect(service.repository.updateCalls).toHaveLength(1);
       expect(service.repository.updateCalls[0].data.nomeCompleto).toBe('João Silva');
+      const gravada = service.repository.updateCalls[0].data.senha;
+      expect(gravada).not.toBe(mockData.senha);
+      expect(isHash(gravada)).toBe(true);
+      expect(await verificarSenha(mockData.senha, gravada)).toBe(true);
       expect(service.repository.updateCalls[0]).toEqual({
         where: { id: 'user-id-1' },
         data: {
@@ -103,7 +116,7 @@ function describeExecuteMethod() {
           nomeCompleto: 'João Silva',
           email: mockData.email,
           telefone: mockData.telefone,
-          senha: mockData.senha,
+          senha: gravada,
           resetarSenha: mockData.resetarSenha,
           permissao: mockData.permissao,
           idiomas: undefined
@@ -507,7 +520,10 @@ function describeUpdateScenarios() {
       const service = new UpdateUserService(MockRepository, 'user-id-1', mockData);
       await service.execute();
 
-      expect(service.repository.updateCalls[0].data.senha).toBe('novaSenhaForte123');
+      const gravada = service.repository.updateCalls[0].data.senha;
+      expect(gravada).not.toBe('novaSenhaForte123');
+      expect(isHash(gravada)).toBe(true);
+      expect(await verificarSenha('novaSenhaForte123', gravada)).toBe(true);
     });
   });
 }

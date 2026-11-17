@@ -1,4 +1,3 @@
-// import 'newrelic'; // Comentado até configurar a license key
 // import './db/database';
 import app from './app.js';
 import Constants from './utilities/constants.js';

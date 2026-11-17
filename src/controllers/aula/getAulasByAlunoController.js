@@ -1,19 +1,21 @@
-import AbstractController from '../abstractController.js';
+import { AbstractAulaController } from './AbstractAulaController.js';
 import { GetAulaListService } from '../../services/aula/getAulaListService.js';
 
-export class GetAulasByAlunoController extends AbstractController {
+export class GetAulasByAlunoController extends AbstractAulaController {
   constructor(req, res) {
     super(req, res);
-    this.where = {};
   }
 
   async execute() {
     try {
+      if (!this.req.user.isAdmin && !this.req.user.id) {
+        return this.res.status(403).json({ message: this.req.t('api.errors.forbidden') });
+      }
+
       const idAluno = this.req.validatedId || this.req.params.id;
 
-      this.where = {
-        idAluno
-      };
+      const negocio = { idAluno };
+      this.where = this.req.user.isAdmin ? negocio : { AND: [this.where, negocio] };
 
       const aulas = await GetAulaListService.handle(this.where);
 

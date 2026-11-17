@@ -13,7 +13,7 @@ export class ProfessoresSeed extends BaseSeed {
         sobrenome: 'Silva',
         email: 'ana.silva@blsidiomas.com',
         telefone: '11987654321',
-        senha: 'senha123', // Em produção, deve ser hasheada
+        senha: 'senha123',
         permissao: 'admin',
         resetarSenha: false
       },

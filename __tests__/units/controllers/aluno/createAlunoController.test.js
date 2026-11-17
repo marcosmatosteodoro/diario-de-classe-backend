@@ -17,8 +17,10 @@ describe('CreateAlunoController', () => {
         dataNascimento: '1990-01-01',
         observacoes: 'Aluno dedicado'
       },
+      user: { sub: 'user-sub-123', id: 'user-sub-123' },
       t: key => {
         const translations = {
+          'api.errors.unauthorized': 'Não autorizado',
           'alunos.create.email_exists': 'Este email já está em uso',
           'alunos.create.error': 'Erro ao criar aluno'
         };
@@ -381,7 +383,7 @@ describe('CreateAlunoController', () => {
 
       await controller.execute();
 
-      expect(receivedData).toEqual(mockReq.body);
+      expect(receivedData).toEqual({ ...mockReq.body, criador: 'user-sub-123' });
 
       IsAlunoEmailExistsService.handle = originalIsEmailExists;
       CreateAlunoService.handle = originalCreateAluno;
@@ -495,6 +497,56 @@ describe('CreateAlunoController', () => {
       expect(minimalController.req.body.endereco).toBeUndefined();
       expect(minimalController.req.body.dataNascimento).toBeUndefined();
       expect(minimalController.req.body.observacoes).toBeUndefined();
+    });
+  });
+
+  describe('criador derivado do token', () => {
+    let originalIsEmailExists, originalCreateAluno, receivedData;
+
+    beforeEach(() => {
+      originalIsEmailExists = IsAlunoEmailExistsService.handle;
+      originalCreateAluno = CreateAlunoService.handle;
+      receivedData = null;
+      IsAlunoEmailExistsService.handle = async () => false;
+      CreateAlunoService.handle = async data => {
+        receivedData = data;
+        return { id: 1 };
+      };
+    });
+
+    afterEach(() => {
+      IsAlunoEmailExistsService.handle = originalIsEmailExists;
+      CreateAlunoService.handle = originalCreateAluno;
+    });
+
+    test('ignora criador do body e grava req.user.sub', async () => {
+      mockReq.body.criador = 'outro-usuario-999';
+
+      await controller.execute();
+
+      expect(mockRes.statusCode).toBe(201);
+      expect(receivedData.criador).toBe('user-sub-123');
+    });
+
+    test('sem criador no body grava req.user.sub', async () => {
+      await controller.execute();
+
+      expect(receivedData.criador).toBe('user-sub-123');
+    });
+
+    test.each([
+      ['sem req.user', undefined],
+      ['sub ausente', { id: 'x' }],
+      ['sub null', { sub: null }],
+      ['sub vazio', { sub: '' }]
+    ])('falha seguro com 401 e não cria (%s), mesmo com criador no body', async (_r, user) => {
+      mockReq.user = user;
+      mockReq.body.criador = 'outro-usuario-999';
+
+      await controller.execute();
+
+      expect(mockRes.statusCode).toBe(401);
+      expect(receivedData).toBeNull();
     });
   });
 });

@@ -1,11 +1,12 @@
 import { CreateAulaController } from '../../../../src/controllers/aula/createAulaController.js';
 import { CreateAulaService } from '../../../../src/services/aula/createAulaService.js';
 import { IsAulaExistsService } from '../../../../src/services/aula/isAulaExistsService.js';
+import { GetContratoListService } from '../../../../src/services/contrato/getContratoListService.js';
 import { GetContratoService } from '../../../../src/services/contrato/getContratoService.js';
 import { UpdateAulasContratoService } from '../../../../src/services/contrato/updateAulasContratoService.js';
 
 describe('CreateAulaController - vínculo contrato↔aluno', () => {
-  let originals, calls, contratoLookups;
+  let originals, calls, contratoLookups, professorTemPosse;
 
   const buildReq = user => ({
     user,
@@ -41,13 +42,16 @@ describe('CreateAulaController - vínculo contrato↔aluno', () => {
   beforeEach(() => {
     calls = [];
     contratoLookups = [];
+    professorTemPosse = true;
     originals = {
+      lista: GetContratoListService.handle,
       contrato: GetContratoService.handle,
       exists: IsAulaExistsService.handle,
       create: CreateAulaService.handle,
       update: UpdateAulasContratoService.handle
     };
     GetContratoService.handle = contratoDoBanco;
+    GetContratoListService.handle = async () => (professorTemPosse ? [{ id: 'contrato-1' }] : []);
     IsAulaExistsService.handle = async () => {
       calls.push('exists');
       return false;
@@ -63,6 +67,7 @@ describe('CreateAulaController - vínculo contrato↔aluno', () => {
 
   afterEach(() => {
     GetContratoService.handle = originals.contrato;
+    GetContratoListService.handle = originals.lista;
     IsAulaExistsService.handle = originals.exists;
     CreateAulaService.handle = originals.create;
     UpdateAulasContratoService.handle = originals.update;
@@ -127,5 +132,18 @@ describe('CreateAulaController - vínculo contrato↔aluno', () => {
     expect(res.statusCode).toBe(201);
     expect(res.data.status).toBe('AGENDADA');
     expect(calls).toEqual(['exists', 'create', 'recalc']);
+  });
+
+  test('não-admin sem posse com par inválido recebe 403 (não 422) e o contrato não é consultado', async () => {
+    professorTemPosse = false;
+    const req = buildReq({ id: 'prof-1', isAdmin: false });
+    req.body.idAluno = 'aluno-2';
+    const res = buildRes();
+
+    await CreateAulaController.handle(req, res);
+
+    expect(res.statusCode).toBe(403);
+    expect(contratoLookups).toEqual([]);
+    expect(calls).toEqual([]);
   });
 });

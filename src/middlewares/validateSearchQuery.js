@@ -1,3 +1,6 @@
+import Constants from '../utilities/constants.js';
+import { redactErrorForLog } from '../utilities/redactErrorForLog.js';
+
 /**
  * Valida se o parâmetro de busca 'q' é válido
  * @param {string} q - Parâmetro de busca
@@ -67,9 +70,13 @@ export const validateSearchQuery = (req, res, next) => {
     // Se chegou até aqui, o parâmetro é válido
     return next();
   } catch (error) {
-    return res.status(500).json({
-      message: req.t ? req.t('error.internal') : 'Erro interno do servidor',
-      error: error.message
-    });
+    console.error('[validateSearchQuery] Erro:', redactErrorForLog(error));
+    const body = {
+      message: req.t ? req.t('error.internal') : 'Erro interno do servidor'
+    };
+    if (Constants.env === 'development') {
+      body.error = error.message;
+    }
+    return res.status(500).json(body);
   }
 };

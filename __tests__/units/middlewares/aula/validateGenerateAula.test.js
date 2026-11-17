@@ -1,5 +1,8 @@
 import { validateGenerateAula } from '../../../../src/middlewares/aula/validateGenerateAula.js';
 import httpStatus from 'http-status';
+import { jest } from '@jest/globals';
+import { GetContratoService } from '../../../../src/services/contrato/getContratoService.js';
+import Constants from '../../../../src/utilities/constants.js';
 
 describe('validateGenerateAula Middleware', () => {
   let mockReq, mockRes, mockNext;
@@ -634,5 +637,77 @@ describe('validateGenerateAula Middleware', () => {
       expect(mockNext.called).toBe(true);
       expect(mockRes.statusCode).toBeNull();
     });
+  });
+});
+
+describe('validateGenerateAula - detalhe do erro interno na resposta', () => {
+  const originalEnv = Constants.env;
+  const mensagemInterna = 'Invalid `prisma.contrato.findUnique()` tabela secreta_xyz';
+  let req, res, errorSpy;
+
+  beforeEach(() => {
+    req = {
+      body: { isEdit: true, id: 1 },
+      t: key => ({ 'error.internal': 'Erro interno do servidor' })[key] || key
+    };
+    res = {
+      statusCode: null,
+      jsonData: null,
+      status(code) {
+        this.statusCode = code;
+        return this;
+      },
+      json(data) {
+        this.jsonData = data;
+        return this;
+      }
+    };
+    errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(GetContratoService, 'handle').mockRejectedValue(
+      Object.assign(new Error(mensagemInterna), {
+        name: 'PrismaClientKnownRequestError',
+        code: 'P2025',
+        meta: { cause: 'valor-sensivel' }
+      })
+    );
+  });
+
+  afterEach(() => {
+    Constants.env = originalEnv;
+  });
+
+  test.each(['production', 'test', 'homolog'])(
+    'fora de development (%s) responde 500 sem o texto interno em nenhum campo',
+    async env => {
+      Constants.env = env;
+
+      await validateGenerateAula(req, res, () => {});
+
+      expect(res.statusCode).toBe(500);
+      expect(res.jsonData).toEqual({ message: 'Erro interno do servidor' });
+      expect(JSON.stringify(res.jsonData)).not.toContain('secreta_xyz');
+    }
+  );
+
+  test('registra o erro redigido, sem message nem valores', async () => {
+    Constants.env = 'production';
+
+    await validateGenerateAula(req, res, () => {});
+
+    expect(errorSpy).toHaveBeenCalledWith('[validateGenerateAula] Erro:', {
+      name: 'PrismaClientKnownRequestError',
+      code: 'P2025',
+      meta: ['cause']
+    });
+  });
+
+  test('em development inclui error com a mensagem', async () => {
+    Constants.env = 'development';
+
+    await validateGenerateAula(req, res, () => {});
+
+    expect(res.statusCode).toBe(500);
+    expect(res.jsonData.message).toBe('Erro interno do servidor');
+    expect(res.jsonData.error).toBe(mensagemInterna);
   });
 });
