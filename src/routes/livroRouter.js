@@ -1,7 +1,4 @@
 import express from 'express';
-import multer from 'multer';
-import os from 'os';
-import path from 'path';
 // Controladores
 import { GetLivroListController } from '../controllers/livro/getLivroListController.js';
 import { GetLivroController } from '../controllers/livro/getLivroController.js';
@@ -15,17 +12,13 @@ import { UploadConteudoLivroExcelController } from '../controllers/conteudoLivro
 import { validateId } from '../middlewares/validateId.js';
 import { validateSearchQuery } from '../middlewares/validateSearchQuery.js';
 import { validateExcelFile } from '../middlewares/validateExcelFile.js';
+import { uploadPlanilha } from '../utilities/planilhaUpload.js';
 import { validateCreateLivro } from '../middlewares/livro/validateCreateLivro.js';
 import { validateUpdateLivro } from '../middlewares/livro/validateUpdateLivro.js';
 import { validateCreateConteudoLivro } from '../middlewares/conteudoLivro/validateCreateConteudoLivro.js';
 import adminOnly from '../middlewares/adminOnly.js';
 
 const router = express.Router();
-
-// Usa /tmp tanto em produção quanto local
-const uploadDir = path.join(os.tmpdir(), 'uploads');
-
-const upload = multer({ dest: uploadDir });
 
 // GET /api/livros - Buscar todos os livros
 router.get('/', validateSearchQuery, GetLivroListController.handle);
@@ -59,7 +52,7 @@ router.post(
   '/:id/conteudos/upload',
   adminOnly,
   validateId,
-  upload.single('file'),
+  uploadPlanilha.single('file'),
   validateExcelFile,
   UploadConteudoLivroExcelController.handle
 );
