@@ -50,17 +50,23 @@ function installStore() {
       }
       const resultado = {
         contagem: linha.contagem,
-        segundosRestantes: Math.max(Math.ceil((linha.expiraEm - agora) / 1000), 1)
+        segundosRestantes: Math.max(Math.ceil((linha.expiraEm - agora) / 1000), 1),
+        expiraEm: linha.expiraEm
       };
       await new Promise(resolve => setImmediate(resolve));
       return resultado;
     });
-  jest.spyOn(TentativaLoginRepository.prototype, 'decrementar').mockImplementation(async chave => {
-    const atual = store.get(chave);
-    if (atual) atual.contagem = Math.max(atual.contagem - 1, 0);
-    await new Promise(resolve => setImmediate(resolve));
-    return atual ? 1 : 0;
-  });
+  // Respeita o predicado de janela do UPDATE: só altera a linha cuja expiraEm é a informada
+  // (sem expiraEm, não há predicado: o UPDATE é incondicional).
+  jest
+    .spyOn(TentativaLoginRepository.prototype, 'decrementar')
+    .mockImplementation(async (chave, expiraEm) => {
+      const atual = store.get(chave);
+      const alvo = atual && (expiraEm === undefined || atual.expiraEm === expiraEm) ? atual : null;
+      if (alvo) alvo.contagem = Math.max(alvo.contagem - 1, 0);
+      await new Promise(resolve => setImmediate(resolve));
+      return alvo ? 1 : 0;
+    });
   jest
     .spyOn(TentativaLoginRepository.prototype, 'removerPorChave')
     .mockImplementation(async chave => ({ count: store.delete(chave) ? 1 : 0 }));
@@ -197,8 +203,102 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
     for (let i = 0; i < total; i++) await login(app, { email: `pessoa${i}@example.com` });
 
     const chavesIpEmail = [...store.criadas].filter(chave => chave.startsWith('ip-email:'));
-    // +1 de folga: a requisição que cruza o teto do IP é recusada antes da chave IP+e-mail.
-    expect(chavesIpEmail.length).toBeLessThanOrEqual(Constants.loginMaxTentativasPorIp + 1);
+    expect(chavesIpEmail.length).toBe(Constants.loginMaxTentativasPorIp);
+  });
+
+  describe('devolução da reserva do IP fica na janela da reserva', () => {
+    const teto = Constants.loginMaxTentativasPorIp;
+
+    // Segura a devolução atrasada (a primeira chamada) até `liberar()`; as demais seguem direto.
+    const segurarPrimeiraDevolucao = () => {
+      const original = TentativaLoginRepository.prototype.decrementar.getMockImplementation();
+      let liberar;
+      const portao = new Promise(resolve => (liberar = resolve));
+      let seguraChamada = null;
+      let primeira = true;
+      TentativaLoginRepository.prototype.decrementar.mockImplementation(async (...args) => {
+        if (primeira) {
+          primeira = false;
+          seguraChamada = args;
+          await portao;
+        }
+        return original(...args);
+      });
+      const chegou = async () => {
+        for (let i = 0; i < 1000 && !seguraChamada; i++) {
+          await new Promise(resolve => setImmediate(resolve));
+        }
+        return seguraChamada;
+      };
+      return { liberar, chegou };
+    };
+
+    // Janela nova com 1 reserva já feita; devem caber exatamente `teto` no total.
+    const completarEEsgotarJanelaNova = async () => {
+      for (let i = 0; i < teto - 1; i++) {
+        expect((await login(app, { email: `nova${i}@example.com` })).status).toBe(401);
+      }
+      expect((await login(app, { email: 'excedente@example.com' })).status).toBe(429);
+    };
+
+    test('recusa: a devolução atrasada de uma reserva da janela anterior não libera tentativas na janela nova', async () => {
+      for (let i = 0; i < teto; i++) await login(app, { email: `pessoa${i}@example.com` });
+      const devolucao = segurarPrimeiraDevolucao();
+
+      const recusada = login(app, { email: 'recusada@example.com' }).then(r => r);
+      const args = await devolucao.chegou();
+      expect(args[1]).toBe(now + Constants.loginJanelaSegundos * 1000);
+
+      now += Constants.loginJanelaSegundos * 1000 + 1;
+      expect((await login(app, { email: 'primeira.da.nova@example.com' })).status).toBe(401);
+      devolucao.liberar();
+      expect((await recusada).status).toBe(429);
+
+      await completarEEsgotarJanelaNova();
+    });
+
+    test('recusa por e-mail: a devolução atrasada também fica na janela da reserva', async () => {
+      for (let i = 0; i < Constants.loginMaxTentativasPorEmail; i++) await login(app);
+      const devolucao = segurarPrimeiraDevolucao();
+
+      const recusada = login(app).then(r => r);
+      expect(await devolucao.chegou()).not.toBeNull();
+
+      now += Constants.loginJanelaSegundos * 1000 + 1;
+      expect((await login(app, { email: 'primeira.da.nova@example.com' })).status).toBe(401);
+      devolucao.liberar();
+      expect((await recusada).status).toBe(429);
+
+      await completarEEsgotarJanelaNova();
+    });
+
+    test('sucesso: a devolução atrasada com a janela antiga não altera a janela nova', async () => {
+      loginSpy.mockResolvedValueOnce(loginOk);
+      const devolucao = segurarPrimeiraDevolucao();
+
+      const sucesso = login(app, { senha: 'certa' }).then(r => r);
+      const args = await devolucao.chegou();
+      expect(args[1]).toBe(now + Constants.loginJanelaSegundos * 1000);
+
+      now += Constants.loginJanelaSegundos * 1000 + 1;
+      expect((await login(app, { email: 'primeira.da.nova@example.com' })).status).toBe(401);
+      devolucao.liberar();
+      expect((await sucesso).status).toBe(200);
+
+      await completarEEsgotarJanelaNova();
+    });
+
+    test('recusa e sucesso devolvem com o fim da janela da reserva do IP', async () => {
+      const fim = now + Constants.loginJanelaSegundos * 1000;
+      loginSpy.mockResolvedValue(loginOk);
+
+      await login(app, { senha: 'certa' });
+
+      expect(TentativaLoginRepository.prototype.decrementar).toHaveBeenCalledWith(
+        expect.stringMatching(/^ip:/),
+        fim
+      );
+    });
   });
 
   test('sucesso zera o contador IP+e-mail', async () => {

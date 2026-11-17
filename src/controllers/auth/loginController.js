@@ -27,7 +27,7 @@ export class LoginController extends AbstractController {
         return this.res.status(401).json({ message: this.req.t('auth.login.unauthorized') });
       }
 
-      await ZerarTentativasLoginService.handle(ip, email);
+      await ZerarTentativasLoginService.handle(ip, email, this.res.locals?.expiraEmReservaIp);
       return this.res.status(200).json(response);
     } catch (error) {
       return this.handleError(error, 'auth.login.error');

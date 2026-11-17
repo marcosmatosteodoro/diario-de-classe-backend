@@ -4,10 +4,11 @@ import LoggerManager from '../../utilities/loggerManager.js';
 import { maskEmail } from '../../utilities/maskEmail.js';
 
 /**
- * Reserva a tentativa nos contadores IP+e-mail e IP antes de verificar a
+ * Reserva a tentativa nos contadores IP e IP+e-mail (nessa ordem) antes de verificar a
  * credencial; a decisão sai do valor devolvido pela mesma escrita. Acima do
- * teto: 429 + Retry-After, sem chegar ao LoginController. Erro no contador
- * nega a requisição (fail secure).
+ * teto: 429 + Retry-After, sem chegar ao LoginController. Liberada: o fim da janela da
+ * reserva do IP segue em `res.locals.expiraEmReservaIp`, para o controller devolver
+ * a reserva só dentro dessa janela. Erro no contador nega a requisição (fail secure).
  *
  * @param {Object} req
  * @param {Object} res
@@ -18,7 +19,10 @@ export const limitLoginAttempts = async (req, res, next) => {
   const email = req.body?.email;
 
   try {
-    const retryAfter = await ReservarTentativaLoginService.handle(ip, email);
+    const { segundosBloqueio: retryAfter, expiraEmIp } = await ReservarTentativaLoginService.handle(
+      ip,
+      email
+    );
 
     if (retryAfter > 0) {
       LoggerManager.warn('Login bloqueado por excesso de tentativas', {
@@ -30,6 +34,7 @@ export const limitLoginAttempts = async (req, res, next) => {
       return res.status(429).json({ message: req.t('auth.login.too_many_attempts') });
     }
 
+    res.locals.expiraEmReservaIp = expiraEmIp;
     return next();
   } catch (error) {
     // Só name/code: a mensagem de erro do ORM pode embutir argumentos da chamada.
