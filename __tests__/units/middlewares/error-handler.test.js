@@ -190,3 +190,87 @@ describe('ThrowErrors Function', () => {
     expect(() => ThrowErrors(req)).not.toThrow();
   });
 });
+
+describe('ErrorHandler - erros HTTP 4xx expostos', () => {
+  let req, res;
+
+  beforeEach(() => {
+    req = {
+      t: jest.fn(key => {
+        const translations = {
+          'api.errors.bad_request': 'Requisição inválida',
+          'api.errors.payload_too_large': 'Corpo da requisição excede o tamanho permitido',
+          'api.errors.internal_error': 'Erro interno do servidor'
+        };
+        return translations[key] || key;
+      })
+    };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+  });
+
+  function httpError(status, extra = {}) {
+    return Object.assign(new Error('mensagem interna'), { status, expose: true, ...extra });
+  }
+
+  test('erro exposto 413 responde 413 com a chave payload_too_large', () => {
+    ErrorHandler(httpError(413, { body: 'conteudo-secreto' }), req, res);
+
+    expect(res.status).toHaveBeenCalledWith(413);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'PayloadTooLarge',
+      message: 'Corpo da requisição excede o tamanho permitido'
+    });
+  });
+
+  test('erro exposto 400 preserva o status e responde BadRequest', () => {
+    ErrorHandler(httpError(400, { body: 'conteudo-secreto' }), req, res);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'BadRequest',
+      message: 'Requisição inválida'
+    });
+  });
+
+  test('erro exposto 415 via statusCode preserva o status', () => {
+    ErrorHandler(httpError(undefined, { statusCode: 415 }), req, res);
+
+    expect(res.status).toHaveBeenCalledWith(415);
+  });
+
+  test('erro 4xx exposto responde status e mensagem traduzida fixa', () => {
+    ErrorHandler(httpError(413, { body: 'conteudo-secreto' }), req, res);
+
+    const serializado = JSON.stringify(res.json.mock.calls[0][0]);
+    expect(serializado).not.toContain('conteudo-secreto');
+    expect(serializado).not.toContain('mensagem interna');
+  });
+
+  test('erro comum continua respondendo 500', () => {
+    ErrorHandler(new Error('falha'), req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+  });
+
+  test('status 413 sem expose responde 500 (fail secure)', () => {
+    ErrorHandler(httpError(413, { expose: undefined }), req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+  });
+
+  test('expose true com status 5xx responde 500', () => {
+    ErrorHandler(httpError(503), req, res);
+
+    expect(res.status).toHaveBeenCalledWith(500);
+  });
+
+  test('sem req.t usa o fallback local em português para 413', () => {
+    ErrorHandler(httpError(413), {}, res);
+
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'PayloadTooLarge',
+      message: 'Corpo da requisição excede o tamanho permitido'
+    });
+  });
+});

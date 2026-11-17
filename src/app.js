@@ -25,6 +25,9 @@ try {
   throw error;
 }
 
+// Limite único do corpo JSON e urlencoded; dimensionado pelo salvamento do contrato com até 1.800 aulas
+const BODY_LIMIT = '3mb';
+
 const app = express();
 
 if (!Constants.isProduction) {
@@ -43,11 +46,11 @@ if (!Constants.isProduction) {
 app.use(i18nMiddleware);
 app.use('/api/stripe', bodyParser.raw({ type: '*/*' })); // Configura endpoint específico do Stripe para receber dados brutos (webhooks)
 app.use(responseTime({ header: 'execution-time' })); // Adiciona header com tempo de execução das requisições
-app.use(bodyParser.json({ limit: '100mb' })); // Permite parsing de JSON com limite de 100MB
+app.use(bodyParser.json({ limit: BODY_LIMIT })); // Permite parsing de JSON com limite de BODY_LIMIT
 app.use(
   bodyParser.urlencoded({
     extended: true, // Permite parsing de objetos aninhados em form-data
-    limit: '100mb' // Define limite de 100MB para dados URL-encoded
+    limit: BODY_LIMIT // Define o mesmo limite para dados URL-encoded
   })
 );
 app.use(compress()); // Habilita compressão gzip/deflate nas respostas
