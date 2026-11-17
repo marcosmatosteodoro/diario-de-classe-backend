@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import request from 'supertest';
 import util from 'node:util';
+import { cookiesDaSessao } from '../../mocks/cookiesDaSessao.js';
 
 // O import a frio da árvore de app.js chega perto do testTimeout global (10s).
 const TIMEOUT_IMPORT_FRIO = 30000;
@@ -73,11 +74,6 @@ describe('POST /api/auth/login (app real)', () => {
     });
   };
 
-  // O i18n do app grava o cookie `lng` em toda resposta; o que a sessão controla é o
-  // subconjunto de set-cookie que não é o de idioma.
-  const cookiesDaSessao = res =>
-    (res.headers['set-cookie'] ?? []).filter(c => !c.startsWith('lng='));
-
   const entrar = () =>
     request(app)
       .post('/api/auth/login')
@@ -120,6 +116,16 @@ describe('POST /api/auth/login (app real)', () => {
     const res = await entrar();
 
     expect(res.status).toBe(401);
+    expect(cookiesDaSessao(res)).toEqual([]);
+  });
+
+  test('500: ZerarTentativas lançando no sucesso nega o login sem cookie de sessão', async () => {
+    mockarSucesso();
+    TentativaLoginRepository.prototype.removerPorChave.mockRejectedValue(new Error('banco fora'));
+    const res = await entrar();
+
+    expect(res.status).toBe(500);
+    expect(res.body).not.toHaveProperty('accessToken');
     expect(cookiesDaSessao(res)).toEqual([]);
   });
 
