@@ -25,6 +25,15 @@ export class UpdateLivroService extends AbstractService {
     });
   }
 
+  /**
+   * Update genérico de livro. Não há checagem aqui (nem no controller) que impeça
+   * trocar `idioma` de um livro já em uso por cronograma — a coerência livro↔contrato
+   * só é validada na criação do cronograma, nunca depois.
+   *
+   * @param {string} id
+   * @param {Object} data campos parciais (chaves `undefined` são removidas antes do update)
+   * @returns {Promise<Object>} livro atualizado, projetado pela whitelist padrao
+   */
   static async handle(id, data) {
     const Repository = LivroRepository;
     const service = new UpdateLivroService(Repository, id, data);

@@ -14,6 +14,11 @@ export class GetContratoListService extends AbstractService {
     });
   }
 
+  /**
+   * @param {Object} [where] filtro Prisma livre
+   * @returns {Promise<Array<Object>>} contratos projetados pela whitelist padrao
+   *   (inclui nome/nomeCompleto do aluno, sem lista de aulas)
+   */
   static async handle(where = {}) {
     const Repository = ContratoRepository;
     const service = new GetContratoListService(Repository, where);

@@ -29,6 +29,15 @@ export class UpdateContratoService extends AbstractService {
     });
   }
 
+  /**
+   * Update genérico de contrato. Aceita `totalAulas`/`totalAulasFeitas`/etc direto
+   * de `data` — esses campos são derivados e normalmente só `UpdateAulasContratoService`
+   * os escreve; passar valor aqui os sobrescreve sem recalculo.
+   *
+   * @param {string} id
+   * @param {Object} data campos parciais de contrato (chaves `undefined` são removidas)
+   * @returns {Promise<Object>} contrato atualizado, projetado pela whitelist padrao
+   */
   static async handle(id, data) {
     const Repository = ContratoRepository;
     const service = new UpdateContratoService(Repository, id, data);

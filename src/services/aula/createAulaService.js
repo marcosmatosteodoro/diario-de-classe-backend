@@ -27,6 +27,20 @@ export class CreateAulaService extends AbstractService {
     );
   }
 
+  /**
+   * @param {Object} data dados da aula
+   * @param {string} data.idAluno
+   * @param {string} data.idProfessor
+   * @param {string} data.idContrato
+   * @param {string|Date} data.dataAula
+   * @param {string} data.horaInicial
+   * @param {string} data.horaFinal
+   * @param {number} data.duracaoAula
+   * @param {string} data.tipo
+   * @param {string} data.status
+   * @param {string} [data.observacao]
+   * @returns {Promise<Object>} aula criada, projetada pela whitelist de saida
+   */
   static async handle(data) {
     const Repository = AulaRepository;
     const service = new CreateAulaService(Repository, data);

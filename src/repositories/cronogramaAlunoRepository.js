@@ -24,6 +24,11 @@ export default class CronogramaAlunoRepository extends AbstractRepository {
     };
   }
 
+  /**
+   * Campos do cronograma mais o livro vinculado (id, nome, idioma, nivel) —
+   * usado por toda leitura que precisa mostrar qual livro o aluno cursa.
+   * @returns {Object}
+   */
   getSelectFieldsWithLivro() {
     return {
       ...this.getSelectFields(),

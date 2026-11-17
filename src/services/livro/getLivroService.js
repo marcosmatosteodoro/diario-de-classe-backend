@@ -17,6 +17,12 @@ export class GetLivroService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} id
+   * @param {Object} [options]
+   * @param {boolean} [options.withConteudos] inclui `conteudos` do livro, ordenados por `ordem`
+   * @returns {Promise<Object|null>} livro, ou `null`
+   */
   static async handle(id, options = {}) {
     const Repository = LivroRepository;
     const service = new GetLivroService(Repository, id, options);

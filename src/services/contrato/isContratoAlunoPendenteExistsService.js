@@ -19,6 +19,10 @@ export class IsContratoAlunoPendenteExistsService extends AbstractService {
     return contrato && contrato.length > 0;
   }
 
+  /**
+   * @param {string} idAluno
+   * @returns {Promise<boolean>} true quando o aluno tem ao menos um contrato `PENDENTE`
+   */
   static async handle(idAluno) {
     const Repository = ContratoRepository;
     const service = new IsContratoAlunoPendenteExistsService(Repository, idAluno);

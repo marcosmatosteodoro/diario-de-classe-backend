@@ -24,6 +24,17 @@ export class CreateDiaAulaService extends AbstractService {
     );
   }
 
+  /**
+   * @param {Object} data dados do dia de aula
+   * @param {string} data.idAluno
+   * @param {string} data.idContrato
+   * @param {string} data.diaSemana `SEGUNDA`|`TERCA`|`QUARTA`|`QUINTA`|`SEXTA`|`SABADO`|`DOMINGO`
+   * @param {number} data.quantidadeAulas
+   * @param {number} [data.duracaoAula]
+   * @param {string} data.horaInicial formato `HH:MM`
+   * @param {string} data.horaFinal formato `HH:MM`
+   * @returns {Promise<Object>} dia de aula criado, projetado pela whitelist de saida
+   */
   static async handle(data) {
     const Repository = DiaAulaRepository;
     const service = new CreateDiaAulaService(Repository, data);

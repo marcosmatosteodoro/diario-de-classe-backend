@@ -25,6 +25,14 @@ export class CreateCronogramaService extends AbstractService {
     );
   }
 
+  /**
+   * @param {Object} data
+   * @param {string} data.idAluno
+   * @param {string} data.idContrato
+   * @param {string} data.idLivro
+   * @param {string|Date} [data.dataInicio] default `new Date()`
+   * @returns {Promise<Object>} cronograma criado (unico ativo do contrato), com o livro projetado
+   */
   static async handle(data) {
     const Repository = CronogramaAlunoRepository;
     const service = new CreateCronogramaService(Repository, data);

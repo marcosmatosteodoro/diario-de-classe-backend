@@ -3,6 +3,29 @@ import { GetAulaListService } from '../../services/aula/getAulaListService.js';
 import { GetContratoListService } from '../../services/contrato/getContratoListService.js';
 import AbstractController from '../abstractController.js';
 
+/**
+ * Monta os números e a lista de aulas da tela inicial do dashboard
+ * (`GET /dashboard`, atrás de `isLoggedIn`).
+ *
+ * Orquestra três services já documentados na própria camada de aluno, aula e
+ * contrato — não tem repository nem service próprio:
+ * - `GetAlunoListService` e `GetContratoListService`: contam alunos e
+ *   contratos ATIVO visíveis ao usuário logado (todos, se admin).
+ * - `GetAulaListService`: traz as aulas conforme os filtros de
+ *   `req.query` (ver `bindMainWhere`), com relações (`withRelations: true`).
+ *
+ * Nenhuma das três listas é paginada nem filtrada por data no banco por
+ * padrão — o custo cresce com o histórico total, não com "hoje". Em
+ * seguida, `aulasAgendadas` é obtido filtrando o array de aulas já trazido
+ * **em memória** (`aulas.filter(...)`), em vez de um `WHERE`/`COUNT` no
+ * banco.
+ *
+ * Query aceitos em `req.query` (todos opcionais): `dataInicio`,
+ * `dataTermino` (janela de `dataAula`), `status`, `tipo`, `alunoId`,
+ * `professorId`, `minhasAulas` ('true' força o professor logado). Usuário
+ * não-admin sempre tem o `where` de aulas/alunos/contratos restrito ao
+ * próprio id, ignorando `professorId`/`minhasAulas` informados.
+ */
 export class GetHomeController extends AbstractController {
   constructor(req, res) {
     super(req, res);
@@ -12,6 +35,12 @@ export class GetHomeController extends AbstractController {
     this.id = req.user.sub;
   }
 
+  /**
+   * @returns {Promise<void>} responde 200 com
+   *   `{ totalAulas, totalAlunos, totalContratos, aulas }`, onde `totalAulas`
+   *   conta só as aulas com `status === 'AGENDADA'` dentro do conjunto já
+   *   filtrado por `where` (não é um COUNT à parte).
+   */
   async execute() {
     try {
       this.bindWheres();

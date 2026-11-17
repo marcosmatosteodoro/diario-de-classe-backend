@@ -18,6 +18,11 @@ export class GetCronogramaListByAlunoService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} idAluno
+   * @param {Object} [additionalWhere] filtro extra de autorizacao
+   * @returns {Promise<Array<Object>>} cronogramas do aluno, com livro projetado
+   */
   static async handle(idAluno, additionalWhere = {}) {
     const Repository = CronogramaAlunoRepository;
     const service = new GetCronogramaListByAlunoService(Repository, idAluno, additionalWhere);

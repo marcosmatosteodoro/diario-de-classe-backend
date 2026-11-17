@@ -24,6 +24,14 @@ export class CreateLivroService extends AbstractService {
     );
   }
 
+  /**
+   * @param {Object} data
+   * @param {string} data.nome
+   * @param {string} data.idioma
+   * @param {number|string|null} [data.nivel] aceita string numerica; convertido para Int ou `null`
+   * @param {boolean} [data.ativo]
+   * @returns {Promise<Object>} livro criado, projetado pela whitelist padrao
+   */
   static async handle(data) {
     const Repository = LivroRepository;
     const service = new CreateLivroService(Repository, data);

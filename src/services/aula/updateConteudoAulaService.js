@@ -33,6 +33,11 @@ export class UpdateConteudoAulaService extends AbstractService {
     );
   }
 
+  /**
+   * @param {string} id id da aula
+   * @param {string|null} [idConteudo] `null`/ausente devolve a aula ao resequenciamento automatico
+   * @returns {Promise<Object>} aula atualizada, com o conteudo vinculado (`getSelectFieldsWithConteudo`)
+   */
   static async handle(id, idConteudo) {
     const Repository = AulaRepository;
     const service = new UpdateConteudoAulaService(Repository, id, idConteudo);

@@ -49,6 +49,11 @@ export class UpdateAulasContratoService extends AbstractService {
     return contrato;
   }
 
+  /**
+   * @param {string} id id do contrato
+   * @returns {Promise<Object>} contrato com os totais recalculados por `COUNT` fresco
+   *   (nunca ajuste incremental) — dispara tambem o resequenciamento do cronograma
+   */
   static async handle(id) {
     const Repository = ContratoRepository;
     const service = new UpdateAulasContratoService(Repository, id);

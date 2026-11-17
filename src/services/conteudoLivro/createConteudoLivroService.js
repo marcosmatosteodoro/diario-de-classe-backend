@@ -28,6 +28,15 @@ export class CreateConteudoLivroService extends AbstractService {
     );
   }
 
+  /**
+   * @param {Object} data
+   * @param {string} data.idLivro
+   * @param {number|string} [data.ordem] posicao do conteudo no livro; ausente/null
+   *   encadeia no fim da sequencia atual
+   * @param {string} data.titulo
+   * @param {string} [data.descricao]
+   * @returns {Promise<Object>} conteudo criado, projetado pela whitelist padrao
+   */
   static async handle(data) {
     const Repository = ConteudoLivroRepository;
     const service = new CreateConteudoLivroService(Repository, data);

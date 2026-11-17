@@ -7,6 +7,9 @@ export class IsUserEmailExistsService extends AbstractService {
     this.email = email;
   }
 
+  /**
+   * @returns {Promise<boolean>} `true` se existir usuário com `this.email`
+   */
   async execute() {
     const user = await this.repository.selectOne({
       where: { email: this.email },
@@ -16,6 +19,10 @@ export class IsUserEmailExistsService extends AbstractService {
     return Boolean(user);
   }
 
+  /**
+   * @param {string} email
+   * @returns {Promise<boolean>} ver `execute()`
+   */
   static async handle(email) {
     const Repository = UserRepository;
     const service = new IsUserEmailExistsService(Repository, email);

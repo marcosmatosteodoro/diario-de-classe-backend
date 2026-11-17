@@ -14,6 +14,11 @@ export class GetDiaDeFuncionamentoService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} id
+   * @returns {Promise<Object|null>} registro encontrado, com os campos de
+   *   DiaDeFuncionamentoRepository.getSelectFields(), ou `null` se não existir
+   */
   static async handle(id) {
     const Repository = DiaDeFuncionamentoRepository;
     const service = new GetDiaDeFuncionamentoService(Repository, id);

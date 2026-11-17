@@ -14,6 +14,10 @@ export class GetDisponibilidadeProfessorListService extends AbstractService {
     });
   }
 
+  /**
+   * @param {Object} [where] filtro Prisma livre (ex.: `{ userId }`)
+   * @returns {Promise<Array<Object>>} disponibilidades projetadas pela whitelist padrao
+   */
   static async handle(where = {}) {
     const Repository = DisponibilidadeProfessorRepository;
     const service = new GetDisponibilidadeProfessorListService(Repository, where);

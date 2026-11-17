@@ -26,6 +26,17 @@ export class CreateContratoService extends AbstractService {
     );
   }
 
+  /**
+   * Cria o contrato com os totais derivados zerados — quem preenche `totalAulas`
+   * e os demais e `UpdateAulasContratoService`, via recalculo, nunca este create.
+   *
+   * @param {Object} data
+   * @param {string} data.idAluno
+   * @param {string|Date} [data.dataInicio]
+   * @param {string|Date} [data.dataTermino]
+   * @param {string} [data.status] default `'PENDENTE'`
+   * @returns {Promise<Object>} contrato criado, projetado pela whitelist padrao
+   */
   static async handle(data) {
     const Repository = ContratoRepository;
     const service = new CreateContratoService(Repository, data);

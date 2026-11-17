@@ -14,6 +14,11 @@ export class GetDiaAulaService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} id
+   * @param {Object} [additionalWhere] filtro extra mesclado ao `where` (ex.: autorizacao)
+   * @returns {Promise<Object|null>} dia de aula projetado pela whitelist de saida, ou `null`
+   */
   static async handle(id, additionalWhere = {}) {
     const Repository = DiaAulaRepository;
     const service = new GetDiaAulaService(Repository, id, additionalWhere);

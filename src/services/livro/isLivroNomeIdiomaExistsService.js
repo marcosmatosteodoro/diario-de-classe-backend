@@ -25,6 +25,14 @@ export class IsLivroNomeIdiomaExistsService extends AbstractService {
     return Boolean(livro);
   }
 
+  /**
+   * @param {Object} params
+   * @param {string} params.nome
+   * @param {string} params.idioma
+   * @param {string|null} [params.idIgnorado] exclui este id da busca (uso no update: o próprio
+   *   registro não conta como duplicata de si mesmo)
+   * @returns {Promise<boolean>} true quando ja existe outro livro com esse nome+idioma
+   */
   static async handle({ nome, idioma, idIgnorado = null }) {
     const Repository = LivroRepository;
     const service = new IsLivroNomeIdiomaExistsService(Repository, { nome, idioma, idIgnorado });

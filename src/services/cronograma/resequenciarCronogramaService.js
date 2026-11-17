@@ -137,6 +137,14 @@ export class ResequenciarCronogramaService extends AbstractService {
     };
   }
 
+  /**
+   * @param {string} idContrato
+   * @returns {Promise<
+   *   { resequenciado: false, motivo: 'sem_cronograma_ativo', aulasAtualizadas: 0 } |
+   *   { resequenciado: true, idLivro: string, aulasAtualizadas: number, totalConteudos: number,
+   *     conteudosVinculados: number, conteudosRestantes: number, aulasSemConteudo: number }
+   * >}
+   */
   static async handle(idContrato) {
     const Repository = AulaRepository;
     const service = new ResequenciarCronogramaService(Repository, idContrato);

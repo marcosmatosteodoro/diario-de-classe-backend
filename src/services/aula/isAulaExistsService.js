@@ -24,6 +24,15 @@ export class IsAulaExistsService extends AbstractService {
     return Boolean(aula);
   }
 
+  /**
+   * @param {Object} params
+   * @param {string} params.idAluno
+   * @param {string} params.idProfessor
+   * @param {string} params.idContrato
+   * @param {string|Date} params.dataAula
+   * @returns {Promise<boolean>} true quando ja existe aula com essa combinacao exata
+   *   (mesmo aluno, professor, contrato e dia) — nao detecta sobreposicao de horario
+   */
   static async handle(params) {
     const Repository = AulaRepository;
     const service = new IsAulaExistsService(Repository, params);

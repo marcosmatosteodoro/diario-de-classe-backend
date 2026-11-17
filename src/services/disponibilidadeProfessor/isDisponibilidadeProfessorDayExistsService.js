@@ -17,6 +17,12 @@ export class IsDisponibilidadeProfessorDayExistsService extends AbstractService 
     return Boolean(disponibilidadeProfessor);
   }
 
+  /**
+   * Sem consumidor hoje — nenhum controller ou middleware o chama.
+   * @param {string} diaSemana `SEGUNDA`|`TERCA`|`QUARTA`|`QUINTA`|`SEXTA`|`SABADO`|`DOMINGO`
+   * @param {string} id id do próprio registro de disponibilidade (não `userId`)
+   * @returns {Promise<boolean>} true quando existe registro com esse `id` e `diaSemana`
+   */
   static async handle(diaSemana, id) {
     const Repository = DisponibilidadeProfessorRepository;
     const service = new IsDisponibilidadeProfessorDayExistsService(Repository, diaSemana, id);

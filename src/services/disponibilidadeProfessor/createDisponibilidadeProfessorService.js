@@ -22,6 +22,15 @@ export class CreateDisponibilidadeProfessorService extends AbstractService {
     );
   }
 
+  /**
+   * @param {Object} data
+   * @param {string} data.diaSemana `SEGUNDA`|`TERCA`|`QUARTA`|`QUINTA`|`SEXTA`|`SABADO`|`DOMINGO`
+   * @param {string} data.horaInicial formato `HH:MM`, validado só no middleware de entrada
+   * @param {string} data.horaFinal formato `HH:MM`
+   * @param {boolean} data.ativo
+   * @param {string} data.userId professor ao qual o registro pertence
+   * @returns {Promise<Object>} disponibilidade criada
+   */
   static async handle(data) {
     const Repository = DisponibilidadeProfessorRepository;
     const service = new CreateDisponibilidadeProfessorService(Repository, data);

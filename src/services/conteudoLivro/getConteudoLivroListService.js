@@ -15,6 +15,10 @@ export class GetConteudoLivroListService extends AbstractService {
     });
   }
 
+  /**
+   * @param {Object} [where] filtro Prisma livre (ex.: `{ idLivro }`)
+   * @returns {Promise<Array<Object>>} conteudos ordenados por `ordem` asc
+   */
   static async handle(where = {}) {
     const Repository = ConteudoLivroRepository;
     const service = new GetConteudoLivroListService(Repository, where);

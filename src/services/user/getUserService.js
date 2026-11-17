@@ -7,6 +7,10 @@ export class GetUserService extends AbstractService {
     this.id = id;
   }
 
+  /**
+   * @returns {Promise<Object|null>} usuário projetado pela whitelist de saída
+   *   (`senha` fora), ou `null` se não existir
+   */
   async execute() {
     return await this.repository.selectOne({
       where: { id: this.id },
@@ -14,6 +18,10 @@ export class GetUserService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} id
+   * @returns {Promise<Object|null>} ver `execute()`
+   */
   static async handle(id) {
     const Repository = UserRepository;
     const service = new GetUserService(Repository, id);

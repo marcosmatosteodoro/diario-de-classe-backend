@@ -23,6 +23,12 @@ export class GetCronogramaListByLivroService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} idLivro
+   * @param {Object} [options]
+   * @param {boolean} [options.apenasAtivos] restringe a cronogramas com `ativo: true`
+   * @returns {Promise<Array<{ id: string, idContrato: string, ativo: boolean }>>}
+   */
   static async handle(idLivro, options = {}) {
     const Repository = CronogramaAlunoRepository;
     const service = new GetCronogramaListByLivroService(Repository, idLivro, options);

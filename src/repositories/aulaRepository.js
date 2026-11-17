@@ -28,6 +28,11 @@ export default class AulaRepository extends AbstractRepository {
     };
   }
 
+  /**
+   * Campos da aula mais aluno/professor/contrato — usado quando o consumidor
+   * precisa dos dados relacionados, nao so nome.
+   * @returns {Object}
+   */
   getSelectFieldsWithRelations() {
     return {
       id: true,

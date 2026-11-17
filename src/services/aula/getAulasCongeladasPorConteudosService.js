@@ -30,6 +30,11 @@ export class GetAulasCongeladasPorConteudosService extends AbstractService {
     });
   }
 
+  /**
+   * @param {Array<string>} idsConteudo
+   * @returns {Promise<Array<{ id: string, idConteudo: string, idContrato: string, status: string }>>}
+   *   lista vazia quando `idsConteudo` e vazio/ausente
+   */
   static async handle(idsConteudo) {
     const Repository = AulaRepository;
     const service = new GetAulasCongeladasPorConteudosService(Repository, idsConteudo);

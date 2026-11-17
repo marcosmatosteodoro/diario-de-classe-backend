@@ -93,6 +93,18 @@ export class GetProjecaoCronogramaService extends AbstractService {
     };
   }
 
+  /**
+   * @param {string} idAluno
+   * @param {Object} [additionalWhere] filtro extra de autorizacao
+   * @param {string|null} [idContrato] desambigua quando o aluno tem mais de um contrato ativo
+   * @returns {Promise<{
+   *   cronograma: Object,
+   *   linhas: Array<Object>,
+   *   conteudosNaoAgendados: Array<{ id: string, ordem: number, titulo: string, descricao: string }>,
+   *   resumo: { totalAulas: number, totalConteudos: number, conteudosVinculados: number,
+   *     conteudosRestantes: number, aulasSemConteudo: number }
+   * }|null>} `null` quando o aluno/contrato nao tem cronograma ativo
+   */
   static async handle(idAluno, additionalWhere = {}, idContrato = null) {
     const Repository = AulaRepository;
     const service = new GetProjecaoCronogramaService(

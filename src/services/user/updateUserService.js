@@ -9,6 +9,16 @@ export class UpdateUserService extends AbstractService {
     this.data = data;
   }
 
+  /**
+   * Atualiza o usuário. `resetarSenha` é aceito e gravado; nenhum código do
+   * sistema o consome. Campos `undefined` em `this.data` são removidos antes
+   * do update (atualização parcial); o `select` com `senha: false` mantém a
+   * senha fora da resposta.
+   *
+   * `senha` ausente, vazia, só espaços ou `null` é ignorada e nunca
+   * sobrescreve a senha existente (DEC-002-001).
+   * @returns {Promise<Object>} usuário atualizado, projetado pela whitelist de saída
+   */
   async execute() {
     const data = {
       nome: this.data.nome,
@@ -35,6 +45,13 @@ export class UpdateUserService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} id
+   * @param {Object} data campos parciais de usuário (undefined vira remoção da chave)
+   * @param {string|null} [data.senha] ausente, vazia, só espaços ou `null` é ignorada e nunca
+   *   sobrescreve a senha existente (DEC-002-001)
+   * @returns {Promise<Object>} ver `execute()`
+   */
   static async handle(id, data) {
     const Repository = UserRepository;
     const service = new UpdateUserService(Repository, id, data);

@@ -11,6 +11,12 @@ export class DeleteDisponibilidadeProfessorService extends AbstractService {
     return await this.repository.delete({ id: this.id });
   }
 
+  /**
+   * Sem rota nem controller que o chame hoje — código morto, só exercitado pelo
+   * próprio teste unitário.
+   * @param {string} id
+   * @returns {Promise<Object>} disponibilidade removida
+   */
   static async handle(id) {
     const Repository = DisponibilidadeProfessorRepository;
     const service = new DeleteDisponibilidadeProfessorService(Repository, id);
