@@ -247,98 +247,149 @@ describe('Negação de acesso pelo app.js real (integração)', () => {
       dominio: 'aluno',
       modelo: 'Aluno',
       base: '/api/alunos',
+      whereComPosse: id => ({ OR: posseAluno(id) }),
       corpo: { email: 'alheio@example.com' }
     },
     {
       dominio: 'aula',
       modelo: 'Aula',
       base: '/api/aulas',
+      whereComPosse: id => posseAula(id),
       corpo: { observacao: 'observação de teste' }
     }
-  ])('escrita em $dominio (sem rota restrita a administrador: n/a)', ({ modelo, base, corpo }) => {
-    beforeEach(() => simularBanco(modelo));
+  ])(
+    'escrita em $dominio (sem rota restrita a administrador: n/a)',
+    ({ modelo, base, whereComPosse, corpo }) => {
+      beforeEach(() => simularBanco(modelo));
 
-    test('professor não altera o registro de outro dono: 404 e nada é escrito', async () => {
-      const res = await request(app)
-        .put(`${base}/${ID_ALHEIO}`)
-        .set('Authorization', TOKEN_PROFESSOR)
-        .send(corpo);
+      test('professor não altera o registro de outro dono: 404 e nada é escrito', async () => {
+        const res = await request(app)
+          .put(`${base}/${ID_ALHEIO}`)
+          .set('Authorization', TOKEN_PROFESSOR)
+          .send(corpo);
 
-      expect(res.status).toBe(404);
-      expect(whereRecebidoPor(selectOne).id).toBe(ID_ALHEIO);
-      expect(update).not.toHaveBeenCalled();
-    });
+        expect(res.status).toBe(404);
+        expect(selectOne).toHaveBeenCalledTimes(1);
+        expect(whereRecebidoPor(selectOne)).toEqual({
+          id: ID_ALHEIO,
+          ...whereComPosse(SOLICITANTE)
+        });
+        expect(update).not.toHaveBeenCalled();
+      });
 
-    test('professor altera o próprio registro: 200 e a escrita chega ao repositório (controle positivo)', async () => {
-      const res = await request(app)
-        .put(`${base}/${ID_PROPRIO}`)
-        .set('Authorization', TOKEN_PROFESSOR)
-        .send({ ...corpo, email: REGISTRO_PROPRIO.email });
+      test('professor altera o próprio registro: 200 e a escrita chega ao repositório (controle positivo)', async () => {
+        const res = await request(app)
+          .put(`${base}/${ID_PROPRIO}`)
+          .set('Authorization', TOKEN_PROFESSOR)
+          .send({ ...corpo, email: REGISTRO_PROPRIO.email });
 
-      expect(res.status).toBe(200);
-      expect(update.mock.calls[0][0]).toEqual({ id: ID_PROPRIO });
-    });
-  });
+        expect(res.status).toBe(200);
+        // Aula dispara uma 2ª escrita (recálculo do contrato); a 1ª é a do registro.
+        expect(update).toHaveBeenCalled();
+        expect(update.mock.calls[0][0]).toEqual({ id: ID_PROPRIO });
+      });
+    }
+  );
 
   describe.each([
     {
       dominio: 'contrato',
       modelo: 'Contrato',
       base: '/api/contratos',
-      corpoPut: { observacao: 'observação de teste' }
+      corpoPut: { observacao: 'observação de teste' },
+      statusAdminPut: 422,
+      statusAdminPost: 422
     },
     {
       dominio: 'diaAula',
       modelo: 'DiaAula',
       base: '/api/dias-aulas',
-      corpoPut: { quantidadeAulas: 2 }
+      corpoPut: { quantidadeAulas: 2 },
+      // Sem configuração de duração no banco simulado o PUT chega ao controller e falha ali.
+      statusAdminPut: 500,
+      statusAdminPost: 422
     }
-  ])('escrita em $dominio é restrita a administrador', ({ modelo, base, corpoPut }) => {
-    const corpoPost = {
-      idAluno: cuid('aluno1'),
-      idContrato: cuid('contrato1'),
-      diaSemana: 'SEGUNDA',
-      quantidadeAulas: 1,
-      horaInicial: '10:00'
-    };
+  ])(
+    'escrita em $dominio é restrita a administrador',
+    ({ modelo, base, corpoPut, statusAdminPut, statusAdminPost }) => {
+      const corpoPost = {
+        idAluno: cuid('aluno1'),
+        idContrato: cuid('contrato1'),
+        diaSemana: 'SEGUNDA',
+        quantidadeAulas: 1,
+        horaInicial: '10:00'
+      };
 
-    beforeEach(() => simularBanco(modelo));
+      beforeEach(() => simularBanco(modelo));
 
-    test('professor em PUT /:id → 403 e nenhum acesso a dado', async () => {
+      test('professor em PUT /:id → 403 e nenhum acesso a dado', async () => {
+        const res = await request(app)
+          .put(`${base}/${ID_PROPRIO}`)
+          .set('Authorization', TOKEN_PROFESSOR)
+          .send(corpoPut);
+
+        expect(res.status).toBe(403);
+        semAcessoADados();
+      });
+
+      test('professor em POST / → 403 e nenhum acesso a dado', async () => {
+        const res = await request(app)
+          .post(base)
+          .set('Authorization', TOKEN_PROFESSOR)
+          .send(corpoPost);
+
+        expect(res.status).toBe(403);
+        semAcessoADados();
+      });
+
+      test('professor em DELETE /:id → 403 e nenhum acesso a dado', async () => {
+        const res = await request(app)
+          .delete(`${base}/${ID_PROPRIO}`)
+          .set('Authorization', TOKEN_PROFESSOR);
+
+        expect(res.status).toBe(403);
+        semAcessoADados();
+      });
+
+      test('administrador em PUT /:id passa da restrição (controle positivo)', async () => {
+        const res = await request(app)
+          .put(`${base}/${ID_PROPRIO}`)
+          .set('Authorization', TOKEN_ADMIN)
+          .send(corpoPut);
+
+        expect(res.status).toBe(statusAdminPut);
+      });
+
+      test('administrador em POST / passa da restrição (controle positivo)', async () => {
+        const res = await request(app).post(base).set('Authorization', TOKEN_ADMIN).send(corpoPost);
+
+        expect(res.status).toBe(statusAdminPost);
+      });
+    }
+  );
+
+  describe('aula: o filtro por professor da query não troca a posse do solicitante', () => {
+    beforeEach(() => simularBanco('Aula'));
+
+    test('professor lista com ?idProfessor=<outro>: o filtro recebido segue com a posse dele', async () => {
       const res = await request(app)
-        .put(`${base}/${ID_PROPRIO}`)
-        .set('Authorization', TOKEN_PROFESSOR)
-        .send(corpoPut);
+        .get(`/api/aulas?idProfessor=${OUTRO_DONO}`)
+        .set('Authorization', TOKEN_PROFESSOR);
 
-      expect(res.status).toBe(403);
-      semAcessoADados();
+      expect(res.status).toBe(200);
+      expect(whereRecebidoPor(selectMany)).toEqual(posseAula(SOLICITANTE));
+      expect(JSON.stringify(res.body)).not.toContain(ID_ALHEIO);
     });
 
-    test('professor em POST / → 403 e nenhum acesso a dado', async () => {
-      const res = await request(app)
-        .post(base)
-        .set('Authorization', TOKEN_PROFESSOR)
-        .send(corpoPost);
+    test('administrador lista com ?idProfessor=<outro>: o filtro é aplicado (controle positivo)', async () => {
+      await request(app)
+        .get(`/api/aulas?idProfessor=${OUTRO_DONO}`)
+        .set('Authorization', TOKEN_ADMIN);
 
-      expect(res.status).toBe(403);
-      semAcessoADados();
-    });
-
-    test('administrador em PUT /:id passa da restrição (controle positivo)', async () => {
-      const res = await request(app)
-        .put(`${base}/${ID_PROPRIO}`)
-        .set('Authorization', TOKEN_ADMIN)
-        .send(corpoPut);
-
-      expect(res.status).not.toBe(403);
-    });
-
-    test('administrador em POST / passa da restrição (controle positivo)', async () => {
-      const res = await request(app).post(base).set('Authorization', TOKEN_ADMIN).send(corpoPost);
-
-      expect(res.status).not.toBe(403);
+      expect(whereRecebidoPor(selectMany)).toEqual({ idProfessor: OUTRO_DONO });
     });
   });
+
   describe('controles dos spies de escrita: o acesso a dado simulado registra as chamadas', () => {
     test('administrador remove um dia de aula: o spy de remoção é chamado', async () => {
       simularBanco('DiaAula');
