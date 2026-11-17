@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import { ResequenciarCronogramaService } from '../../../../src/services/cronograma/resequenciarCronogramaService.js';
 import { GetCronogramaAtivoService } from '../../../../src/services/cronograma/getCronogramaAtivoService.js';
+import { GetConteudoLivroListService } from '../../../../src/services/conteudoLivro/getConteudoLivroListService.js';
 import AulaRepository from '../../../../src/repositories/aulaRepository.js';
 
 /**
@@ -234,6 +235,53 @@ describe('ResequenciarCronogramaService', () => {
       });
       // Não deve nem consultar as aulas: sem livro, não há o que resequenciar.
       expect(selectManySpy).not.toHaveBeenCalled();
+    });
+
+    // Caminho real de leitura + escrita via repository (o algoritmo puro,
+    // calcularVinculos, é coberto à parte).
+    it('lê o cronograma ativo, calcula os vínculos e escreve só as linhas alteradas', async () => {
+      jest.spyOn(GetCronogramaAtivoService, 'handle').mockResolvedValue({
+        idLivro: 'livro-1',
+        dataInicio: null
+      });
+      jest
+        .spyOn(GetConteudoLivroListService, 'handle')
+        .mockResolvedValue([conteudo(1), conteudo(2)]);
+
+      const aulasDoRepository = [
+        // já está com o vínculo correto: não deve entrar no lote de escrita.
+        aula('01', { idConteudo: 'conteudo-1' }),
+        // sem vínculo: deve receber o próximo conteúdo da fila.
+        aula('02', { idConteudo: null })
+      ];
+      const selectManySpy = jest
+        .spyOn(AulaRepository.prototype, 'selectMany')
+        .mockResolvedValue(aulasDoRepository);
+      const updateSpy = jest
+        .spyOn(AulaRepository.prototype, 'updateConteudoEmLote')
+        .mockResolvedValue(1);
+
+      const repoInstance = new AulaRepository();
+      const resultado = await ResequenciarCronogramaService.handle('contrato-1');
+
+      expect(selectManySpy).toHaveBeenCalledWith({
+        where: { idContrato: 'contrato-1' },
+        select: repoInstance.getSelectFieldsForResequenciamento(),
+        orderBy: [{ dataAula: 'asc' }, { horaInicial: 'asc' }]
+      });
+
+      // Só a aula 02 mudou de vínculo: é a única linha escrita.
+      expect(updateSpy).toHaveBeenCalledWith([{ id: '02', idConteudo: 'conteudo-2' }]);
+
+      expect(resultado).toEqual({
+        resequenciado: true,
+        idLivro: 'livro-1',
+        aulasAtualizadas: 1,
+        totalConteudos: 2,
+        conteudosVinculados: 2,
+        conteudosRestantes: 0,
+        aulasSemConteudo: 0
+      });
     });
   });
 });
