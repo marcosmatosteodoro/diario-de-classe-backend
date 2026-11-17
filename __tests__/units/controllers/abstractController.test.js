@@ -1,3 +1,5 @@
+import util from 'node:util';
+import { jest } from '@jest/globals';
 import AbstractController from '../../../src/controllers/abstractController.js';
 import Constants from '../../../src/utilities/constants.js';
 
@@ -181,6 +183,71 @@ describe('AbstractController', () => {
 
       expect(mockRes.statusCode).toBe(400);
       expect(mockRes.data.error).toBe('Valor inválido');
+    });
+  });
+
+  describe('handleError - redação de erros do Prisma no log (DEC-002-006, CWE-532)', () => {
+    const SENTINELA = 'senha-sentinela-nao-pode-vazar-no-log';
+
+    let errorSpy;
+
+    beforeEach(() => {
+      errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      errorSpy.mockRestore();
+    });
+
+    function textoLogado() {
+      return errorSpy.mock.calls
+        .flat()
+        .map(arg => util.inspect(arg, { depth: null }))
+        .join(' ');
+    }
+
+    test('erro com name PrismaClientValidationError: texto logado não contém a senha e contém o name', () => {
+      const mockReq = {};
+      const mockRes = buildMockRes();
+      const controller = new TestController(mockReq, mockRes);
+
+      const error = new Error(`Invalid \`prisma.user.update()\` invocation: senha: "${SENTINELA}"`);
+      error.name = 'PrismaClientValidationError';
+
+      controller.handleError(error);
+
+      expect(textoLogado()).not.toContain(SENTINELA);
+      expect(textoLogado()).toContain('PrismaClientValidationError');
+    });
+
+    test('erro com name PrismaClientKnownRequestError: texto logado traz name, code e chaves de meta, nunca valores', () => {
+      const mockReq = {};
+      const mockRes = buildMockRes();
+      const controller = new TestController(mockReq, mockRes);
+
+      const error = new Error(`Unique constraint failed: senha "${SENTINELA}"`);
+      error.name = 'PrismaClientKnownRequestError';
+      error.code = 'P2002';
+      error.meta = { target: 'email', senha: SENTINELA };
+
+      controller.handleError(error);
+
+      const texto = textoLogado();
+      expect(texto).toContain('PrismaClientKnownRequestError');
+      expect(texto).toContain('P2002');
+      expect(texto).toContain('target');
+      expect(texto).toContain('senha');
+      expect(texto).not.toContain(SENTINELA);
+    });
+
+    test('controle: erro comum (não-Prisma) continua logado como hoje, sem redação', () => {
+      const mockReq = {};
+      const mockRes = buildMockRes();
+      const controller = new TestController(mockReq, mockRes);
+
+      controller.handleError(new Error('falha X'));
+
+      expect(textoLogado()).toContain('falha X');
     });
   });
 
