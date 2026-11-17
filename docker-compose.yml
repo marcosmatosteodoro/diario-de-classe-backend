@@ -8,6 +8,7 @@ services:
       - NODE_ENV=production
       - JWT_SECRET_TOKEN=${JWT_SECRET_TOKEN:?Defina JWT_SECRET_TOKEN (veja o .env.example)}
       - JWT_REFRESH_TOKEN=${JWT_REFRESH_TOKEN:?Defina JWT_REFRESH_TOKEN (veja o .env.example)}
+      - CORS_ORIGINS=${CORS_ORIGINS:?Defina CORS_ORIGINS (veja o .env.example)}
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/diarioclasse
     ports:
       - '8080:8080'

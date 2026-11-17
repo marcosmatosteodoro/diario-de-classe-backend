@@ -85,6 +85,8 @@ describe('parseCorsOrigins', () => {
 
   test.each([
     '*',
+    'https://*.example.com',
+    'https://a.example.com:*',
     'https://a.example.com/',
     'https://a.example.com/x',
     'ftp://a.example.com',
@@ -93,6 +95,12 @@ describe('parseCorsOrigins', () => {
     expect(() => parseCorsOrigins(invalida, false)).toThrow('CORS_ORIGINS');
     expect(() => parseCorsOrigins(`http://localhost:3001,${invalida}`, true)).toThrow(
       'CORS_ORIGINS'
+    );
+  });
+
+  test('wildcard em subdomínio é recusado com a mensagem de origem inválida', () => {
+    expect(() => parseCorsOrigins('https://*.example.com', true)).toThrow(
+      'A variável de ambiente CORS_ORIGINS deve conter apenas origens exatas (esquema://host[:porta], sem caminho, barra final ou *) (veja o .env.example).'
     );
   });
 

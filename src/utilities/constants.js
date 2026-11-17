@@ -23,6 +23,7 @@ function erroCorsOrigins(detalhe) {
 }
 
 function ehOrigemExata(entrada) {
+  if (entrada.includes('*')) return false;
   try {
     const url = new URL(entrada);
     return ['http:', 'https:'].includes(url.protocol) && url.origin === entrada;

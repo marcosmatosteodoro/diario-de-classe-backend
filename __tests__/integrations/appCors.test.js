@@ -7,6 +7,8 @@ const TIMEOUT_IMPORT_FRIO = 30000;
 const ORIGEM_LISTADA = 'https://app.example.com';
 const SEGUNDA_ORIGEM = 'http://localhost:3001';
 const ORIGEM_NAO_LISTADA = 'https://evil.example.com';
+// Rota montada pelo router real; sem Authorization responde 401 sem tocar o banco.
+const ROTA_REAL = '/api/alunos';
 
 describe('CORS montado pelo app.js (integração)', () => {
   let app;
@@ -55,16 +57,16 @@ describe('CORS montado pelo app.js (integração)', () => {
   });
 
   test('GET de origem listada recebe Access-Control-Allow-Origin igual à origem', async () => {
-    const res = await request(app).get('/api/rota-inexistente').set('Origin', ORIGEM_LISTADA);
+    const res = await request(app).get(ROTA_REAL).set('Origin', ORIGEM_LISTADA);
 
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(401);
     expect(res.headers['access-control-allow-origin']).toBe(ORIGEM_LISTADA);
   });
 
   test('GET de origem não listada não recebe Access-Control-Allow-Origin', async () => {
-    const res = await request(app).get('/api/rota-inexistente').set('Origin', ORIGEM_NAO_LISTADA);
+    const res = await request(app).get(ROTA_REAL).set('Origin', ORIGEM_NAO_LISTADA);
 
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(401);
     expect(res.headers['access-control-allow-origin']).toBeUndefined();
   });
 });
