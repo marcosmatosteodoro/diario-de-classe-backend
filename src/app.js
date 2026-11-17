@@ -18,7 +18,15 @@ import i18nMiddleware from './middlewares/i18n.js';
 
 import { InitialSetting } from './InitialSetting.js';
 
-InitialSetting.handle();
+try {
+  await InitialSetting.handle();
+} catch (error) {
+  LoggerManager.error('Falha no setup de inicialização', error);
+  throw error;
+}
+
+// Limite único do corpo JSON e urlencoded; dimensionado pelo salvamento do contrato com até 1.800 aulas
+const BODY_LIMIT = '3mb';
 
 const app = express();
 
@@ -43,18 +51,18 @@ if (!Constants.isProduction) {
 app.use(i18nMiddleware);
 app.use('/api/stripe', bodyParser.raw({ type: '*/*' })); // Configura endpoint específico do Stripe para receber dados brutos (webhooks)
 app.use(responseTime({ header: 'execution-time' })); // Adiciona header com tempo de execução das requisições
-app.use(bodyParser.json({ limit: '100mb' })); // Permite parsing de JSON com limite de 100MB
+app.use(bodyParser.json({ limit: BODY_LIMIT })); // Permite parsing de JSON com limite de BODY_LIMIT
 app.use(
   bodyParser.urlencoded({
     extended: true, // Permite parsing de objetos aninhados em form-data
-    limit: '100mb' // Define limite de 100MB para dados URL-encoded
+    limit: BODY_LIMIT // Define o mesmo limite para dados URL-encoded
   })
 );
 app.use(compress()); // Habilita compressão gzip/deflate nas respostas
 app.use(methodOverride()); // Permite override de métodos HTTP (PUT, DELETE via POST)
 app.use(cookieParser()); // Habilita parsing de cookies nas requisições
 app.use(helmet()); // Adiciona headers de segurança para proteger a aplicação
-app.use(cors()); // Habilita Cross-Origin Resource Sharing (requisições entre domínios)
+app.use(cors({ origin: Constants.corsOrigins, methods: ['GET', 'POST', 'PUT', 'DELETE'] })); // Restringe o CORS às origens configuradas em CORS_ORIGINS
 app.use(cleanRequest); // Middleware customizado para limpeza/sanitização das requisições
 
 // Definir rotas

@@ -1,9 +1,56 @@
+import { URL } from 'node:url';
 import env from 'custom-env';
 
 // Só carrega custom-env em desenvolvimento/test
 // Em produção (Vercel), as variáveis vêm do dashboard
 if (process.env.NODE_ENV !== 'production') {
   env.env(true);
+}
+
+export function requireSecret(value, name) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new Error(
+      `A variável de ambiente ${name} é obrigatória. Defina-a no ambiente (veja o .env.example).`
+    );
+  }
+  return value;
+}
+
+const CORS_ORIGINS_PADRAO_DEV = ['http://localhost:3001'];
+
+function erroCorsOrigins(detalhe) {
+  return new Error(`A variável de ambiente CORS_ORIGINS ${detalhe} (veja o .env.example).`);
+}
+
+function ehOrigemExata(entrada) {
+  if (entrada.includes('*')) return false;
+  try {
+    const url = new URL(entrada);
+    return ['http:', 'https:'].includes(url.protocol) && url.origin === entrada;
+  } catch {
+    return false;
+  }
+}
+
+export function parseCorsOrigins(value, isProduction) {
+  const origens = String(value ?? '')
+    .split(',')
+    .map(item => item.trim())
+    .filter(item => item !== '');
+
+  if (origens.length === 0) {
+    if (isProduction) {
+      throw erroCorsOrigins('é obrigatória em produção. Defina-a no ambiente');
+    }
+    return [...CORS_ORIGINS_PADRAO_DEV];
+  }
+
+  if (!origens.every(ehOrigemExata)) {
+    throw erroCorsOrigins(
+      'deve conter apenas origens exatas (esquema://host[:porta], sem caminho, barra final ou *)'
+    );
+  }
+  return origens;
 }
 
 export default class Constants {
@@ -14,13 +61,15 @@ export default class Constants {
 
   static isProduction = String(Constants.env).toLowerCase().startsWith('prod');
 
+  static corsOrigins = parseCorsOrigins(process.env.CORS_ORIGINS, Constants.isProduction);
+
   static serviceName = process.env.NAME;
 
   static port = process.env.PORT;
 
-  static jwtSecret = process.env.JWT_SECRET_TOKEN || 'dev-secret';
+  static jwtSecret = requireSecret(process.env.JWT_SECRET_TOKEN, 'JWT_SECRET_TOKEN');
 
-  static jwtRefreshSecret = process.env.JWT_REFRESH_TOKEN || `${Constants.jwtSecret}-refresh`;
+  static jwtRefreshSecret = requireSecret(process.env.JWT_REFRESH_TOKEN, 'JWT_REFRESH_TOKEN');
 
   static accessExp = Number(process.env.JWT_EXP_SECONDS) || 60 * 60 * 24 * 7; // 7d
 

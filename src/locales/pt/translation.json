@@ -15,6 +15,7 @@
       "internal_error": "Erro interno do servidor",
       "bad_request": "Requisição inválida",
       "unauthorized": "Não autorizado",
+      "payload_too_large": "Corpo da requisição excede o tamanho permitido",
       "forbidden": "Você não tem permissão para realizar esta ação"
     }
   },
@@ -188,7 +189,8 @@
     "create": {
       "success": "Aula criada com sucesso",
       "error": "Erro ao criar aula",
-      "ids_exists": "Já existe uma aula para este dia"
+      "ids_exists": "Já existe uma aula para este dia",
+      "contrato_nao_pertence_ao_aluno": "O contrato informado não pertence ao aluno"
     },
     "update": {
       "success": "Aula atualizada com sucesso",

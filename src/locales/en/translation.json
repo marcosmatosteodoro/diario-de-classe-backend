@@ -15,6 +15,7 @@
       "internal_error": "Internal server error",
       "bad_request": "Invalid request",
       "unauthorized": "Unauthorized",
+      "payload_too_large": "Request body exceeds the allowed size",
       "forbidden": "You do not have permission to perform this action"
     }
   },
@@ -188,7 +189,8 @@
     "create": {
       "success": "Class created successfully",
       "error": "Error creating class",
-      "ids_exists": "There is already a class scheduled for today."
+      "ids_exists": "There is already a class scheduled for today.",
+      "contrato_nao_pertence_ao_aluno": "The given contract does not belong to the student"
     },
     "update": {
       "success": "Class updated successfully",

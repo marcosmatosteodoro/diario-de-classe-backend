@@ -9,6 +9,7 @@ describe('GetContratosByAlunoController', () => {
     // Mock básico do request
     mockReq = {
       params: { id: '1' },
+      user: { id: 'admin-1', isAdmin: true },
       t: key => {
         const translations = {
           'contratos.get.not_found': 'Contratos não encontrados',

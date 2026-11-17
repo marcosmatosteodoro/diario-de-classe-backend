@@ -1,4 +1,3 @@
-// import 'newrelic'; // Comentado até configurar a license key
 // import './db/database';
 import app from './app.js';
 import Constants from './utilities/constants.js';
@@ -16,8 +15,8 @@ console.log('Constants check:', {
   isProduction: Constants.isProduction,
   serviceName: Constants.serviceName,
   port: Constants.port,
-  jwtSecret: Constants.jwtSecret,
-  jwtRefreshSecret: Constants.jwtRefreshSecret,
+  hasJwtSecret: !!Constants.jwtSecret,
+  hasJwtRefreshSecret: !!Constants.jwtRefreshSecret,
   accessExp: Constants.accessExp,
   refreshExp: Constants.refreshExp
 });

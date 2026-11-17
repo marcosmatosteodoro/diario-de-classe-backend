@@ -16,7 +16,6 @@ export class UpdateAlunoService extends AbstractService {
       nomeCompleto: getNomeCompleto(this.data),
       email: this.data.email,
       telefone: this.data.telefone,
-      criador: this.data.criador,
       material: this.data.material
     };
 

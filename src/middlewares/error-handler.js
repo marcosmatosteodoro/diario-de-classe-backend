@@ -1,6 +1,37 @@
 import httpStatus from 'http-status';
 import UnauthorizedError from '../utilities/errors/unauthorized.js';
 import Constants from '../utilities/constants.js';
+import { redactErrorForLog } from '../utilities/redactErrorForLog.js';
+
+// Erro 4xx que o emissor marcou como exponível (ex.: body-parser).
+function clientErrorResponse(err, t) {
+  const status = err.status ?? err.statusCode;
+  if (err.expose !== true || !Number.isInteger(status) || status < 400 || status >= 500) {
+    return null;
+  }
+  const response =
+    status === httpStatus.REQUEST_ENTITY_TOO_LARGE
+      ? { error: 'PayloadTooLarge', message: t('api.errors.payload_too_large') }
+      : { error: 'BadRequest', message: t('api.errors.bad_request') };
+  return { statusCode: status, response };
+}
+
+// Fora de desenvolvimento a mensagem crua do erro (ex.: Prisma) não vai ao cliente.
+function internalErrorBody(err, t) {
+  const exposeDetail = Constants.env === 'development';
+  return {
+    error: exposeDetail ? err.message || 'Internal Server Error' : 'Internal Server Error',
+    message: t('api.errors.internal_error')
+  };
+}
+
+function logInternalError(err) {
+  if (!Constants.isProduction) {
+    console.log(err);
+  } else {
+    console.error('[ErrorHandler] Erro:', redactErrorForLog(err));
+  }
+}
 
 export default function ErrorHandler(err, req, res) {
   let statusCode = httpStatus.BAD_REQUEST;
@@ -15,10 +46,13 @@ export default function ErrorHandler(err, req, res) {
     const fallbacks = {
       'api.errors.bad_request': 'Requisição inválida',
       'api.errors.unauthorized': 'Não autorizado',
+      'api.errors.payload_too_large': 'Corpo da requisição excede o tamanho permitido',
       'api.errors.internal_error': 'Erro interno do servidor'
     };
     return fallbacks[key] || key;
   };
+
+  const clientError = clientErrorResponse(err, t);
 
   if (err.errors && err.errors.length > 0) {
     statusCode = httpStatus.BAD_REQUEST;
@@ -32,15 +66,12 @@ export default function ErrorHandler(err, req, res) {
       error: 'UnauthorizedError',
       message: t('api.errors.unauthorized')
     };
+  } else if (clientError) {
+    ({ statusCode, response } = clientError);
   } else {
-    if (!Constants.isProduction) {
-      console.log(err);
-    }
+    logInternalError(err);
     statusCode = httpStatus.INTERNAL_SERVER_ERROR;
-    response = {
-      error: err.message || 'Internal Server Error',
-      message: t('api.errors.internal_error')
-    };
+    response = internalErrorBody(err, t);
   }
 
   res.status(statusCode);

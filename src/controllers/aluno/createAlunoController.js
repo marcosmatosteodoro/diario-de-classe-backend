@@ -9,13 +9,18 @@ export class CreateAlunoController extends AbstractController {
 
   async execute() {
     try {
+      const criador = this.req.user?.sub;
+      if (criador === undefined || criador === null || criador === '') {
+        return this.res.status(401).json({ message: this.req.t('api.errors.unauthorized') });
+      }
+
       if (await IsAlunoEmailExistsService.handle(this.req.body.email)) {
         return this.res.status(409).json({
           message: this.req.t('alunos.create.email_exists')
         });
       }
 
-      const newAluno = await CreateAlunoService.handle(this.req.body);
+      const newAluno = await CreateAlunoService.handle({ ...this.req.body, criador });
 
       return this.res.status(201).json(newAluno);
     } catch (error) {
