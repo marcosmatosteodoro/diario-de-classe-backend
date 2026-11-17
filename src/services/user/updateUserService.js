@@ -1,6 +1,7 @@
 import AbstractService from '../abstractService.js';
 import UserRepository from '../../repositories/userRepository.js';
 import { getNomeCompleto } from '../../utilities/getNomeCompleto.js';
+import { hashSenha } from '../../utilities/password.js';
 
 export class UpdateUserService extends AbstractService {
   constructor(Repository, id, data) {
@@ -20,6 +21,8 @@ export class UpdateUserService extends AbstractService {
    * @returns {Promise<Object>} usuário atualizado, projetado pela whitelist de saída
    */
   async execute() {
+    const senhaFornecida = typeof this.data.senha === 'string' && this.data.senha.trim() !== '';
+
     const data = {
       nome: this.data.nome,
       sobrenome: this.data.sobrenome,
@@ -27,11 +30,8 @@ export class UpdateUserService extends AbstractService {
       email: this.data.email,
       telefone: this.data.telefone,
       // DEC-002-001: senha ausente/vazia/só-espaços/null é "não fornecida" e nunca
-      // sobrescreve a senha existente; guarda precede qualquer hash futuro (BI-22).
-      senha:
-        typeof this.data.senha === 'string' && this.data.senha.trim() !== ''
-          ? this.data.senha
-          : undefined,
+      // sobrescreve a senha existente; só a fornecida é hasheada.
+      senha: senhaFornecida ? await hashSenha(this.data.senha) : undefined,
       resetarSenha: this.data.resetarSenha,
       permissao: this.data.permissao,
       idiomas: this.data.idiomas

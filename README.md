@@ -274,18 +274,18 @@ npm run test:coverage
 
 ### Configuração CORS
 
-Para permitir requisições do frontend, configure as origens permitidas:
+A API só devolve os cabeçalhos de CORS para as origens listadas em `CORS_ORIGINS`
+(lista separada por vírgula, lida por `Constants.corsOrigins`):
 
-```javascript
-// Exemplo de configuração para diferentes ambientes
-const corsOptions = {
-  origin:
-    process.env.NODE_ENV === 'production'
-      ? ['https://meudominio.com']
-      : ['http://localhost:3000', 'http://localhost:5173'],
-  credentials: true
-};
+```bash
+CORS_ORIGINS=https://app.example.com,http://localhost:3001
 ```
+
+- Cada entrada é uma origem exata (`esquema://host[:porta]`), sem caminho, barra final ou `*`;
+  valor inválido impede o boot.
+- Em produção a variável é obrigatória; fora dela, o padrão é `http://localhost:3001`.
+- Métodos permitidos: `GET`, `POST`, `PUT` e `DELETE`. Não há suporte a credenciais
+  (`credentials`): a autenticação segue por `Authorization: Bearer`.
 
 ### Headers de Segurança
 
