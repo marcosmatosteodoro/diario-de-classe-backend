@@ -5,6 +5,7 @@ import AlunoRepository from '../../repositories/alunoRepository.js';
 import { CreateAlunoService } from '../../services/aluno/createAlunoService.js';
 import { UpdateAlunoService } from '../../services/aluno/updateAlunoService.js';
 import { GetAlunoListController } from './getAlunoListController.js';
+import LoggerManager from '../../utilities/loggerManager.js';
 
 export class UploadAlunoExcelController extends AbstractController {
   constructor(req, res) {
@@ -57,10 +58,10 @@ export class UploadAlunoExcelController extends AbstractController {
 
   isThereRepeatedEmail(data) {
     const emailSet = new Set();
-    for (const row of data) {
+    for (const [index, row] of data.entries()) {
       const email = row.email;
       if (emailSet.has(email)) {
-        console.log('Email repetido encontrado:', email);
+        LoggerManager.warn('aluno.upload.email_duplicado', { linha: index + 1 });
         return true; // Email repetido encontrado
       }
       emailSet.add(email);
