@@ -2,17 +2,30 @@ import {
   hashSenha,
   isHash,
   verificarSenha,
-  textoIgualEmTempoConstante,
   SCRYPT_PARAMS
 } from '../../../src/utilities/password.js';
+
+// Custo barato nos testes: o custo de produção só é exercitado onde ele é o objeto da prova.
+const BARATO = Object.freeze({ N: 2 ** 10, r: 8, p: 1 });
 
 describe('password', () => {
   test('custo de produção respeita o mínimo OWASP (N=2^17, r=8, p=1)', () => {
     expect(SCRYPT_PARAMS).toEqual({ N: 131072, r: 8, p: 1 });
   });
 
+  test('roundtrip com o custo de produção', async () => {
+    const h = await hashSenha('x-senha');
+
+    expect(h.split('$').slice(0, 4)).toEqual(['scrypt', '131072', '8', '1']);
+    expect(await verificarSenha('x-senha', h)).toBe(true);
+    expect(await verificarSenha('outra', h)).toBe(false);
+  });
+
   test('duas chamadas com a mesma senha geram strings diferentes e ambas verificam', async () => {
-    const [h1, h2] = await Promise.all([hashSenha('x-senha'), hashSenha('x-senha')]);
+    const [h1, h2] = await Promise.all([
+      hashSenha('x-senha', BARATO),
+      hashSenha('x-senha', BARATO)
+    ]);
 
     expect(h1).not.toBe(h2);
     expect(await verificarSenha('x-senha', h1)).toBe(true);
@@ -20,17 +33,17 @@ describe('password', () => {
   });
 
   test('formato autodescritivo scrypt$N$r$p$salt$hash e sem a senha em claro', async () => {
-    const h = await hashSenha('x-senha');
+    const h = await hashSenha('x-senha', BARATO);
     const partes = h.split('$');
 
     expect(partes).toHaveLength(6);
-    expect(partes.slice(0, 4)).toEqual(['scrypt', '131072', '8', '1']);
+    expect(partes.slice(0, 4)).toEqual(['scrypt', '1024', '8', '1']);
     expect(h).not.toContain('x-senha');
     expect(isHash(h)).toBe(true);
   });
 
   test('senha errada, vazia e hash como senha → false', async () => {
-    const h = await hashSenha('certa');
+    const h = await hashSenha('certa', BARATO);
 
     expect(await verificarSenha('errada', h)).toBe(false);
     expect(await verificarSenha('', h)).toBe(false);
@@ -69,21 +82,12 @@ describe('password', () => {
   });
 
   test('hash adulterado (último byte trocado) → false', async () => {
-    const h = await hashSenha('certa');
+    const h = await hashSenha('certa', BARATO);
     const partes = h.split('$');
     const buf = Buffer.from(partes[5], 'base64');
     buf[buf.length - 1] ^= 0xff;
     partes[5] = buf.toString('base64');
 
     expect(await verificarSenha('certa', partes.join('$'))).toBe(false);
-  });
-
-  test('textoIgualEmTempoConstante: igual, diferente, tamanhos distintos e não-string', () => {
-    expect(textoIgualEmTempoConstante('abc', 'abc')).toBe(true);
-    expect(textoIgualEmTempoConstante('abc', 'abd')).toBe(false);
-    expect(textoIgualEmTempoConstante('abc', 'abcd')).toBe(false);
-    expect(textoIgualEmTempoConstante('abcd', 'abc')).toBe(false);
-    expect(textoIgualEmTempoConstante('abc', null)).toBe(false);
-    expect(textoIgualEmTempoConstante(undefined, 'abc')).toBe(false);
   });
 });

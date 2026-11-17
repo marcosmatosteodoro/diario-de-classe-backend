@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { textoIgualEmTempoConstante } from './textoIgualEmTempoConstante.js';
 
 export function parseJwt(token) {
   if (!token || typeof token !== 'string') return null;
@@ -29,10 +30,7 @@ export function verifyJwt(token, secret) {
       .replace(/=+$/, '')
       .replace(/\+/g, '-')
       .replace(/\//g, '_');
-    const received = Buffer.from(signature);
-    const expected = Buffer.from(expectedSig);
-    if (received.length !== expected.length) return false;
-    if (!crypto.timingSafeEqual(received, expected)) return false;
+    if (!textoIgualEmTempoConstante(signature, expectedSig)) return false;
     if (payload.exp && Math.floor(Date.now() / 1000) > payload.exp) return false;
     return payload;
   } catch {
