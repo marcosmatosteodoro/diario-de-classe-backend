@@ -20,4 +20,12 @@ describe('GET /api/', () => {
     expect(typeof res.body.status).toBe('string');
     expect(typeof res.body.message).toBe('string');
   });
+
+  test('POST com X-HTTP-Method-Override: GET não é tratado como GET', async () => {
+    const res = await request(app).post('/api/').set('X-HTTP-Method-Override', 'GET');
+
+    expect(res.status).toBe(404);
+    expect(res.body.version).toBeUndefined();
+    expect(res.body.status).toBeUndefined();
+  });
 });
