@@ -11,7 +11,14 @@ import requireSameOrigin from '../middlewares/auth/requireSameOrigin.js';
 const router = express.Router();
 
 // POST /auth/login
-router.post('/login', validateLoginParams, limitLoginAttempts, LoginController.handle);
+// Origem antes do limitador: login cross-site não consome tentativa nem grava cookie.
+router.post(
+  '/login',
+  requireSameOrigin,
+  validateLoginParams,
+  limitLoginAttempts,
+  LoginController.handle
+);
 
 // POST /auth/logout
 router.post('/logout', requireSameOrigin, LogoutController.handle);

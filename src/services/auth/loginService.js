@@ -122,7 +122,7 @@ export class LoginService extends AbstractService {
     const payload = generatePayload(user);
     this.accessToken = createJwt(payload, Constants.jwtSecret, Constants.accessExp);
     this.refreshToken = createJwt(
-      { sub: user.id },
+      { sub: user.id, typ: Constants.refreshTokenType },
       Constants.jwtRefreshSecret,
       Constants.refreshExp
     );

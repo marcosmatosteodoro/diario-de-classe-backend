@@ -3,7 +3,7 @@ import UserRepository from '../../repositories/userRepository.js';
 import { createJwt } from '../../utilities/createJwt.js';
 import Constants from '../../utilities/constants.js';
 import tokenRevocationManager from './tokenRevocationManagerService.js';
-import { verifyJwt } from '../../utilities/verifyJwt.js';
+import { verificarRefreshJwt } from '../../utilities/verificarRefreshJwt.js';
 import { generatePayload } from '../../utilities/generatePayload.js';
 import { GetConfiguracaoService } from '../configuracao/getConfiguracaoService.js';
 
@@ -63,8 +63,7 @@ export class RefreshTokenService extends AbstractService {
   }
 
   verifyRefreshToken() {
-    const payload = verifyJwt(this.refreshToken, Constants.jwtRefreshSecret);
-    return payload || null;
+    return verificarRefreshJwt(this.refreshToken);
   }
 
   static async handle(refreshToken) {

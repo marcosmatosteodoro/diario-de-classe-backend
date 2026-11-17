@@ -75,6 +75,10 @@ export default class Constants {
 
   static refreshExp = Number(process.env.JWT_REFRESH_EXP_SECONDS) || 60 * 60 * 24 * 7; // 7d
 
+  // Claim `typ` do refresh emitido no login: renovar e sair recusam refresh sem ela, o que
+  // separa o refresh da sessão em cookie do legado de 30 dias (DEC-003-018).
+  static refreshTokenType = 'sessao';
+
   // Cookie do refresh: nome e path são constantes de código, nunca env (DEC-003-015).
   static sessionCookie = { name: 'bls_sessao', path: '/api/auth' };
 

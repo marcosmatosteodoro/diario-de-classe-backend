@@ -1,5 +1,6 @@
 import AbstractService from '../abstractService.js';
 import UserRepository from '../../repositories/userRepository.js';
+import { verificarRefreshJwt } from '../../utilities/verificarRefreshJwt.js';
 import tokenRevocationManager from './tokenRevocationManagerService.js';
 
 export class LogoutService extends AbstractService {
@@ -9,12 +10,17 @@ export class LogoutService extends AbstractService {
   }
 
   /**
-   * Sair é idempotente: sem token ou com token já revogado não há o que revogar e
-   * nada lança.
+   * Sair é idempotente: sem token, com token já revogado ou com valor que não é um
+   * refresh válido não há o que revogar e nada lança (o cookie chega do cliente: gravar
+   * qualquer valor na lista de revogados seria memória ilimitada).
    * @returns {Promise<{ revogado: boolean }>}
    */
   async execute() {
-    if (!this.refreshToken || tokenRevocationManager.isRevoked(this.refreshToken)) {
+    if (
+      !this.refreshToken ||
+      !verificarRefreshJwt(this.refreshToken) ||
+      tokenRevocationManager.isRevoked(this.refreshToken)
+    ) {
       return { revogado: false };
     }
 
