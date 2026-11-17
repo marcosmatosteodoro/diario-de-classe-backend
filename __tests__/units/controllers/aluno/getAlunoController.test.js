@@ -552,4 +552,76 @@ describe('GetAlunoController', () => {
       GetAlunoService.handle = originalHandle;
     });
   });
+
+  describe('Relações do aluno - filtro por dono', () => {
+    let recebidos;
+
+    beforeEach(() => {
+      recebidos = {};
+      GetAlunoService.handle = async () => ({ id: '1', nome: 'Teste' });
+      GetContratoListService.handle = async where => {
+        recebidos.contratos = where;
+        return [];
+      };
+      GetDiaAulaListService.handle = async where => {
+        recebidos.diasAulas = where;
+        return [];
+      };
+      GetAulaListService.handle = async where => {
+        recebidos.aulas = where;
+        return [];
+      };
+    });
+
+    test('admin consulta as três relações só por idAluno', async () => {
+      mockReq.user = { id: 'admin-1', isAdmin: true };
+
+      await new GetAlunoController(mockReq, mockRes).execute();
+
+      expect(recebidos).toEqual({
+        contratos: { idAluno: '1' },
+        diasAulas: { idAluno: '1' },
+        aulas: { idAluno: '1' }
+      });
+    });
+
+    test('não-admin consulta as três relações com o filtro de dono de cada entidade', async () => {
+      mockReq.user = { id: 'prof-9', isAdmin: false };
+
+      await new GetAlunoController(mockReq, mockRes).execute();
+
+      expect(recebidos).toEqual({
+        contratos: {
+          AND: [{ aulas: { some: { idProfessor: 'prof-9' } } }, { idAluno: '1' }]
+        },
+        diasAulas: {
+          AND: [
+            {
+              aluno: {
+                OR: [{ aulas: { some: { idProfessor: 'prof-9' } } }, { criador: 'prof-9' }]
+              }
+            },
+            { idAluno: '1' }
+          ]
+        },
+        aulas: { AND: [{ idProfessor: 'prof-9' }, { idAluno: '1' }] }
+      });
+    });
+
+    test('não-admin sem id de usuário recebe 403 e nenhuma consulta é feita', async () => {
+      mockReq.user = { id: undefined, isAdmin: false };
+      let chamadas = 0;
+      GetAlunoService.handle = async () => {
+        chamadas++;
+        return { id: '1' };
+      };
+
+      await new GetAlunoController(mockReq, mockRes).execute();
+
+      expect(mockRes.statusCode).toBe(403);
+      expect(mockRes.data).toEqual({ message: 'api.errors.forbidden' });
+      expect(chamadas).toBe(0);
+      expect(recebidos).toEqual({});
+    });
+  });
 });

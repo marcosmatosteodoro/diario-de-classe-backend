@@ -261,7 +261,8 @@
   "disponibilidadeProfessors": {
     "update": {
       "success": "Disponibilidade do professor atualizada com sucesso",
-      "error": "Erro ao atualizar disponibilidade do professor"
+      "error": "Erro ao atualizar disponibilidade do professor",
+      "forbidden": "Disponibilidade não pertence ao professor informado"
     }
   },
   "excel_file": {

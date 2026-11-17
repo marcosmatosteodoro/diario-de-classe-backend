@@ -75,6 +75,11 @@ export default class Constants {
 
   static refreshExp = Number(process.env.JWT_REFRESH_EXP_SECONDS) || 60 * 60 * 24 * 30; // 30d
 
+  // Lida sob demanda: só o seed exige; a API não pode falhar no boot por causa dela.
+  static get seedPassword() {
+    return requireSecret(process.env.SEED_PASSWORD, 'SEED_PASSWORD');
+  }
+
   /* Login: limite de tentativas por janela */
   static loginMaxTentativasPorEmail = Number(process.env.LOGIN_MAX_TENTATIVAS_POR_EMAIL) || 5;
 
