@@ -45,7 +45,6 @@ export class UpdateNomeCompletoController extends AbstractController {
           this.professorData.detalhesErros.push({
             id: professor.id,
             nomeCompleto: nomeCompleto || 'null',
-            professores,
             error: error.message
           });
         }
@@ -75,7 +74,6 @@ export class UpdateNomeCompletoController extends AbstractController {
           this.alunoData.detalhesErros.push({
             id: aluno.id,
             nomeCompleto: nomeCompleto || 'null',
-            aluno,
             error: error.message
           });
         }

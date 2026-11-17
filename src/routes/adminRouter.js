@@ -4,7 +4,7 @@ import { UpdateNomeCompletoController } from '../controllers/admin/updateNomeCom
 
 const router = express.Router();
 
-// GET /api/admin
-router.get('/update-nomeCompleto', UpdateNomeCompletoController.handle);
+// POST /api/admin
+router.post('/update-nomeCompleto', UpdateNomeCompletoController.handle);
 
 export default router;
