@@ -129,7 +129,9 @@
     },
     "upload": {
       "repeated_emails": "Emails repetidos encontrados no arquivo",
-      "error": "Erro ao fazer upload do arquivo"
+      "error": "Erro ao fazer upload do arquivo",
+      "too_many": "A planilha tem mais de {{max}} alunos",
+      "line_too_long": "O aluno da linha {{linha}} excede o tamanho permitido"
     }
   },
   "configuracaos": {

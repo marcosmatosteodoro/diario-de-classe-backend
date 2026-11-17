@@ -129,7 +129,9 @@
     },
     "upload": {
       "repeated_emails": "Repeated emails found in file",
-      "error": "Error uploading file"
+      "error": "Error uploading file",
+      "too_many": "The spreadsheet has more than {{max}} students",
+      "line_too_long": "The student on line {{linha}} exceeds the allowed size"
     }
   },
   "configuracaos": {
