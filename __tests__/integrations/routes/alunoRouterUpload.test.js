@@ -1,10 +1,11 @@
 import fs from 'fs';
+import { randomUUID } from 'crypto';
 import os from 'os';
 import path from 'path';
 import express from 'express';
 import request from 'supertest';
 import { jest } from '@jest/globals';
-import XLSX from 'xlsx';
+import { planilhaXlsx } from '../../mocks/planilhaXlsx.js';
 import routes from '../../../src/routes.js';
 import Constants from '../../../src/utilities/constants.js';
 import { createJwt } from '../../../src/utilities/createJwt.js';
@@ -29,18 +30,21 @@ function buildApp() {
 
 const token = role => `Bearer ${createJwt({ sub: `${role}-1`, role }, Constants.jwtSecret)}`;
 
-const planilha = () => {
-  const ws = XLSX.utils.aoa_to_sheet([['Ana Lima', 'ana.lima@example.com']]);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Plan1');
-  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-};
-
-const listaUploads = () => (fs.existsSync(uploadDir) ? fs.readdirSync(uploadDir).sort() : []);
+const arquivosComConteudo = buffer =>
+  fs.existsSync(uploadDir)
+    ? fs.readdirSync(uploadDir).filter(nome => {
+        try {
+          return fs.readFileSync(path.join(uploadDir, nome)).equals(buffer);
+        } catch {
+          return false;
+        }
+      })
+    : [];
 
 describe('POST /alunos/upload (router real de src/routes.js)', () => {
   let app;
   const originals = {};
+  let arquivoRecebido;
 
   beforeEach(() => {
     app = buildApp();
@@ -49,7 +53,11 @@ describe('POST /alunos/upload (router real de src/routes.js)', () => {
     originals.create = CreateAlunoService.handle;
     originals.update = UpdateAlunoService.handle;
     originals.list = GetAlunoListController.handle;
-    UploadAlunoExcelController.prototype.execute = jest.fn(originals.execute);
+    arquivoRecebido = undefined;
+    UploadAlunoExcelController.prototype.execute = jest.fn(function execute(...args) {
+      arquivoRecebido = this.req.file?.path;
+      return originals.execute.apply(this, args);
+    });
     AlunoRepository.prototype.selectOne = jest.fn().mockResolvedValue(null);
     CreateAlunoService.handle = jest.fn().mockResolvedValue({ id: 'aluno-1' });
     UpdateAlunoService.handle = jest.fn();
@@ -57,6 +65,7 @@ describe('POST /alunos/upload (router real de src/routes.js)', () => {
   });
 
   afterEach(() => {
+    if (arquivoRecebido) fs.rmSync(arquivoRecebido, { force: true });
     UploadAlunoExcelController.prototype.execute = originals.execute;
     AlunoRepository.prototype.selectOne = originals.selectOne;
     CreateAlunoService.handle = originals.create;
@@ -65,28 +74,29 @@ describe('POST /alunos/upload (router real de src/routes.js)', () => {
   });
 
   test('upload de alunos exige admin: professor recebe 403 e nenhum arquivo é gravado', async () => {
-    const antes = listaUploads();
+    const conteudo = planilhaXlsx([['Ana Lima', `${randomUUID()}@example.com`]]);
 
     const response = await request(app)
       .post('/alunos/upload')
       .set('Authorization', token('member'))
-      .attach('file', planilha(), 'alunos.xlsx');
+      .attach('file', conteudo, 'alunos.xlsx');
 
     expect(response.status).toBe(403);
     expect(response.body.message).toBe('api.errors.forbidden');
     expect(UploadAlunoExcelController.prototype.execute).not.toHaveBeenCalled();
     expect(CreateAlunoService.handle).not.toHaveBeenCalled();
-    expect(listaUploads()).toEqual(antes);
+    expect(arquivosComConteudo(conteudo)).toEqual([]);
   });
 
   test('admin com .xlsx válido segue o fluxo e cria o aluno da planilha', async () => {
     const response = await request(app)
       .post('/alunos/upload')
       .set('Authorization', token('admin'))
-      .attach('file', planilha(), 'alunos.xlsx');
+      .attach('file', planilhaXlsx([['Ana Lima', 'ana.lima@example.com']]), 'alunos.xlsx');
 
     expect(response.status).toBe(200);
     expect(UploadAlunoExcelController.prototype.execute).toHaveBeenCalledTimes(1);
+    expect(path.dirname(arquivoRecebido)).toBe(uploadDir);
     expect(CreateAlunoService.handle).toHaveBeenCalledWith({
       nome: 'Ana',
       sobrenome: 'Lima',

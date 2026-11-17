@@ -1,8 +1,8 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import XLSX from 'xlsx';
 import { UploadConteudoLivroExcelController } from '../../../../src/controllers/conteudoLivro/uploadConteudoLivroExcelController.js';
+import { planilhaXlsx } from '../../../mocks/planilhaXlsx.js';
 
 /**
  * Cobre a leitura da planilha (prepareData) e os limites (validarConteudos),
@@ -30,13 +30,13 @@ describe('UploadConteudoLivroExcelController', () => {
 
     it('lê uma planilha .xlsx real e devolve array de arrays', () => {
       const arquivo = path.join(dir, 'conteudos.xlsx');
-      const ws = XLSX.utils.aoa_to_sheet([
-        ['Título', 'Descrição'],
-        ['Unit 1', 'Greetings']
-      ]);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Plan1');
-      fs.writeFileSync(arquivo, XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }));
+      fs.writeFileSync(
+        arquivo,
+        planilhaXlsx([
+          ['Título', 'Descrição'],
+          ['Unit 1', 'Greetings']
+        ])
+      );
 
       expect(controller.getXLSXDataByFile(arquivo)).toEqual([
         ['Título', 'Descrição'],
