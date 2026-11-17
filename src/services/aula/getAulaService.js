@@ -23,6 +23,10 @@ export class GetAulaService extends AbstractService {
    * (AbstractAulaController monta `{ idProfessor }` para professor nao-admin).
    * Antes ele era aceito na chamada e descartado aqui, entao os cinco
    * controllers que ja o enviavam liberavam aula de qualquer professor.
+   *
+   * @param {string} id
+   * @param {Object} [additionalWhere] filtro extra mesclado ao `where` (ex.: `{ idProfessor }`)
+   * @returns {Promise<Object|null>} aula com relacoes (aluno/professor/contrato), ou `null`
    */
   static async handle(id, additionalWhere = {}) {
     const Repository = AulaRepository;

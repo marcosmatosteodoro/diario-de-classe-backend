@@ -15,6 +15,11 @@ export class GetAlunoListService extends AbstractService {
     });
   }
 
+  /**
+   * @param {Object} [where] filtro Prisma livre
+   * @returns {Promise<Array<Object>>} alunos ordenados por `nome` asc, projetados pela
+   *   whitelist padrao
+   */
   static async handle(where = {}) {
     const Repository = AlunoRepository;
     const service = new GetAlunoListService(Repository, where);

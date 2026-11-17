@@ -14,6 +14,11 @@ export class GetCronogramaService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} id
+   * @param {Object} [additionalWhere] filtro extra de autorizacao
+   * @returns {Promise<Object|null>} cronograma com livro projetado, ou `null`
+   */
   static async handle(id, additionalWhere = {}) {
     const Repository = CronogramaAlunoRepository;
     const service = new GetCronogramaService(Repository, id, additionalWhere);

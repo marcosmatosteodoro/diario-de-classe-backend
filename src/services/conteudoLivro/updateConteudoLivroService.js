@@ -24,6 +24,14 @@ export class UpdateConteudoLivroService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} id
+   * @param {Object} data
+   * @param {number|string} [data.ordem]
+   * @param {string} [data.titulo]
+   * @param {string} [data.descricao]
+   * @returns {Promise<Object>} conteudo atualizado, projetado pela whitelist padrao
+   */
   static async handle(id, data) {
     const Repository = ConteudoLivroRepository;
     const service = new UpdateConteudoLivroService(Repository, id, data);

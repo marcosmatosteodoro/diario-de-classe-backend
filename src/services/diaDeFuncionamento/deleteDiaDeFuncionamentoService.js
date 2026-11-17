@@ -11,6 +11,10 @@ export class DeleteDiaDeFuncionamentoService extends AbstractService {
     return await this.repository.delete({ id: this.id });
   }
 
+  /**
+   * @param {string} id
+   * @returns {Promise<Object>} registro removido
+   */
   static async handle(id) {
     const Repository = DiaDeFuncionamentoRepository;
     const service = new DeleteDiaDeFuncionamentoService(Repository, id);

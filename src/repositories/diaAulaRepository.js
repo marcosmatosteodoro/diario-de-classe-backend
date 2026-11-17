@@ -10,6 +10,12 @@ export default class DiaAulaRepository extends AbstractRepository {
     return prisma.diaAula;
   }
 
+  /**
+   * Whitelist de saida do dia de aula: dia da semana, janela de horario
+   * (`horaInicial`/`horaFinal`) e quantidade/duracao das aulas — nao inclui as
+   * relacoes `aluno` nem `contrato`. `duracaoAula` pode ser `null`.
+   * @returns {Object}
+   */
   getSelectFields() {
     return {
       id: true,

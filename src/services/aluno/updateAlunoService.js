@@ -28,6 +28,11 @@ export class UpdateAlunoService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} id
+   * @param {Object} data campos parciais de aluno (chaves `undefined` sao removidas antes do update)
+   * @returns {Promise<Object>} aluno atualizado, projetado pela whitelist padrao
+   */
   static async handle(id, data) {
     const Repository = AlunoRepository;
     const service = new UpdateAlunoService(Repository, id, data);

@@ -106,4 +106,31 @@ describe('validateUpdateDisponibilidadeProfessor middleware', () => {
     expect(mockNext.called).toBe(true);
     expect(mockRes.statusCode).toBe(null);
   });
+
+  // A validação só garante horaFinal > horaInicial por item; nada compara os
+  // itens entre si. Dois registros do mesmo professor, mesmo dia da semana,
+  // com horários sobrepostos, passam sem nenhum erro.
+  test('aceita dois registros do mesmo professor, mesmo dia, com horários sobrepostos (lacuna documentada)', () => {
+    mockReq.body = [
+      {
+        diaSemana: 'SEGUNDA',
+        horaInicial: '08:00',
+        horaFinal: '12:00',
+        ativo: true,
+        userId: 'prof-1'
+      },
+      {
+        diaSemana: 'SEGUNDA',
+        horaInicial: '10:00',
+        horaFinal: '11:00',
+        ativo: true,
+        userId: 'prof-1'
+      }
+    ];
+
+    validateUpdateDisponibilidadeProfessor(mockReq, mockRes, () => mockNext.call());
+
+    expect(mockNext.called).toBe(true);
+    expect(mockRes.statusCode).toBe(null);
+  });
 });

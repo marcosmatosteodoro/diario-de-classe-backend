@@ -26,6 +26,13 @@ export class IsConteudoOrdemExistsService extends AbstractService {
     return Boolean(conteudo);
   }
 
+  /**
+   * @param {Object} params
+   * @param {string} params.idLivro
+   * @param {number} params.ordem
+   * @param {string|null} [params.idIgnorado] exclui este id da busca (uso no update)
+   * @returns {Promise<boolean>} true quando ja existe conteudo com essa `ordem` no livro
+   */
   static async handle({ idLivro, ordem, idIgnorado = null }) {
     const Repository = ConteudoLivroRepository;
     const service = new IsConteudoOrdemExistsService(Repository, {

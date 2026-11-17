@@ -30,6 +30,14 @@ export class IsConteudoCongeladoEmOutraAulaService extends AbstractService {
     return Boolean(aula);
   }
 
+  /**
+   * @param {Object} params
+   * @param {string} params.idContrato
+   * @param {string} params.idConteudo
+   * @param {string} params.idAulaIgnorada aula que esta sendo editada, excluida da busca
+   * @returns {Promise<boolean>} true quando outra aula do mesmo contrato ja tem esse
+   *   conteudo congelado (concluida ou vinculo manual)
+   */
   static async handle({ idContrato, idConteudo, idAulaIgnorada }) {
     const Repository = AulaRepository;
     const service = new IsConteudoCongeladoEmOutraAulaService(Repository, {

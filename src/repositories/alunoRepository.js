@@ -10,6 +10,10 @@ export default class AlunoRepository extends AbstractRepository {
     return prisma.aluno;
   }
 
+  /**
+   * Whitelist de saida do aluno (inclui email e telefone).
+   * @returns {Object}
+   */
   getSelectFields() {
     return {
       id: true,

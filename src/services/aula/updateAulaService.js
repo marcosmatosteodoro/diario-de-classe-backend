@@ -30,6 +30,16 @@ export class UpdateAulaService extends AbstractService {
     });
   }
 
+  /**
+   * Recebe **dois** argumentos: `id` e `data` — nao um unico objeto mesclado.
+   * Tres chamadores (createContratoController, updateContratoController e
+   * createManyAulaController) chamam com um objeto so; nessas chamadas `data`
+   * chega `undefined` aqui e `execute()` estoura no primeiro acesso.
+   *
+   * @param {string} id
+   * @param {Object} data campos parciais de aula (undefined vira remocao da chave)
+   * @returns {Promise<Object>} aula atualizada, projetada pela whitelist de saida
+   */
   static async handle(id, data) {
     const Repository = AulaRepository;
     const service = new UpdateAulaService(Repository, id, data);

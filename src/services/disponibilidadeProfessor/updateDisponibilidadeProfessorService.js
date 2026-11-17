@@ -25,6 +25,11 @@ export class UpdateDisponibilidadeProfessorService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} id
+   * @param {Object} data campos parciais (chaves `undefined` são removidas antes do update)
+   * @returns {Promise<Object>} disponibilidade atualizada, projetada pela whitelist padrao
+   */
   static async handle(id, data) {
     const Repository = DisponibilidadeProfessorRepository;
     const service = new UpdateDisponibilidadeProfessorService(Repository, id, data);

@@ -30,6 +30,16 @@ export class UpdateCronogramaService extends AbstractService {
     return await this.repository.update({ id: this.id }, data, { select });
   }
 
+  /**
+   * @param {string} id
+   * @param {Object} data
+   * @param {string|Date} [data.dataInicio]
+   * @param {string|Date} [data.dataConclusao]
+   * @param {boolean} [data.ativo]
+   * @param {string|null} [idContrato] obrigatorio quando `data.ativo === true`: garante
+   *   que este vira o unico cronograma ativo do contrato (encerra o anterior na mesma transacao)
+   * @returns {Promise<Object>} cronograma atualizado, com livro projetado
+   */
   static async handle(id, data, idContrato = null) {
     const Repository = CronogramaAlunoRepository;
     const service = new UpdateCronogramaService(Repository, id, data, idContrato);

@@ -25,6 +25,14 @@ export class GetAulaListService extends AbstractService {
     });
   }
 
+  /**
+   * @param {Object} [where] filtro Prisma livre (ex.: idContrato, idAluno, idProfessor)
+   * @param {Object} [params]
+   * @param {boolean} [params.withRelations] inclui aluno/professor/contrato relacionados
+   * @param {Object} [params.select] select customizado; só vale quando `withRelations` é falsy (`withRelations: true` tem precedência)
+   * @returns {Promise<Array<Object>>} aulas ordenadas por `dataAula` asc; forma varia
+   *   conforme `params` (padrao: com relacoes)
+   */
   static async handle(where = {}, params = {}) {
     const Repository = AulaRepository;
     const service = new GetAulaListService(Repository, where, params);

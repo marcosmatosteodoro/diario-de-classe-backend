@@ -16,6 +16,11 @@ export class GetConteudosAcimaDaOrdemService extends AbstractService {
     return await this.repository.selectAcimaDaOrdem(this.idLivro, this.limite);
   }
 
+  /**
+   * @param {string} idLivro
+   * @param {number} limite
+   * @returns {Promise<Array<{ id: string, ordem: number, titulo: string }>>}
+   */
   static async handle(idLivro, limite) {
     const Repository = ConteudoLivroRepository;
     const service = new GetConteudosAcimaDaOrdemService(Repository, idLivro, limite);

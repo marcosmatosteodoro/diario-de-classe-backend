@@ -11,6 +11,12 @@ export class DeleteContratoService extends AbstractService {
     return await this.repository.delete({ id: this.id });
   }
 
+  /**
+   * Hard delete direto, sem checar aulas dependentes: a cascata do schema
+   * apaga todas as aulas do contrato junto, inclusive as `CONCLUIDA`.
+   * @param {string} id
+   * @returns {Promise<Object>} contrato removido
+   */
   static async handle(id) {
     const Repository = ContratoRepository;
     const service = new DeleteContratoService(Repository, id);

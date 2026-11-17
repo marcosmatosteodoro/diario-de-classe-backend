@@ -7,6 +7,10 @@ export class GetUserListService extends AbstractService {
     this.where = where;
   }
 
+  /**
+   * @returns {Promise<Array<Object>>} usuários filtrados por `this.where`,
+   *   ordenados por `nome`, projetados pela whitelist de saída (`senha` fora)
+   */
   async execute() {
     return await this.repository.selectMany({
       select: this.repository.selectFields,
@@ -15,6 +19,10 @@ export class GetUserListService extends AbstractService {
     });
   }
 
+  /**
+   * @param {Object} [where] filtro Prisma (`{}` lista todos)
+   * @returns {Promise<Array<Object>>} ver `execute()`
+   */
   static async handle(where = {}) {
     const Repository = UserRepository;
     const service = new GetUserListService(Repository, where);

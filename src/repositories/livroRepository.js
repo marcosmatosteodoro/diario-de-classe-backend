@@ -22,6 +22,11 @@ export default class LivroRepository extends AbstractRepository {
     };
   }
 
+  /**
+   * Campos do livro mais seus `conteudos` (id, ordem, titulo, descricao),
+   * ordenados por `ordem` asc.
+   * @returns {Object}
+   */
   getSelectFieldsWithConteudos() {
     return {
       ...this.getSelectFields(),

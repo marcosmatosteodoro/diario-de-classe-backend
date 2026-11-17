@@ -11,6 +11,14 @@ export class DeleteConteudoLivroService extends AbstractService {
     return await this.repository.delete({ id: this.id });
   }
 
+  /**
+   * Hard delete direto. A FK de `Aula` para este conteudo e `SetNull`: apagar um
+   * conteudo com aula historica zera o vinculo em silencio — quem chama isto
+   * deve checar antes com `GetAulasCongeladasPorConteudosService` (o controller
+   * ja faz essa checagem com 409).
+   * @param {string} id
+   * @returns {Promise<Object>} conteudo removido
+   */
   static async handle(id) {
     const Repository = ConteudoLivroRepository;
     const service = new DeleteConteudoLivroService(Repository, id);

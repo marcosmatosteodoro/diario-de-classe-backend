@@ -52,6 +52,14 @@ export class GetContratoService extends AbstractService {
     return contrato;
   }
 
+  /**
+   * @param {string} id
+   * @param {Object} [params]
+   * @param {boolean} [params.withRelations] inclui `aulas` (com professor) e `diaAulas` completos
+   * @param {Object} [params.additionalWhere] filtro extra mesclado ao `where` (filtro do controller)
+   * @returns {Promise<Object|null>} contrato com `aulas` (quando presente) ordenadas
+   *   por dataAula/horaInicial em memoria, ou `null`
+   */
   static async handle(id, params) {
     const Repository = ContratoRepository;
     const service = new GetContratoService(Repository, id, params);

@@ -16,6 +16,11 @@ export class IsAlunoEmailExistsService extends AbstractService {
     return Boolean(aluno);
   }
 
+  /**
+   * @param {string} email
+   * @returns {Promise<boolean>} true quando ja existe aluno com esse email (barreira de
+   *   aplicacao adicional ao `@unique` do schema)
+   */
   static async handle(email) {
     const Repository = AlunoRepository;
     const service = new IsAlunoEmailExistsService(Repository, email);

@@ -13,6 +13,15 @@ Regras para manter o padrão do backend. Node.js + Express 5 + Prisma, **ESM, Ja
 - Segurança: `helmet`, `cors`, validação de input.
 - JWT **manual** (HMAC-SHA256) em `src/middlewares/auth/isLoggedIn.js` — não trocar por lib sem pedir.
 
+## Antes de mexer num domínio
+
+Se o workspace `diario-de-classe-workspace` estiver clonado ao lado (`../diario-de-classe-workspace/`),
+leia `docs/<dominio>/MAP.md` de lá antes de explorar o domínio (`aluno`, `aula`, `contrato`,
+`disponibilidade`, `cronograma`, `auth`, `user`, `diaAula`, `livro`, `configuracao`,
+`operacoes-admin`) — registra o fluxo real, a regra de negócio não óbvia e a armadilha
+já encontrada, com âncora `arquivo:linha`. Confira a âncora antes de decidir por ela — o
+MAP é aproximação declarada, o código é a fonte.
+
 ## Arquitetura em 3 camadas
 
 ```
@@ -108,6 +117,12 @@ Sempre declarar a whitelist em `getDataForFilter()` — nunca confiar em campos 
 - `__tests__/units/**` e `__tests__/integrations/**`, arquivos `*.test.js`.
 - `describe`/`test`, `beforeEach` para fixtures, `jest.fn()`/`jest.spyOn()`, mocks em `__mocks__/`.
 - Sem DB real em unitários. Ao criar Service/Controller/Repository novo, adicionar teste no mesmo estilo.
+- **Ao mockar `<Classe>.handle(...)`, copie a assinatura declarada na classe** (abra o arquivo, confira `static handle(...)`) — nunca a chamada do código sob teste. Um mock que copia a chamada errada em vez do contrato já deixou passar um bug real de produção (`this.data` chegando `undefined` num service chamado com um único argumento). Detalhe da lição em `guidelines/project/lessons.md` no workspace, se clonado ao lado.
+
+## Documentação de fronteira (JSDoc)
+
+- Métodos públicos de `Repository` e o `static handle(...)` de `Service` levam JSDoc com `@param`/`@returns`, e comentário do _porquê_ quando a decisão não é óbvia — não repetir o nome do método. Modelo a copiar: `src/repositories/cronogramaAlunoRepository.js` (métodos `criarComoAtivo`/`updateComoAtivoUnico`).
+- JSDoc documenta o comportamento **real**, inclusive defeituoso — não é lugar para "consertar documentando". Se o código tem um bug funcional conhecido, o comentário descreve o bug, não o comportamento desejado. Achados de segurança não são descritos em JSDoc, comentário ou nome de teste; o registro segue o processo do workspace.
 
 ## Config / env
 

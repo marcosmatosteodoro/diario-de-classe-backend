@@ -1,6 +1,11 @@
 import AbstractService from '../abstractService.js';
 import ConfiguracaoRepository from '../../repositories/configuracaoRepository.js';
 
+/**
+ * Busca configurações e ordena os `diasDeFuncionamento` de cada uma pela
+ * ordem natural da semana (SEGUNDA..DOMINGO), já que o Prisma não garante
+ * ordem no campo relacional.
+ */
 export class GetConfiguracaoService extends AbstractService {
   constructor(Repository, where) {
     super(Repository);
@@ -24,6 +29,12 @@ export class GetConfiguracaoService extends AbstractService {
     });
   }
 
+  /**
+   * @param {Object} [where] - condições de filtro (Prisma `where`); vazio traz todas
+   * @returns {Promise<Array<Object>>} configurações com os campos de
+   *   ConfiguracaoRepository.getSelectFields(), cada uma com
+   *   `diasDeFuncionamento` ordenado por dia da semana
+   */
   static async handle(where = {}) {
     const Repository = ConfiguracaoRepository;
     const service = new GetConfiguracaoService(Repository, where);

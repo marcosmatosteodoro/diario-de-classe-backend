@@ -15,6 +15,10 @@ export class GetLivroListService extends AbstractService {
     });
   }
 
+  /**
+   * @param {Object} [where] filtro Prisma livre
+   * @returns {Promise<Array<Object>>} livros ordenados por idioma, nivel e nome
+   */
   static async handle(where = {}) {
     const Repository = LivroRepository;
     const service = new GetLivroListService(Repository, where);

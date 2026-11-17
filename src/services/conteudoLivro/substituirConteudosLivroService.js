@@ -30,6 +30,12 @@ export class SubstituirConteudosLivroService extends AbstractService {
     return await this.repository.substituirByLivro(this.idLivro, data);
   }
 
+  /**
+   * @param {string} idLivro
+   * @param {Array<{ ordem?: number, titulo: string, descricao?: string }>} conteudos
+   *   sem `ordem` informada, a posicao na lista (1-based) e usada
+   * @returns {Promise<{ count: number, criados: number, atualizados: number, removidos: number }>}
+   */
   static async handle(idLivro, conteudos) {
     const Repository = ConteudoLivroRepository;
     const service = new SubstituirConteudosLivroService(Repository, idLivro, conteudos);

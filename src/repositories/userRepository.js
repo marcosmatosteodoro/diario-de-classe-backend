@@ -10,6 +10,15 @@ export default class UserRepository extends AbstractRepository {
     return prisma.user;
   }
 
+  /**
+   * Whitelist de saída de `user` (professor/admin). `senha: false` mantém a
+   * senha fora da projeção quando o service passa
+   * `select: this.repository.selectFields`.
+   *
+   * `resetarSenha` está na whitelist e é gravável em create/update; nenhum
+   * código do sistema o consome.
+   * @returns {Object} objeto de projeção Prisma (`select`)
+   */
   getSelectFields() {
     return {
       id: true,

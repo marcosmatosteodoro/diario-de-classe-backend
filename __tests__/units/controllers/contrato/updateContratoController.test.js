@@ -1,4 +1,5 @@
 import { UpdateContratoController } from '../../../../src/controllers/contrato/updateContratoController.js';
+import { CreateContratoController } from '../../../../src/controllers/contrato/createContratoController.js';
 import AbstractController from '../../../../src/controllers/abstractController.js';
 import { GetAulaListService } from '../../../../src/services/aula/getAulaListService.js';
 import { CreateAulaService } from '../../../../src/services/aula/createAulaService.js';
@@ -503,6 +504,152 @@ describe('UpdateContratoController', () => {
       expect(deleteCalls).toBe(1);
       expect(updateCalls).toBe(0);
       expect(createCalls).toBe(1);
+    });
+  });
+
+  // Comportamento atual: a reconciliação hard-deleta a aula existente cuja
+  // data sai do payload de edição sem checar o status. Aula CONCLUIDA é apagada como qualquer outra.
+  // Este teste prova o comportamento atual (defeituoso), não o corrige.
+  describe('createAulas - hard delete ignora status da aula (bug documentado)', () => {
+    const originals = {};
+
+    const buildController = aulas => {
+      const req = {
+        params: { id: '1' },
+        body: { idAluno: '1', idProfessor: '2', aulas }
+      };
+      const res = {
+        status() {
+          return this;
+        },
+        json() {
+          return this;
+        }
+      };
+      const controller = new UpdateContratoController(req, res);
+      controller.contrato = { id: 'contrato-1' };
+      return controller;
+    };
+
+    beforeEach(() => {
+      originals.list = GetAulaListService.handle;
+      originals.create = CreateAulaService.handle;
+      originals.update = UpdateAulaService.handle;
+      originals.del = DeleteAulaService.handle;
+    });
+
+    afterEach(() => {
+      GetAulaListService.handle = originals.list;
+      CreateAulaService.handle = originals.create;
+      UpdateAulaService.handle = originals.update;
+      DeleteAulaService.handle = originals.del;
+    });
+
+    test('deleta aula CONCLUIDA cuja data sai do payload de edição, sem checar status', async () => {
+      const deletedIds = [];
+
+      // A aula existente é CONCLUIDA e sua data (06/01) não está mais entre as
+      // aulas enviadas no payload de edição (só 13/01).
+      GetAulaListService.handle = async () => [
+        {
+          id: 'aula-concluida',
+          status: 'CONCLUIDA',
+          dataAula: new Date('2025-01-06T00:00:00.000Z')
+        }
+      ];
+      DeleteAulaService.handle = async id => {
+        deletedIds.push(id);
+        return {};
+      };
+      UpdateAulaService.handle = async () => ({});
+      CreateAulaService.handle = async () => ({});
+
+      const controller = buildController([
+        {
+          dataAula: '2025-01-13',
+          horaInicial: '08:00',
+          horaFinal: '09:00',
+          tipo: 'PADRAO'
+        }
+      ]);
+
+      await controller.createAulas();
+
+      // A reconciliação nunca lê `aulaEx.status` antes de decidir apagar: o
+      // hard delete acontece independente de a aula já ter sido dada.
+      expect(deletedIds).toEqual(['aula-concluida']);
+    });
+  });
+
+  // Divergência entre create e update: a reconciliação do update considera
+  // todas as aulas do contrato do aluno; a do create, só as do professor do
+  // payload.
+  describe('createAulas - divergência create vs update: filtro por idProfessor', () => {
+    const originals = {};
+
+    beforeEach(() => {
+      originals.list = GetAulaListService.handle;
+      originals.create = CreateAulaService.handle;
+      originals.update = UpdateAulaService.handle;
+      originals.del = DeleteAulaService.handle;
+    });
+
+    afterEach(() => {
+      GetAulaListService.handle = originals.list;
+      CreateAulaService.handle = originals.create;
+      UpdateAulaService.handle = originals.update;
+      DeleteAulaService.handle = originals.del;
+    });
+
+    test('update busca aulas existentes sem filtrar por idProfessor; create filtra', async () => {
+      const req = {
+        params: { id: '1' },
+        body: { idAluno: '1', idProfessor: '2', aulas: [] }
+      };
+      const res = {
+        status() {
+          return this;
+        },
+        json() {
+          return this;
+        }
+      };
+
+      CreateAulaService.handle = async () => ({});
+      UpdateAulaService.handle = async () => ({});
+      DeleteAulaService.handle = async () => ({});
+
+      let updateWhere = null;
+      GetAulaListService.handle = async where => {
+        updateWhere = where;
+        return [];
+      };
+
+      const updateController = new UpdateContratoController(req, res);
+      updateController.contrato = { id: 'contrato-1' };
+      await updateController.createAulas();
+
+      // O update busca as aulas existentes por idContrato/idAluno, sem
+      // idProfessor.
+      expect(updateWhere).toEqual({ idContrato: 'contrato-1', idAluno: '1' });
+      expect(updateWhere.idProfessor).toBeUndefined();
+
+      let createWhere = null;
+      GetAulaListService.handle = async where => {
+        createWhere = where;
+        return [];
+      };
+
+      const createController = new CreateContratoController(req, res);
+      createController.contrato = { id: 'contrato-1' };
+      await createController.createAulas();
+
+      // O create, para o mesmo cenário, inclui idProfessor no filtro.
+      expect(createWhere).toEqual({
+        idContrato: 'contrato-1',
+        idAluno: '1',
+        idProfessor: '2'
+      });
     });
   });
 });

@@ -14,6 +14,11 @@ export class GetDiaAulaListService extends AbstractService {
     });
   }
 
+  /**
+   * @param {Object} [where] filtro Prisma livre (ex.: idContrato, idAluno)
+   * @returns {Promise<Array<Object>>} dias de aula projetados pela whitelist de saida,
+   *   sem ordenacao explicita
+   */
   static async handle(where = {}) {
     const Repository = DiaAulaRepository;
     const service = new GetDiaAulaListService(Repository, where);

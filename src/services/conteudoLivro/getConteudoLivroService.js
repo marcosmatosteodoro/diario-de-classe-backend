@@ -14,6 +14,11 @@ export class GetConteudoLivroService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} id
+   * @param {Object} [additionalWhere] filtro extra mesclado ao `where`
+   * @returns {Promise<Object|null>} conteudo projetado pela whitelist padrao, ou `null`
+   */
   static async handle(id, additionalWhere = {}) {
     const Repository = ConteudoLivroRepository;
     const service = new GetConteudoLivroService(Repository, id, additionalWhere);

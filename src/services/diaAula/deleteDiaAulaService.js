@@ -11,6 +11,11 @@ export class DeleteDiaAulaService extends AbstractService {
     return await this.repository.delete({ id: this.id });
   }
 
+  /**
+   * Hard delete: sem soft delete de dia de aula.
+   * @param {string} id
+   * @returns {Promise<Object>} dia de aula removido (registro completo do model, sem `select`)
+   */
   static async handle(id) {
     const Repository = DiaAulaRepository;
     const service = new DeleteDiaAulaService(Repository, id);

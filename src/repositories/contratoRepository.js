@@ -10,6 +10,11 @@ export default class ContratoRepository extends AbstractRepository {
     return prisma.contrato;
   }
 
+  /**
+   * Whitelist padrao de saida: totais derivados do contrato mais nome/nomeCompleto
+   * do aluno; não inclui a lista de `aulas` nem `diaAulas`.
+   * @returns {Object}
+   */
   getSelectFields() {
     return {
       id: true,
@@ -35,6 +40,12 @@ export default class ContratoRepository extends AbstractRepository {
     };
   }
 
+  /**
+   * Variante completa: aluno e diaAulas, mais `aulas` com o professor
+   * projetado (nome/nomeCompleto). Usada quando o consumidor precisa do
+   * detalhe, não só dos totais.
+   * @returns {Object}
+   */
   getSelectFieldsWithRelations() {
     return {
       id: true,

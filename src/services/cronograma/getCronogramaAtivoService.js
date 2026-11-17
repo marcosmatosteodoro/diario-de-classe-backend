@@ -34,6 +34,13 @@ export class GetCronogramaAtivoService extends AbstractService {
     return cronograma || null;
   }
 
+  /**
+   * @param {Object} params ao menos um dos dois deve vir preenchido
+   * @param {string|null} [params.idContrato]
+   * @param {string|null} [params.idAluno]
+   * @param {Object} [additionalWhere] filtro extra de autorizacao
+   * @returns {Promise<Object|null>} cronograma ativo mais recente (com livro projetado), ou `null`
+   */
   static async handle({ idContrato = null, idAluno = null }, additionalWhere = {}) {
     const Repository = CronogramaAlunoRepository;
     const service = new GetCronogramaAtivoService(

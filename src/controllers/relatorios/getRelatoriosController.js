@@ -4,6 +4,22 @@ import { GetContratoListService } from '../../services/contrato/getContratoListS
 import { GetUserListService } from '../../services/user/getUserListService.js';
 import AbstractController from '../abstractController.js';
 
+/**
+ * Monta o catálogo de relatórios disponíveis (`GET /relatorios`, atrás de
+ * `isLoggedIn` + `adminOnly`) — não tem repository nem service próprio.
+ *
+ * Não recebe query/params: as opções de filtro (professor, aluno, aula,
+ * contrato) são montadas buscando a lista **inteira** de cada entidade em
+ * paralelo (`Promise.all`), sem filtro nenhum, só para popular dropdown.
+ *
+ * `getAulasOptions` lê `aula.nome` para o `label` de cada opção; esse campo
+ * não existe em `Aula` (ver schema Prisma), então o label de aula fica
+ * sempre vazio/undefined no dropdown.
+ *
+ * Hoje o catálogo devolve um único relatório fixo, `relatorio-1`, com os
+ * filtros `dataInicial`/`dataFinal`/`idAluno`/`idProfessor` anunciados no
+ * `filters`; esses filtros são aplicados por `GetRelatorio1Controller.buildWhere`.
+ */
 export class GetRelatoriosController extends AbstractController {
   constructor(req, res) {
     super(req, res);
@@ -112,6 +128,12 @@ export class GetRelatoriosController extends AbstractController {
     return filters.map(filter => this.buildFilter(filter)).filter(filter => filter !== null);
   }
 
+  /**
+   * @returns {Promise<void>} responde 200 com um array de relatórios
+   *   `{ endpoint, title, description, filters }`, onde `filters` é a lista
+   *   de objetos de UI (`buildFilter`) para os filtros anunciados por cada
+   *   relatório.
+   */
   async execute() {
     try {
       await Promise.all([

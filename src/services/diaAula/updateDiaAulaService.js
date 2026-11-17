@@ -27,6 +27,18 @@ export class UpdateDiaAulaService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} id
+   * @param {Object} data campos parciais do dia de aula (undefined vira remocao da chave)
+   * @param {string} [data.idAluno]
+   * @param {string} [data.idContrato]
+   * @param {string} [data.diaSemana] `SEGUNDA`|`TERCA`|`QUARTA`|`QUINTA`|`SEXTA`|`SABADO`|`DOMINGO`
+   * @param {number} [data.quantidadeAulas]
+   * @param {number} [data.duracaoAula]
+   * @param {string} [data.horaInicial] formato `HH:MM`
+   * @param {string} [data.horaFinal] formato `HH:MM`
+   * @returns {Promise<Object>} dia de aula atualizado, projetado pela whitelist de saida
+   */
   static async handle(id, data) {
     const Repository = DiaAulaRepository;
     const service = new UpdateDiaAulaService(Repository, id, data);

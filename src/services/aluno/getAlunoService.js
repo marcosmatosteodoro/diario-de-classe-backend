@@ -17,6 +17,11 @@ export class GetAlunoService extends AbstractService {
     });
   }
 
+  /**
+   * @param {string} id
+   * @param {Object} [additionalWhere] filtro extra mesclado ao `where` (filtro do controller)
+   * @returns {Promise<Object|null>} aluno projetado pela whitelist padrao, ou `null`
+   */
   static async handle(id, additionalWhere = {}) {
     const Repository = AlunoRepository;
     const service = new GetAlunoService(Repository, id, additionalWhere);

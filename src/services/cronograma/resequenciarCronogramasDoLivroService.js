@@ -34,6 +34,10 @@ export class ResequenciarCronogramasDoLivroService {
     return { contratosResequenciados: contratos.length };
   }
 
+  /**
+   * @param {string} idLivro
+   * @returns {Promise<{ contratosResequenciados: number }>}
+   */
   static async handle(idLivro) {
     const service = new ResequenciarCronogramasDoLivroService(idLivro);
     return await service.execute();

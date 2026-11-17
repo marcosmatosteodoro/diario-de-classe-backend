@@ -20,6 +20,13 @@ export class IsDiaAulaAlunoContratoExistsService extends AbstractService {
     return diaAula && diaAula.length > 0;
   }
 
+  /**
+   * @param {Object} params
+   * @param {string} params.idAluno
+   * @param {string} params.idContrato
+   * @returns {Promise<boolean>} true quando ha ao menos um dia de aula para esse aluno+contrato,
+   *   em qualquer dia da semana
+   */
   static async handle({ idAluno, idContrato }) {
     const Repository = DiaAulaRepository;
     const service = new IsDiaAulaAlunoContratoExistsService(Repository, { idAluno, idContrato });

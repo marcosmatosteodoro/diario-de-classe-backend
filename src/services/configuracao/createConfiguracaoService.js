@@ -22,6 +22,18 @@ export class CreateConfiguracaoService extends AbstractService {
     });
   }
 
+  /**
+   * @param {Object} data
+   * @param {number} [data.duracaoAula] - duração padrão da aula, em minutos;
+   *   consumida por controllers de dia de aula e de contrato para calcular
+   *   horaFinal a partir de horaInicial
+   * @param {number} [data.tolerancia] - tolerância de atraso, em minutos;
+   *   armazenada e editável, mas sem consumidor encontrado fora deste CRUD
+   * @param {Array<Object>} [data.diasDeFuncionamento] - dias de funcionamento
+   *   a vincular (campo relacional; ignorado se undefined)
+   * @returns {Promise<Object>} configuração criada, com os campos de
+   *   ConfiguracaoRepository.getSelectFields()
+   */
   static async handle(data) {
     const Repository = ConfiguracaoRepository;
     const service = new CreateConfiguracaoService(Repository, data);
