@@ -7,7 +7,7 @@ import { maskEmail } from '../../utilities/maskEmail.js';
  * Reserva a tentativa nos contadores IP e IP+e-mail (nessa ordem) antes de verificar a
  * credencial; a decisão sai do valor devolvido pela mesma escrita. Acima do
  * teto: 429 + Retry-After, sem chegar ao LoginController. Liberada: o fim da janela da
- * reserva do IP segue em `res.locals.expiraEmReservaIp`, para o controller devolver
+ * reserva do IP segue em `req.expiraEmReservaIp`, para o controller devolver
  * a reserva só dentro dessa janela. Erro no contador nega a requisição (fail secure).
  *
  * @param {Object} req
@@ -34,7 +34,7 @@ export const limitLoginAttempts = async (req, res, next) => {
       return res.status(429).json({ message: req.t('auth.login.too_many_attempts') });
     }
 
-    res.locals.expiraEmReservaIp = expiraEmIp;
+    req.expiraEmReservaIp = expiraEmIp;
     return next();
   } catch (error) {
     // Só name/code: a mensagem de erro do ORM pode embutir argumentos da chamada.

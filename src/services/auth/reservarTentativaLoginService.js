@@ -16,7 +16,7 @@ export class ReservarTentativaLoginService extends AbstractService {
    * por e-mails novos). Toda recusa devolve a reserva do IP, para que tentativa
    * bloqueada não consuma o teto de quem divide o IP; a devolução só vale na janela
    * em que a reserva foi feita (`expiraEm`).
-   * @returns {Promise<{ segundosBloqueio: number, expiraEmIp: Date|number }>} segundos até
+   * @returns {Promise<{ segundosBloqueio: number, expiraEmIp: string }>} segundos até
    *   a janela que recusou terminar (0 se liberada) e o fim da janela da reserva do IP
    */
   async execute() {
@@ -40,7 +40,7 @@ export class ReservarTentativaLoginService extends AbstractService {
   /**
    * @param {string} ip
    * @param {string} email
-   * @returns {Promise<{ segundosBloqueio: number, expiraEmIp: Date|number }>}
+   * @returns {Promise<{ segundosBloqueio: number, expiraEmIp: string }>}
    */
   static async handle(ip, email) {
     return await new ReservarTentativaLoginService(TentativaLoginRepository, ip, email).execute();

@@ -54,7 +54,7 @@ describe('TentativaLoginRepository', () => {
           '"contagem" = CASE WHEN "tentativas_login"."expiraEm" <= NOW() THEN 1 ELSE "tentativas_login"."contagem" + 1 END,',
           `"expiraEm" = CASE WHEN "tentativas_login"."expiraEm" <= NOW() THEN NOW() + (?::int * INTERVAL '1 second') ELSE "tentativas_login"."expiraEm" END,`,
           '"dataAtualizacao" = NOW()',
-          'RETURNING "contagem", GREATEST(CEIL(EXTRACT(EPOCH FROM ("tentativas_login"."expiraEm" - NOW())))::int, 1) AS "segundosRestantes", "tentativas_login"."expiraEm"'
+          'RETURNING "contagem", GREATEST(CEIL(EXTRACT(EPOCH FROM ("tentativas_login"."expiraEm" - NOW())))::int, 1) AS "segundosRestantes", "tentativas_login"."expiraEm"::text AS "expiraEm"'
         ].join(' ')
       );
     });
@@ -69,7 +69,7 @@ describe('TentativaLoginRepository', () => {
   describe('decrementar', () => {
     test('uma instrução atômica parametrizada, nunca abaixo de zero, restrita à janela informada', async () => {
       executeRaw.mockResolvedValue(1);
-      const expiraEm = new Date('2026-11-17T12:00:00.000Z');
+      const expiraEm = '2026-11-17 12:00:00';
 
       await repository.decrementar('ip:203.0.113.10', expiraEm);
 
@@ -78,7 +78,7 @@ describe('TentativaLoginRepository', () => {
       expect(Array.isArray(strings.raw)).toBe(true);
       expect(valores).toEqual(['ip:203.0.113.10', expiraEm]);
       expect(normalizar(strings)).toBe(
-        'UPDATE "tentativas_login" SET "contagem" = GREATEST("contagem" - 1, 0), "dataAtualizacao" = NOW() WHERE "chave" = ? AND "expiraEm" = ?'
+        'UPDATE "tentativas_login" SET "contagem" = GREATEST("contagem" - 1, 0), "dataAtualizacao" = NOW() WHERE "chave" = ? AND "expiraEm" = ?::timestamp(3)'
       );
     });
 

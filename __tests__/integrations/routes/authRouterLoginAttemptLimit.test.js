@@ -51,18 +51,20 @@ function installStore() {
       const resultado = {
         contagem: linha.contagem,
         segundosRestantes: Math.max(Math.ceil((linha.expiraEm - agora) / 1000), 1),
-        expiraEm: linha.expiraEm
+        expiraEm: String(linha.expiraEm)
       };
       await new Promise(resolve => setImmediate(resolve));
       return resultado;
     });
-  // Respeita o predicado de janela do UPDATE: só altera a linha cuja expiraEm é a informada
-  // (sem expiraEm, não há predicado: o UPDATE é incondicional).
+  // Deliberadamente mais permissivo que a produção (que exige a janela): sem expiraEm o
+  // dublê altera a linha incondicionalmente, para um chamador que omite a janela aparecer
+  // nos testes. `expiraEm` é token opaco (string), comparado só por igualdade.
   jest
     .spyOn(TentativaLoginRepository.prototype, 'decrementar')
     .mockImplementation(async (chave, expiraEm) => {
       const atual = store.get(chave);
-      const alvo = atual && (expiraEm === undefined || atual.expiraEm === expiraEm) ? atual : null;
+      const alvo =
+        atual && (expiraEm === undefined || String(atual.expiraEm) === expiraEm) ? atual : null;
       if (alvo) alvo.contagem = Math.max(alvo.contagem - 1, 0);
       await new Promise(resolve => setImmediate(resolve));
       return alvo ? 1 : 0;
@@ -247,7 +249,7 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
 
       const recusada = login(app, { email: 'recusada@example.com' }).then(r => r);
       const args = await devolucao.chegou();
-      expect(args[1]).toBe(now + Constants.loginJanelaSegundos * 1000);
+      expect(args[1]).toBe(String(now + Constants.loginJanelaSegundos * 1000));
 
       now += Constants.loginJanelaSegundos * 1000 + 1;
       expect((await login(app, { email: 'primeira.da.nova@example.com' })).status).toBe(401);
@@ -278,7 +280,7 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
 
       const sucesso = login(app, { senha: 'certa' }).then(r => r);
       const args = await devolucao.chegou();
-      expect(args[1]).toBe(now + Constants.loginJanelaSegundos * 1000);
+      expect(args[1]).toBe(String(now + Constants.loginJanelaSegundos * 1000));
 
       now += Constants.loginJanelaSegundos * 1000 + 1;
       expect((await login(app, { email: 'primeira.da.nova@example.com' })).status).toBe(401);
@@ -288,16 +290,40 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
       await completarEEsgotarJanelaNova();
     });
 
-    test('recusa e sucesso devolvem com o fim da janela da reserva do IP', async () => {
-      const fim = now + Constants.loginJanelaSegundos * 1000;
-      loginSpy.mockResolvedValue(loginOk);
+    describe('devolução do IP usa a janela da reserva do IP, não a do e-mail', () => {
+      const EMAIL_JANELA = 'abre.janela.ip@example.com';
+      let fimIp;
 
-      await login(app, { senha: 'certa' });
+      beforeEach(async () => {
+        await login(app, { email: EMAIL_JANELA });
+        fimIp = String(now + Constants.loginJanelaSegundos * 1000);
+        now += 100_000;
+      });
 
-      expect(TentativaLoginRepository.prototype.decrementar).toHaveBeenCalledWith(
-        expect.stringMatching(/^ip:/),
-        fim
-      );
+      test('sucesso com e-mail devolve o IP com o fim da janela do IP', async () => {
+        loginSpy.mockResolvedValue(loginOk);
+
+        const r = await login(app, { senha: 'certa' });
+
+        expect(r.status).toBe(200);
+        expect(TentativaLoginRepository.prototype.decrementar).toHaveBeenLastCalledWith(
+          expect.stringMatching(/^ip:/),
+          fimIp
+        );
+      });
+
+      test('recusa por e-mail devolve o IP com o fim da janela do IP', async () => {
+        for (let i = 0; i < Constants.loginMaxTentativasPorEmail; i++) {
+          expect((await login(app)).status).toBe(401);
+        }
+
+        expect((await login(app)).status).toBe(429);
+
+        expect(TentativaLoginRepository.prototype.decrementar).toHaveBeenLastCalledWith(
+          expect.stringMatching(/^ip:/),
+          fimIp
+        );
+      });
     });
   });
 

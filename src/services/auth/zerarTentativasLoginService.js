@@ -27,7 +27,7 @@ export class ZerarTentativasLoginService extends AbstractService {
    * vale na janela da reserva (`expiraEmIp`); ausente, o IP não é devolvido.
    * @param {string} ip
    * @param {string} email
-   * @param {Date|number} [expiraEmIp] - fim da janela da reserva do IP
+   * @param {string} [expiraEmIp] - fim da janela da reserva do IP
    * @returns {Promise<void>}
    */
   static async handle(ip, email, expiraEmIp) {
