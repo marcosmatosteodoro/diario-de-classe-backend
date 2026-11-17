@@ -46,6 +46,7 @@ describe('CreateManyAulaController', () => {
         const translations = {
           'diaAulas.error.aluno_not_exists': 'Aluno não encontrado',
           'diaAulas.error.contrato_not_exists': 'Contrato não encontrado',
+          'aulas.create.contrato_nao_pertence_ao_aluno': 'Contrato não pertence ao aluno',
           'aulas.error.professor_not_exists': 'Professor não encontrado',
           'aulas.create.error': 'Erro ao criar aula'
         };
@@ -351,7 +352,7 @@ describe('CreateManyAulaController', () => {
       await controller.execute();
 
       expect(mockRes.statusCode).toBe(422);
-      expect(mockRes.data.message).toBe('Contrato não encontrado');
+      expect(mockRes.data.message).toBe('Contrato não pertence ao aluno');
     });
 
     describe('vínculo contrato↔aluno', () => {
@@ -373,9 +374,29 @@ describe('CreateManyAulaController', () => {
         await controller.execute();
 
         expect(mockRes.statusCode).toBe(422);
-        expect(mockRes.data.message).toBe('Contrato não encontrado');
+        expect(mockRes.data.message).toBe('Contrato não pertence ao aluno');
         expect(writes).toEqual([]);
         expect(wheres).toEqual([{ id: 'contrato-123', idAluno: 'aluno-123' }]);
+      });
+
+      test.each([
+        ['idAluno ausente', c => (c.req.body.idAluno = undefined)],
+        ['idAluno vazio', c => (c.req.body.idAluno = '')],
+        ['idContrato ausente', c => (c.req.validatedId = c.req.params.id = undefined)],
+        ['idContrato vazio', c => (c.req.validatedId = c.req.params.id = '')]
+      ])('recusa 422 sem consultar o contrato quando %s', async (_nome, mutate) => {
+        let lookups = 0;
+        GetContratoService.handle = async () => {
+          lookups++;
+          return { id: 'x' };
+        };
+        mutate(controller);
+
+        await controller.execute();
+
+        expect(mockRes.statusCode).toBe(422);
+        expect(mockRes.data.message).toBe('Contrato não pertence ao aluno');
+        expect(lookups).toBe(0);
       });
 
       test('segue o fluxo (201) quando o par contrato↔aluno confere', async () => {

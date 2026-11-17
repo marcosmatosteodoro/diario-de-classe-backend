@@ -19,7 +19,8 @@ export class CreateManyAulaController extends AbstractController {
       const idAluno = this.req.body.idAluno;
       const idProfessor = this.req.body.idProfessor;
       const aulas = this.req.body.aulas;
-      const isContratoExists = await this.isContratoExists(idContrato, idAluno);
+      const isContratoExists =
+        !!idContrato && !!idAluno && (await this.isContratoExists(idContrato, idAluno));
       const isAlunoExists = await this.isAlunoExists(idAluno);
       const isProfessorExists = await this.isProfessorExists(idProfessor);
 
@@ -31,7 +32,7 @@ export class CreateManyAulaController extends AbstractController {
 
       if (!isContratoExists) {
         return this.res.status(422).json({
-          message: this.req.t('diaAulas.error.contrato_not_exists')
+          message: this.req.t('aulas.create.contrato_nao_pertence_ao_aluno')
         });
       }
 

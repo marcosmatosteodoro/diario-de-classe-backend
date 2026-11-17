@@ -69,8 +69,8 @@ describe('CreateAulaController - vínculo contrato↔aluno', () => {
   });
 
   test.each([
-    ['admin', { id: 'u1', role: 'admin' }],
-    ['não-admin', { id: 'prof-1', role: 'professor' }]
+    ['admin', { id: 'u1', isAdmin: true }],
+    ['não-admin', { id: 'prof-1', isAdmin: false }]
   ])('recusa 422 e não escreve com contrato de outro aluno (%s)', async (_nome, user) => {
     const req = buildReq(user);
     req.body.idAluno = 'aluno-2';
@@ -84,7 +84,7 @@ describe('CreateAulaController - vínculo contrato↔aluno', () => {
   });
 
   test('recusa 422 e não escreve com contrato inexistente', async () => {
-    const req = buildReq({ id: 'u1', role: 'admin' });
+    const req = buildReq({ id: 'u1', isAdmin: true });
     req.body.idContrato = 'contrato-fantasma';
     const res = buildRes();
 
@@ -95,8 +95,26 @@ describe('CreateAulaController - vínculo contrato↔aluno', () => {
     expect(calls).toEqual([]);
   });
 
+  test.each([
+    ['idAluno ausente', { idAluno: undefined }],
+    ['idAluno vazio', { idAluno: '' }],
+    ['idContrato ausente', { idContrato: undefined }],
+    ['idContrato vazio', { idContrato: '' }]
+  ])('recusa 422 sem consultar o contrato quando %s', async (_nome, override) => {
+    const req = buildReq({ id: 'u1', isAdmin: true });
+    Object.assign(req.body, override);
+    const res = buildRes();
+
+    await CreateAulaController.handle(req, res);
+
+    expect(res.statusCode).toBe(422);
+    expect(res.data.message).toBe('aulas.create.contrato_nao_pertence_ao_aluno');
+    expect(contratoLookups).toEqual([]);
+    expect(calls).toEqual([]);
+  });
+
   test('busca o contrato filtrando por id e idAluno do body', async () => {
-    await CreateAulaController.handle(buildReq({ id: 'u1', role: 'admin' }), buildRes());
+    await CreateAulaController.handle(buildReq({ id: 'u1', isAdmin: true }), buildRes());
 
     expect(contratoLookups).toEqual([{ id: 'contrato-1', idAluno: 'aluno-1' }]);
   });
@@ -104,7 +122,7 @@ describe('CreateAulaController - vínculo contrato↔aluno', () => {
   test('par correto segue o fluxo atual e responde 201', async () => {
     const res = buildRes();
 
-    await CreateAulaController.handle(buildReq({ id: 'u1', role: 'admin' }), res);
+    await CreateAulaController.handle(buildReq({ id: 'u1', isAdmin: true }), res);
 
     expect(res.statusCode).toBe(201);
     expect(res.data.status).toBe('AGENDADA');

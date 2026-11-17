@@ -11,9 +11,11 @@ export class CreateAulaController extends AbstractController {
 
   async execute() {
     try {
-      const contratoDoAluno = await GetContratoService.handle(this.req.body.idContrato, {
-        additionalWhere: { idAluno: this.req.body.idAluno }
-      });
+      const { idContrato, idAluno } = this.req.body;
+      const contratoDoAluno =
+        idContrato && idAluno
+          ? await GetContratoService.handle(idContrato, { additionalWhere: { idAluno } })
+          : null;
       if (!contratoDoAluno) {
         return this.res.status(422).json({
           message: this.req.t('aulas.create.contrato_nao_pertence_ao_aluno')
