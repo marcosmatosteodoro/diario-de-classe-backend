@@ -53,8 +53,13 @@ describe('ConfiguracaoRepository.substituir', () => {
   test('delete antes do create dentro da transação', async () => {
     const { tx } = prepararTransacao('configuracao');
     const ordem = [];
-    tx.configuracao.deleteMany.mockImplementation(async () => ordem.push('delete'));
-    tx.configuracao.create.mockImplementation(async () => ordem.push('create'));
+    tx.configuracao.deleteMany.mockImplementation(async () => {
+      await Promise.resolve();
+      ordem.push('delete');
+    });
+    tx.configuracao.create.mockImplementation(async () => {
+      ordem.push('create');
+    });
 
     await new ConfiguracaoRepository().substituir(['a'], {});
 
@@ -93,6 +98,22 @@ describe('DiaDeFuncionamentoRepository.substituir', () => {
     );
     expect(globalDeleteMany).not.toHaveBeenCalled();
     expect(globalCreate).not.toHaveBeenCalled();
+  });
+
+  test('delete resolvido antes do primeiro create dentro da transação', async () => {
+    const { tx } = prepararTransacao('diaDeFuncionamento');
+    const ordem = [];
+    tx.diaDeFuncionamento.deleteMany.mockImplementation(async () => {
+      await Promise.resolve();
+      ordem.push('delete');
+    });
+    tx.diaDeFuncionamento.create.mockImplementation(async () => {
+      ordem.push('create');
+    });
+
+    await new DiaDeFuncionamentoRepository().substituir(['x'], lista);
+
+    expect(ordem).toEqual(['delete', 'create', 'create']);
   });
 
   test('erro em um create rejeita a operação', async () => {
