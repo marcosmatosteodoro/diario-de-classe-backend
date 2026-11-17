@@ -1,5 +1,6 @@
 import AbstractController from '../abstractController.js';
 import { LogoutService } from '../../services/auth/logoutService.js';
+import { clearSessionCookie, readSessionCookie } from '../../utilities/sessionCookie.js';
 
 export class LogoutController extends AbstractController {
   constructor(req, res) {
@@ -8,16 +9,12 @@ export class LogoutController extends AbstractController {
 
   async execute() {
     try {
-      const { refreshToken } = this.req.body || {};
+      await LogoutService.handle(readSessionCookie(this.req));
 
-      const result = await LogoutService.handle(refreshToken);
-
-      if (!result) {
-        return this.res.status(400).json({ message: this.req.t('auth.logout.error') });
-      }
-
+      clearSessionCookie(this.res);
       return this.res.status(204).json();
     } catch (error) {
+      // Sem remover o cookie: a saída precisa poder ser repetida.
       return this.handleError(error, 'auth.logout.error');
     }
   }

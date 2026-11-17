@@ -369,7 +369,6 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
     const r = await request(app).post('/auth/login').set('X-Forwarded-For', IP).send({});
     expect(r.status).toBe(422);
     expect(cookiesDaSessao(r)).toEqual([]);
-    expect(r.status).toBe(422);
     expect(loginSpy).not.toHaveBeenCalled();
     expect(store.size).toBe(0);
   });

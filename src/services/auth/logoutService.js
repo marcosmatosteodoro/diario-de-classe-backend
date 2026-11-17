@@ -8,21 +8,19 @@ export class LogoutService extends AbstractService {
     this.refreshToken = refreshToken;
   }
 
+  /**
+   * Sair é idempotente: sem token ou com token já revogado não há o que revogar e
+   * nada lança.
+   * @returns {Promise<{ revogado: boolean }>}
+   */
   async execute() {
-    if (!this.refreshToken) {
-      return null;
-    }
-
-    if (tokenRevocationManager.isRevoked(this.refreshToken)) {
-      return null;
+    if (!this.refreshToken || tokenRevocationManager.isRevoked(this.refreshToken)) {
+      return { revogado: false };
     }
 
     tokenRevocationManager.revoke(this.refreshToken);
 
-    return {
-      message: 'auth.logout.success',
-      success: true
-    };
+    return { revogado: true };
   }
 
   static async handle(refreshToken) {
