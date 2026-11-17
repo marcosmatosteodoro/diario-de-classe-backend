@@ -259,7 +259,8 @@
   "disponibilidadeProfessors": {
     "update": {
       "success": "Teacher availability updated successfully",
-      "error": "Error updating teacher availability"
+      "error": "Error updating teacher availability",
+      "forbidden": "Availability does not belong to the given teacher"
     }
   },
   "excel_file": {
