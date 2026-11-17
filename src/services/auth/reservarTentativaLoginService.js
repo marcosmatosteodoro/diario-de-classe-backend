@@ -11,25 +11,28 @@ export class ReservarTentativaLoginService extends AbstractService {
   }
 
   /**
-   * Conta a tentativa nas duas chaves e decide pelo valor devolvido pela própria escrita.
-   * @returns {Promise<number>} segundos até a janela terminar; 0 se a tentativa está dentro do teto
+   * Reserva a tentativa em sequência e decide pelo valor devolvido pela própria escrita.
+   * IP primeiro: acima do teto do IP a chave IP+e-mail nem é criada (sem crescimento
+   * por e-mails novos). Toda recusa devolve a reserva do IP, para que tentativa
+   * bloqueada não consuma o teto de quem divide o IP.
+   * @returns {Promise<number>} segundos até a janela que recusou terminar; 0 se liberada
    */
   async execute() {
     const { chaveIpEmail, chaveIp } = buildLoginAttemptKeys(this.ip, this.email);
     const janela = Constants.loginJanelaSegundos;
-    const [porEmail, porIp] = await Promise.all([
-      this.repository.incrementar(chaveIpEmail, janela),
-      this.repository.incrementar(chaveIp, janela)
-    ]);
 
-    const restantes = [];
-    if (porEmail.contagem > Constants.loginMaxTentativasPorEmail) {
-      restantes.push(porEmail.segundosRestantes);
-    }
+    const porIp = await this.repository.incrementar(chaveIp, janela);
     if (porIp.contagem > Constants.loginMaxTentativasPorIp) {
-      restantes.push(porIp.segundosRestantes);
+      await this.repository.decrementar(chaveIp);
+      return porIp.segundosRestantes;
     }
-    return restantes.length ? Math.max(1, ...restantes) : 0;
+
+    const porEmail = await this.repository.incrementar(chaveIpEmail, janela);
+    if (porEmail.contagem > Constants.loginMaxTentativasPorEmail) {
+      await this.repository.decrementar(chaveIp);
+      return porEmail.segundosRestantes;
+    }
+    return 0;
   }
 
   /**

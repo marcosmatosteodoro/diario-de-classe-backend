@@ -29,8 +29,11 @@ function buildApp() {
 
 // Dublê atômico por chave (como o UPSERT ... RETURNING): a mutação é síncrona e a latência
 // vem depois dela. A regra da janela em SQL é provada em tentativaLoginRepository.test.js.
+// `criadas` é métrica do dublê (chaves distintas já criadas), não estado: é o que
+// o teste de crescimento da tabela observa.
 function installStore() {
   const store = new Map();
+  store.criadas = new Set();
   jest
     .spyOn(TentativaLoginRepository.prototype, 'incrementar')
     .mockImplementation(async (chave, janelaSegundos) => {
@@ -40,6 +43,7 @@ function installStore() {
       if (!atual || atual.expiraEm <= agora) {
         linha = { contagem: 1, expiraEm: agora + janelaSegundos * 1000 };
         store.set(chave, linha);
+        store.criadas.add(chave);
       } else {
         atual.contagem += 1;
         linha = atual;
@@ -151,6 +155,50 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
     expect(r.status).toBe(429);
     expect(r.headers['retry-after']).toBeDefined();
     expect(loginSpy).toHaveBeenCalledTimes(chamadas);
+  });
+
+  test('recusa pelo e-mail não consome o teto do IP: outro e-mail no mesmo IP chega ao LoginService', async () => {
+    const { loginMaxTentativasPorEmail: porEmail, loginMaxTentativasPorIp: porIp } = Constants;
+    for (let i = 0; i < porEmail; i++) await login(app);
+    for (let i = 0; i < porIp - porEmail; i++) {
+      expect((await login(app)).status).toBe(429);
+    }
+    const chamadas = loginSpy.mock.calls.length;
+
+    const r = await login(app, { email: 'colega@example.com' });
+
+    expect(r.status).toBe(401);
+    expect(loginSpy).toHaveBeenCalledTimes(chamadas + 1);
+  });
+
+  test('Retry-After vem da janela que recusou: IP e IP+e-mail têm janelas distintas', async () => {
+    await login(app, { email: 'primeiro@example.com' });
+    now += 600_000;
+    for (let i = 0; i < Constants.loginMaxTentativasPorEmail; i++) await login(app);
+
+    const porEmail = await login(app);
+
+    expect(porEmail.status).toBe(429);
+    expect(porEmail.headers['retry-after']).toBe('900');
+
+    // 1 (primeiro) + 5 (A) = 6 reservas no IP; completa o teto com e-mails distintos.
+    for (let i = 0; i < Constants.loginMaxTentativasPorIp - 6; i++) {
+      await login(app, { email: `pessoa${i}@example.com` });
+    }
+    const porIp = await login(app, { email: 'nova.pessoa@example.com' });
+
+    expect(porIp.status).toBe(429);
+    expect(porIp.headers['retry-after']).toBe('300');
+  });
+
+  test('IP acima do teto com e-mails distintos não cria chaves IP+e-mail sem limite', async () => {
+    const total = 100;
+
+    for (let i = 0; i < total; i++) await login(app, { email: `pessoa${i}@example.com` });
+
+    const chavesIpEmail = [...store.criadas].filter(chave => chave.startsWith('ip-email:'));
+    // +1 de folga: a requisição que cruza o teto do IP é recusada antes da chave IP+e-mail.
+    expect(chavesIpEmail.length).toBeLessThanOrEqual(Constants.loginMaxTentativasPorIp + 1);
   });
 
   test('sucesso zera o contador IP+e-mail', async () => {
@@ -291,6 +339,33 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
       expect(loginSpy).not.toHaveBeenCalled();
       expect(capturado(errorSpy)).not.toContain(SENHA_SENTINELA);
       expect(capturado(errorSpy)).not.toContain(EMAIL);
+    });
+
+    test('contador falhando ao devolver a reserva do IP numa recusa: 503, LoginService não chamado', async () => {
+      for (let i = 0; i < Constants.loginMaxTentativasPorIp; i++) {
+        await login(app, { email: `pessoa${i}@example.com` });
+      }
+      const chamadas = loginSpy.mock.calls.length;
+      loginSpy.mockResolvedValue(loginOk);
+      TentativaLoginRepository.prototype.decrementar.mockRejectedValue(erroDoOrm());
+
+      const r = await login(app, { email: 'nova@example.com', senha: SENHA_SENTINELA });
+
+      expect(r.status).toBe(503);
+      expect(r.body).not.toHaveProperty('accessToken');
+      expect(loginSpy).toHaveBeenCalledTimes(chamadas);
+      expect(capturado(errorSpy)).not.toContain(SENHA_SENTINELA);
+    });
+
+    test('contador falhando ao devolver a reserva do IP na recusa por e-mail: 503, LoginService não chamado', async () => {
+      for (let i = 0; i < Constants.loginMaxTentativasPorEmail; i++) await login(app);
+      const chamadas = loginSpy.mock.calls.length;
+      TentativaLoginRepository.prototype.decrementar.mockRejectedValue(erroDoOrm());
+
+      const r = await login(app);
+
+      expect(r.status).toBe(503);
+      expect(loginSpy).toHaveBeenCalledTimes(chamadas);
     });
 
     test('contador falhando ao apagar a chave no sucesso: login negado, sem tokens', async () => {
