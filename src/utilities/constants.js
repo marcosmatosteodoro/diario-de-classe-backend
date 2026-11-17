@@ -71,9 +71,15 @@ export default class Constants {
 
   static jwtRefreshSecret = requireSecret(process.env.JWT_REFRESH_TOKEN, 'JWT_REFRESH_TOKEN');
 
-  static accessExp = Number(process.env.JWT_EXP_SECONDS) || 60 * 60 * 24 * 7; // 7d
+  static accessExp = Number(process.env.JWT_EXP_SECONDS) || 60 * 15; // 15min
 
-  static refreshExp = Number(process.env.JWT_REFRESH_EXP_SECONDS) || 60 * 60 * 24 * 30; // 30d
+  static refreshExp = Number(process.env.JWT_REFRESH_EXP_SECONDS) || 60 * 60 * 24 * 7; // 7d
+
+  // Cookie do refresh: nome e path são constantes de código, nunca env.
+  static sessionCookie = { name: 'bls_sessao', path: '/api/auth' };
+
+  // Claim `ver` do access: access sem ela (legado de 7 dias) é recusado em isLoggedIn.
+  static accessTokenVersion = 2;
 
   /* Database */
   // static database = {

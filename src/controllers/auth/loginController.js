@@ -1,4 +1,5 @@
 import { LoginService } from '../../services/auth/loginService.js';
+import { setSessionCookie } from '../../utilities/sessionCookie.js';
 import AbstractController from '../abstractController.js';
 
 export class LoginController extends AbstractController {
@@ -19,7 +20,10 @@ export class LoginController extends AbstractController {
         return this.res.status(401).json({ message: this.req.t('auth.login.unauthorized') });
       }
 
-      return this.res.status(200).json(response);
+      const { refreshToken, ...corpo } = response;
+      setSessionCookie(this.res, refreshToken);
+
+      return this.res.status(200).json(corpo);
     } catch (error) {
       return this.handleError(error, 'auth.login.error');
     }
