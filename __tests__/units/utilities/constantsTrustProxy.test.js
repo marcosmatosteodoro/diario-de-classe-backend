@@ -4,9 +4,9 @@ describe('Constants.parseTrustProxy', () => {
   test.each([
     [undefined, undefined],
     ['', undefined],
-    ['true', true],
-    ['TRUE', true],
-    ['false', false],
+    ['true', undefined],
+    ['TRUE', undefined],
+    ['false', undefined],
     ['1', 1],
     ['2', 2],
     ['0', 0],

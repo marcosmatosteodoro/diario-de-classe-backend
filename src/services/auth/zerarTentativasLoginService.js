@@ -10,12 +10,16 @@ export class ZerarTentativasLoginService extends AbstractService {
   }
 
   async execute() {
-    const { chaveIpEmail } = buildLoginAttemptKeys(this.ip, this.email);
-    await this.repository.removerPorChave(chaveIpEmail);
+    const { chaveIpEmail, chaveIp } = buildLoginAttemptKeys(this.ip, this.email);
+    await Promise.all([
+      this.repository.removerPorChave(chaveIpEmail),
+      this.repository.decrementar(chaveIp)
+    ]);
   }
 
   /**
-   * Zera só o contador IP+e-mail; o contador por IP segue até a janela expirar.
+   * Login legítimo: apaga o contador IP+e-mail e devolve a tentativa reservada
+   * ao contador por IP, para não consumir o teto de quem divide o IP.
    * @param {string} ip
    * @param {string} email
    * @returns {Promise<void>}

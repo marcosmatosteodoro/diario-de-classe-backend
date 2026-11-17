@@ -33,15 +33,15 @@ export default class Constants {
 
   static loginJanelaSegundos = Number(process.env.LOGIN_JANELA_SEGUNDOS) || 900; // 15min
 
-  // TRUST_PROXY: número de hops de proxy confiáveis (ex.: 1) ou true/false.
-  // Ausente ou em outro formato → undefined e o `trust proxy` do Express não é alterado.
+  // TRUST_PROXY: número de hops de proxy confiáveis (inteiro >= 0, ex.: 1).
+  // Ausente, false ou outro formato → undefined e o `trust proxy` do Express não é alterado.
+  // `true` não é aceito: o Express passaria a confiar na entrada mais à esquerda do
+  // X-Forwarded-For, que o cliente controla.
   static trustProxy = Constants.parseTrustProxy(process.env.TRUST_PROXY);
 
   static parseTrustProxy(value) {
     if (value === undefined || value === null) return undefined;
     const text = String(value).trim().toLowerCase();
-    if (text === 'true') return true;
-    if (text === 'false') return false;
     if (/^\d+$/.test(text)) return Number(text);
     return undefined;
   }

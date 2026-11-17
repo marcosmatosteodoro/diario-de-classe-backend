@@ -1,4 +1,7 @@
-import { buildLoginAttemptKeys } from '../../../src/utilities/loginAttemptKeys.js';
+import {
+  buildLoginAttemptKeys,
+  getLoginClientIp
+} from '../../../src/utilities/loginAttemptKeys.js';
 
 describe('buildLoginAttemptKeys', () => {
   test('normaliza o e-mail e não o deixa em claro na chave', () => {
@@ -20,5 +23,12 @@ describe('buildLoginAttemptKeys', () => {
     expect(buildLoginAttemptKeys('1.2.3.4', 'b@example.com').chaveIpEmail).not.toBe(
       base.chaveIpEmail
     );
+  });
+});
+
+describe('getLoginClientIp', () => {
+  test('usa req.ip e cai em unknown sem IP', () => {
+    expect(getLoginClientIp({ ip: '1.2.3.4' })).toBe('1.2.3.4');
+    expect(getLoginClientIp({})).toBe('unknown');
   });
 });

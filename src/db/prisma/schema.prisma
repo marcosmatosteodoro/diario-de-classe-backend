@@ -292,7 +292,7 @@ model CronogramaAluno {
 
 model TentativaLogin {
   id              String   @id @default(cuid())
-  chave           String   @unique // identifica a janela de contagem (hash, sem e-mail em claro)
+  chave           String   @unique // IP ou IP + hash do e-mail normalizado (sem e-mail em claro)
   contagem        Int
   expiraEm        DateTime
   dataCriacao     DateTime @default(now())

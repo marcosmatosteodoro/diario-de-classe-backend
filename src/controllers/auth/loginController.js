@@ -1,7 +1,9 @@
 import { LoginService } from '../../services/auth/loginService.js';
-import { RegistrarFalhaLoginService } from '../../services/auth/registrarFalhaLoginService.js';
 import { ZerarTentativasLoginService } from '../../services/auth/zerarTentativasLoginService.js';
 import AbstractController from '../abstractController.js';
+import LoggerManager from '../../utilities/loggerManager.js';
+import { getLoginClientIp } from '../../utilities/loginAttemptKeys.js';
+import { maskEmail } from '../../utilities/maskEmail.js';
 
 export class LoginController extends AbstractController {
   constructor(req, res) {
@@ -17,10 +19,11 @@ export class LoginController extends AbstractController {
 
       const response = await LoginService.handle(email, senha);
 
-      const ip = this.req.ip || 'unknown';
+      const ip = getLoginClientIp(this.req);
 
       if (!response) {
-        await RegistrarFalhaLoginService.handle(ip, email);
+        // A tentativa já foi contada pelo middleware; aqui só se registra a falha.
+        LoggerManager.warn('Falha de login', { ip, email: maskEmail(email) });
         return this.res.status(401).json({ message: this.req.t('auth.login.unauthorized') });
       }
 

@@ -1,3 +1,4 @@
+import { setImmediate } from 'node:timers';
 import express from 'express';
 import request from 'supertest';
 import util from 'node:util';
@@ -26,7 +27,8 @@ function buildApp() {
   return app;
 }
 
-// Armazena como a tabela: janela fixa por chave, com o relógio de Date.now().
+// Dublê atômico por chave (como o UPSERT ... RETURNING): a mutação é síncrona e a latência
+// vem depois dela. A regra da janela em SQL é provada em tentativaLoginRepository.test.js.
 function installStore() {
   const store = new Map();
   jest
@@ -34,17 +36,27 @@ function installStore() {
     .mockImplementation(async (chave, janelaSegundos) => {
       const atual = store.get(chave);
       const agora = Date.now();
-      if (!atual || atual.expiraEm.getTime() <= agora) {
-        const novo = { contagem: 1, expiraEm: new Date(agora + janelaSegundos * 1000) };
-        store.set(chave, novo);
-        return novo;
+      let linha;
+      if (!atual || atual.expiraEm <= agora) {
+        linha = { contagem: 1, expiraEm: agora + janelaSegundos * 1000 };
+        store.set(chave, linha);
+      } else {
+        atual.contagem += 1;
+        linha = atual;
       }
-      atual.contagem += 1;
-      return atual;
+      const resultado = {
+        contagem: linha.contagem,
+        segundosRestantes: Math.max(Math.ceil((linha.expiraEm - agora) / 1000), 1)
+      };
+      await new Promise(resolve => setImmediate(resolve));
+      return resultado;
     });
-  jest
-    .spyOn(TentativaLoginRepository.prototype, 'buscarPorChave')
-    .mockImplementation(async chave => store.get(chave) ?? null);
+  jest.spyOn(TentativaLoginRepository.prototype, 'decrementar').mockImplementation(async chave => {
+    const atual = store.get(chave);
+    if (atual) atual.contagem = Math.max(atual.contagem - 1, 0);
+    await new Promise(resolve => setImmediate(resolve));
+    return atual ? 1 : 0;
+  });
   jest
     .spyOn(TentativaLoginRepository.prototype, 'removerPorChave')
     .mockImplementation(async chave => ({ count: store.delete(chave) ? 1 : 0 }));
@@ -161,7 +173,6 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
     now += Constants.loginJanelaSegundos * 1000 + 1;
 
     expect((await login(app)).status).toBe(401);
-    expect(store.get(`ip:${IP}`).contagem).toBe(1);
   });
 
   test('credencial inválida devolve 401 com a mensagem de sempre', async () => {
@@ -179,12 +190,41 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
     expect(store.size).toBe(0);
   });
 
+  test('sucesso devolve a tentativa ao contador por IP: logins legítimos não consomem o teto do IP', async () => {
+    loginSpy.mockResolvedValue(loginOk);
+    for (let i = 0; i < Constants.loginMaxTentativasPorIp + 5; i++) {
+      expect((await login(app, { email: `pessoa${i}@example.com`, senha: 'certa' })).status).toBe(
+        200
+      );
+    }
+
+    loginSpy.mockResolvedValue(null);
+    expect((await login(app, { email: 'outra@example.com' })).status).toBe(401);
+  });
+
+  test('requisições concorrentes no mesmo IP+e-mail: no máximo o teto chega ao LoginService, o resto recebe 429', async () => {
+    const total = 25;
+
+    const respostas = await Promise.all(Array.from({ length: total }, () => login(app)));
+
+    const status = respostas.map(r => r.status);
+    expect(loginSpy.mock.calls.length).toBeLessThanOrEqual(Constants.loginMaxTentativasPorEmail);
+    expect(status.filter(s => s === 429)).toHaveLength(
+      total - Constants.loginMaxTentativasPorEmail
+    );
+    expect(status.filter(s => s === 401)).toHaveLength(Constants.loginMaxTentativasPorEmail);
+    respostas
+      .filter(r => r.status === 429)
+      .forEach(r => expect(r.headers['retry-after']).toBe('900'));
+  });
+
   describe('log', () => {
     test('controle positivo: a captura detecta a senha quando ela está no log', () => {
-      console.warn('x', { senha: SENHA_SENTINELA });
+      console.warn('x', { senha: SENHA_SENTINELA, email: EMAIL });
       console.error('y', new Error(`Invalid invocation senha: "${SENHA_SENTINELA}"`));
 
       expect(capturado(warnSpy)).toContain(SENHA_SENTINELA);
+      expect(capturado(warnSpy)).toContain(EMAIL);
       expect(capturado(errorSpy)).toContain(SENHA_SENTINELA);
     });
 
@@ -224,7 +264,7 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
     };
 
     test('contador indisponível na consulta: login negado, LoginService não chamado, log sem e-mail nem senha', async () => {
-      TentativaLoginRepository.prototype.buscarPorChave.mockRejectedValue(erroDoOrm());
+      TentativaLoginRepository.prototype.incrementar.mockRejectedValue(erroDoOrm());
       loginSpy.mockResolvedValue(loginOk);
 
       const r = await login(app, { senha: SENHA_SENTINELA });
@@ -238,19 +278,34 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
       expect(texto).not.toContain(EMAIL);
     });
 
-    test('contador falhando ao registrar a falha: resposta é erro, nunca sucesso', async () => {
-      TentativaLoginRepository.prototype.incrementar.mockRejectedValue(erroDoOrm());
+    test('contador falhando na reserva em uma chave só: login negado, LoginService não chamado', async () => {
+      TentativaLoginRepository.prototype.incrementar.mockImplementation(async chave => {
+        if (chave.startsWith('ip:')) throw erroDoOrm();
+        return { contagem: 1, segundosRestantes: 900 };
+      });
+      loginSpy.mockResolvedValue(loginOk);
 
       const r = await login(app, { senha: SENHA_SENTINELA });
 
-      expect(r.status).toBe(500);
+      expect(r.status).toBe(503);
+      expect(loginSpy).not.toHaveBeenCalled();
       expect(capturado(errorSpy)).not.toContain(SENHA_SENTINELA);
       expect(capturado(errorSpy)).not.toContain(EMAIL);
     });
 
-    test('contador falhando ao zerar no sucesso: login negado, sem tokens', async () => {
+    test('contador falhando ao apagar a chave no sucesso: login negado, sem tokens', async () => {
       loginSpy.mockResolvedValue(loginOk);
       TentativaLoginRepository.prototype.removerPorChave.mockRejectedValue(erroDoOrm());
+
+      const r = await login(app, { senha: 'certa' });
+
+      expect(r.status).toBe(500);
+      expect(r.body).not.toHaveProperty('accessToken');
+    });
+
+    test('contador falhando ao decrementar no sucesso: login negado, sem tokens', async () => {
+      loginSpy.mockResolvedValue(loginOk);
+      TentativaLoginRepository.prototype.decrementar.mockRejectedValue(erroDoOrm());
 
       const r = await login(app, { senha: 'certa' });
 
