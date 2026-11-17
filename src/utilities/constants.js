@@ -75,10 +75,10 @@ export default class Constants {
 
   static refreshExp = Number(process.env.JWT_REFRESH_EXP_SECONDS) || 60 * 60 * 24 * 7; // 7d
 
-  // Cookie do refresh: nome e path são constantes de código, nunca env.
+  // Cookie do refresh: nome e path são constantes de código, nunca env (DEC-003-015).
   static sessionCookie = { name: 'bls_sessao', path: '/api/auth' };
 
-  // Claim `ver` do access: access sem ela (legado de 7 dias) é recusado em isLoggedIn.
+  // Claim `ver` do access: isLoggedIn recusa access sem ela ou de outra versão (DEC-003-018).
   static accessTokenVersion = 2;
 
   // Lida sob demanda: só o seed exige; a API não pode falhar no boot por causa dela.
