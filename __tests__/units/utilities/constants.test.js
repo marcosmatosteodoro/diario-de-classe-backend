@@ -169,10 +169,10 @@ describe('Constants — validade da sessão e cookie', () => {
     expect(Constants.accessExp).toBe(900);
   });
 
-  test('sessionCookie é literalmente o nome e o path combinados e a versão do access é 2', async () => {
+  test('sessionCookie é literalmente o nome e o path combinados e a versão do access é 3', async () => {
     const { default: Constants } = await carregar(base, 'test');
     expect(Constants.sessionCookie).toEqual({ name: 'bls_sessao', path: '/api/auth' });
-    expect(Constants.accessTokenVersion).toBe(2);
+    expect(Constants.accessTokenVersion).toBe(3);
   });
 });
 

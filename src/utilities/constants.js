@@ -99,8 +99,9 @@ export default class Constants {
   // Cookie do refresh: nome e path são constantes de código, nunca env (DEC-003-015).
   static sessionCookie = { name: 'bls_sessao', path: '/api/auth' };
 
-  // Claim `ver` do access: isLoggedIn recusa access sem ela ou de outra versão (DEC-003-018).
-  static accessTokenVersion = 2;
+  // Claim `ver` do access: isLoggedIn recusa access sem ela ou de outra versão (DEC-003-018); a 3
+  // é a primeira com `sid`, e o access sem sessão registrada não vale mais (DEC-005-014).
+  static accessTokenVersion = 3;
 
   // Lida sob demanda: só o seed exige; a API não pode falhar no boot por causa dela.
   static get seedPassword() {

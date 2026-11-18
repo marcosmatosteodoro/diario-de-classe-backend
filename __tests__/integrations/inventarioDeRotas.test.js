@@ -4,7 +4,8 @@ import { join } from 'node:path';
 import express from 'express';
 import request from 'supertest';
 import Constants from '../../src/utilities/constants.js';
-import { createJwt } from '../../src/utilities/createJwt.js';
+import { cuid, tokenDe } from '../mocks/accessDeTeste.js';
+import { sessaoAtiva } from '../mocks/sessaoAtiva.js';
 import { base64url } from '../../src/utilities/base64url.js';
 
 const pt = JSON.parse(readFileSync(join(process.cwd(), 'src/locales/pt/translation.json'), 'utf8'));
@@ -12,7 +13,6 @@ const pt = JSON.parse(readFileSync(join(process.cwd(), 'src/locales/pt/translati
 // O import a frio da árvore de app.js chega perto do testTimeout global (10s).
 const TIMEOUT_IMPORT_FRIO = 30000;
 
-const cuid = nome => `c${nome.padEnd(24, '0')}`;
 const ID = cuid('registro1');
 const ID_PROFESSOR = cuid('professor1');
 const ID_ADMIN = cuid('admin1');
@@ -109,12 +109,6 @@ const publicas = daClasse(PUBLICA);
 
 const urlDe = caminho => caminho.replaceAll(':id', ID);
 
-const tokenDe = ({ id, role }, segredo = Constants.jwtSecret) =>
-  createJwt(
-    { sub: id, id, email: 'usuario@example.com', role, ver: Constants.accessTokenVersion },
-    segredo
-  );
-
 const TOKEN_PROFESSOR = tokenDe({ id: ID_PROFESSOR, role: 'professor' });
 const TOKEN_ADMIN = tokenDe({ id: ID_ADMIN, role: 'admin' });
 const TOKEN_ASSINATURA_ERRADA = tokenDe(
@@ -165,6 +159,7 @@ describe('rotas montadas e autorização de administrador no servidor', () => {
   }, TIMEOUT_IMPORT_FRIO);
 
   beforeEach(() => {
+    sessaoAtiva(ID_PROFESSOR, ID_ADMIN);
     jest.spyOn(AbstractRepository.prototype, 'selectOne').mockResolvedValue({ id: ID });
     jest.spyOn(AbstractRepository.prototype, 'selectMany').mockResolvedValue([]);
     create = jest.spyOn(AbstractRepository.prototype, 'create').mockResolvedValue({ id: ID });

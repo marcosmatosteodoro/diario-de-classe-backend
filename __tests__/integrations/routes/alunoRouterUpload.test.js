@@ -8,8 +8,8 @@ import { planilhaXlsx } from '../../mocks/planilhaXlsx.js';
 import { arquivosComConteudo, registroDeEnvios } from '../../mocks/arquivosUpload.js';
 import { uploadDir } from '../../../src/utilities/planilhaUpload.js';
 import routes from '../../../src/routes.js';
-import Constants from '../../../src/utilities/constants.js';
-import { createJwt } from '../../../src/utilities/createJwt.js';
+import { tokenDe } from '../../mocks/accessDeTeste.js';
+import { sessaoAtiva } from '../../mocks/sessaoAtiva.js';
 import AlunoRepository from '../../../src/repositories/alunoRepository.js';
 import { CreateAlunoService } from '../../../src/services/aluno/createAlunoService.js';
 import { UpdateAlunoService } from '../../../src/services/aluno/updateAlunoService.js';
@@ -28,8 +28,7 @@ function buildApp(t = key => key) {
   return app;
 }
 
-const token = role =>
-  `Bearer ${createJwt({ sub: `${role}-1`, role, ver: Constants.accessTokenVersion }, Constants.jwtSecret)}`;
+const token = role => `Bearer ${tokenDe({ id: `${role}-1`, role })}`;
 
 describe('POST /alunos/upload (router real de src/routes.js)', () => {
   let app;
@@ -38,6 +37,7 @@ describe('POST /alunos/upload (router real de src/routes.js)', () => {
   const envios = registroDeEnvios();
 
   beforeEach(() => {
+    sessaoAtiva('admin-1', 'member-1');
     app = buildApp();
     originals.execute = UploadAlunoExcelController.prototype.execute;
     originals.selectOne = AlunoRepository.prototype.selectOne;
@@ -108,6 +108,7 @@ describe('POST /alunos/upload com e-mail repetido', () => {
   let consoleSpies;
 
   beforeEach(() => {
+    sessaoAtiva('admin-1', 'member-1');
     app = buildApp();
     originals.execute = UploadAlunoExcelController.prototype.execute;
     originals.selectOne = AlunoRepository.prototype.selectOne;
@@ -172,6 +173,7 @@ describe('POST /alunos/upload com teto de linhas e caracteres', () => {
   const envios = registroDeEnvios();
 
   beforeEach(() => {
+    sessaoAtiva('admin-1', 'member-1');
     app = buildApp((key, opcoes) => (opcoes ? `${key}|${JSON.stringify(opcoes)}` : key));
     originals.execute = UploadAlunoExcelController.prototype.execute;
     originals.selectOne = AlunoRepository.prototype.selectOne;

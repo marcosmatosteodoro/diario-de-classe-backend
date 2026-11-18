@@ -2,8 +2,8 @@ import express from 'express';
 import request from 'supertest';
 import { jest } from '@jest/globals';
 import routes from '../../../src/routes.js';
-import Constants from '../../../src/utilities/constants.js';
-import { createJwt } from '../../../src/utilities/createJwt.js';
+import { tokenDe } from '../../mocks/accessDeTeste.js';
+import { sessaoAtiva } from '../../mocks/sessaoAtiva.js';
 import { GetUserListService } from '../../../src/services/user/getUserListService.js';
 import { GetAlunoListService } from '../../../src/services/aluno/getAlunoListService.js';
 import { UpdateUserService } from '../../../src/services/user/updateUserService.js';
@@ -45,17 +45,14 @@ function buildApp() {
   return app;
 }
 
-const adminToken = () =>
-  `Bearer ${createJwt(
-    { sub: 'admin-1', role: 'admin', ver: Constants.accessTokenVersion },
-    Constants.jwtSecret
-  )}`;
+const adminToken = () => `Bearer ${tokenDe({ id: 'admin-1', role: 'admin' })}`;
 
 describe('/admin/update-nomeCompleto (router real de src/routes.js)', () => {
   let app;
   const originals = {};
 
   beforeEach(() => {
+    sessaoAtiva('admin-1', 'm-1');
     app = buildApp();
     originals.list = GetUserListService.handle;
     originals.alunoList = GetAlunoListService.handle;
@@ -106,13 +103,7 @@ describe('/admin/update-nomeCompleto (router real de src/routes.js)', () => {
   test('POST de não-admin: 403', async () => {
     const response = await request(app)
       .post('/admin/update-nomeCompleto')
-      .set(
-        'Authorization',
-        `Bearer ${createJwt(
-          { sub: 'm-1', role: 'member', ver: Constants.accessTokenVersion },
-          Constants.jwtSecret
-        )}`
-      );
+      .set('Authorization', `Bearer ${tokenDe({ id: 'm-1', role: 'member' })}`);
 
     expect(response.status).toBe(403);
     expect(UpdateUserService.handle).not.toHaveBeenCalled();

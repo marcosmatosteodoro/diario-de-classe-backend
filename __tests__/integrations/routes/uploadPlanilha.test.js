@@ -7,8 +7,8 @@ import { jest } from '@jest/globals';
 import { planilhaXlsx } from '../../mocks/planilhaXlsx.js';
 import { arquivosComConteudo, registroDeEnvios } from '../../mocks/arquivosUpload.js';
 import routes from '../../../src/routes.js';
-import Constants from '../../../src/utilities/constants.js';
-import { createJwt } from '../../../src/utilities/createJwt.js';
+import { tokenDe } from '../../mocks/accessDeTeste.js';
+import { sessaoAtiva } from '../../mocks/sessaoAtiva.js';
 import ErrorHandler from '../../../src/middlewares/error-handler.js';
 import { UploadAlunoExcelController } from '../../../src/controllers/aluno/uploadAlunoExcelController.js';
 import { UploadConteudoLivroExcelController } from '../../../src/controllers/conteudoLivro/uploadConteudoLivroExcelController.js';
@@ -41,7 +41,7 @@ function buildApp() {
   return app;
 }
 
-const token = `Bearer ${createJwt({ sub: 'admin-1', role: 'admin', ver: Constants.accessTokenVersion }, Constants.jwtSecret)}`;
+const token = `Bearer ${tokenDe({ id: 'admin-1', role: 'admin' })}`;
 
 const xlsReal = () => {
   const wb = XLSX.utils.book_new();
@@ -60,6 +60,7 @@ describe.each(rotas)('upload de planilha em $nome (router real de src/routes.js)
   const envios = registroDeEnvios();
 
   beforeEach(() => {
+    sessaoAtiva('admin-1');
     app = buildApp();
     original = rota.controller.prototype.execute;
     recebidos = [];
@@ -168,6 +169,7 @@ describe('ErrorHandler com erro do multer', () => {
   let consoleSpies;
 
   beforeEach(() => {
+    sessaoAtiva('admin-1');
     consoleSpies = ['log', 'error'].map(metodo =>
       jest.spyOn(console, metodo).mockImplementation(() => {})
     );
