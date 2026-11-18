@@ -50,8 +50,8 @@ export const semearSessao = (armazenamento, { sid, ...dados }) => {
  * retornam quando as `quantidade` já leram — força o intercalamento que `Promise.all` contra
  * dublê síncrono não força. `ordemDeLiberacao` permuta os índices de chegada (padrão: ordem de
  * chegada): a liberação ocorre num turno seguinte ao da última chegada, na ordem pedida, e a ordem
- * efetiva fica em `armazenamento.liberacoes`. A barreira vale uma vez, as releituras seguintes
- * passam livres.
+ * em que as leituras retomam fica em `armazenamento.liberacoes`. A barreira vale uma vez, as
+ * releituras seguintes passam livres.
  */
 export const armarBarreiraDeLeitura = (armazenamento, quantidade, ordemDeLiberacao) => {
   armazenamento.barreira = {
@@ -80,12 +80,12 @@ const aguardarBarreira = async armazenamento => {
     // Fora da chamada do último a chegar: a continuação dele não ganha a vez só por ter liberado.
     setImmediate(() => {
       for (const posicao of barreira.ordem) {
-        armazenamento.liberacoes.push(posicao);
         barreira.chegadas[posicao].resolver();
       }
     });
   }
   await liberacao;
+  armazenamento.liberacoes.push(indice);
 };
 
 /**
