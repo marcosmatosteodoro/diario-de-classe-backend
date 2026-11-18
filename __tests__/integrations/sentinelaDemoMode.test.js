@@ -1,10 +1,14 @@
 import { jest } from '@jest/globals';
+import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { setTimeout as esperar } from 'node:timers/promises';
 import request from 'supertest';
 import Constants from '../../src/utilities/constants.js';
 import { cuid, tokenDe } from '../mocks/accessDeTeste.js';
 import { sessaoAtiva } from '../mocks/sessaoAtiva.js';
+import { planilhaXlsx } from '../mocks/planilhaXlsx.js';
+import { registroDeEnvios } from '../mocks/arquivosUpload.js';
 import { capturarLog } from '../mocks/capturaDeLog.js';
 import { carregarRotasMontadas, TIMEOUT_IMPORT_FRIO } from '../mocks/rotasMontadas.js';
 
@@ -15,6 +19,8 @@ const ID = cuid('registro1');
 const ID_ADMIN = cuid('admin1');
 const FIXA = 'fixa@example.com';
 const TOKEN_ADMIN = `Bearer ${tokenDe({ id: ID_ADMIN, role: 'admin' })}`;
+
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 const POR_ROTA = 'guardada-por-rota';
 const POR_POLITICA = 'guardada-por-politica';
@@ -175,23 +181,73 @@ describe('sentinela do modo demonstração sobre as rotas montadas', () => {
     });
 
     describe('guardada-por-rota', () => {
-      const STATUS_LIGADA_DESLIGADA = {
+      const STATUS_DESLIGADA = {
         'POST /api/alunos/upload': 400,
         'POST /api/livros/:id/conteudos/upload': 400,
         'POST /api/admin/update-nomeCompleto': 200
       };
       const casos = daClasse(POR_ROTA).map(entrada => [chave(entrada), entrada]);
+      const envios = registroDeEnvios();
+
+      afterEach(() => envios.limpar());
+
+      // Requisição que atravessa a cadeia real até o execute: upload leva planilha válida anexada.
+      const enviarAteOExecute = rota => {
+        let req = request(app)
+          [rota.verbo.toLowerCase()](urlDe(rota.caminho))
+          .set('Authorization', TOKEN_ADMIN);
+        if (rota.caminho.endsWith('/upload')) {
+          const planilha = envios.registrar(
+            planilhaXlsx([['Ana Lima', `${randomUUID()}@example.com`]])
+          );
+          req = req.attach('file', planilha, { filename: 'planilha.xlsx', contentType: XLSX_MIME });
+        }
+        return req;
+      };
+      // `chegou` resolve quando a cadeia alcança o execute: com a guarda quebrada (403 e depois
+      // next), o multer ainda lê o corpo depois da resposta, então a ausência só se afirma
+      // depois de uma janela em que o execute teria chegado.
+      const JANELA_MS = 300;
+      const espiarExecute = nome => {
+        let chegou;
+        const sinal = new Promise(resolve => {
+          chegou = resolve;
+        });
+        const execute = jest
+          .spyOn(controllers[nome].prototype, 'execute')
+          .mockImplementation(async function () {
+            chegou();
+            return this.res.headersSent ? undefined : this.res.status(200).json({ ok: true });
+          });
+        const aguardarJanela = () => Promise.race([sinal, esperar(JANELA_MS)]);
+        return { execute, aguardarJanela };
+      };
 
       test.each(casos)(
         '%s com o modo ligado: 403 e o controller não executa',
         async (nome, rota) => {
-          const execute = jest.spyOn(controllers[nome].prototype, 'execute');
+          const { execute, aguardarJanela } = espiarExecute(nome);
 
-          const res = await chamar(rota.verbo, rota.caminho);
+          const res = await enviarAteOExecute(rota);
+          await aguardarJanela();
 
           expect(res.status).toBe(403);
           expect(res.body.message).toBe(MENSAGEM_DEMO);
           expect(execute).not.toHaveBeenCalled();
+        }
+      );
+
+      test.each(casos)(
+        '%s com o modo desligado (controle): a mesma requisição chega ao execute 1 vez',
+        async (nome, rota) => {
+          Constants.demoMode = false;
+          const { execute } = espiarExecute(nome);
+
+          const res = await enviarAteOExecute(rota);
+
+          expect(res.status).toBe(200);
+          expect(res.body).toEqual({ ok: true });
+          expect(execute).toHaveBeenCalledTimes(1);
         }
       );
 
@@ -202,7 +258,7 @@ describe('sentinela do modo demonstração sobre as rotas montadas', () => {
 
           const res = await chamar(rota.verbo, rota.caminho);
 
-          expect(res.status).toBe(STATUS_LIGADA_DESLIGADA[nome]);
+          expect(res.status).toBe(STATUS_DESLIGADA[nome]);
           expect(res.body.message).not.toBe(MENSAGEM_DEMO);
         }
       );
@@ -238,15 +294,20 @@ describe('sentinela do modo demonstração sobre as rotas montadas', () => {
       );
 
       test.each([
-        ['PUT /api/professores/:id', 200],
-        ['DELETE /api/professores/:id', 204]
-      ])('%s com o modo desligado (controle): %i', async (nome, status) => {
-        Constants.demoMode = false;
+        ['PUT /api/professores/:id', 200, () => UpdateUserService],
+        ['DELETE /api/professores/:id', 204, () => DeleteUserService]
+      ])(
+        '%s com o modo desligado (controle): %i e o service de escrita roda 1 vez',
+        async (nome, status, service) => {
+          Constants.demoMode = false;
+          const escrita = jest.spyOn(service(), 'handle');
 
-        const res = await rotasPolitica[nome]();
+          const res = await rotasPolitica[nome]();
 
-        expect(res.status).toBe(status);
-      });
+          expect(res.status).toBe(status);
+          expect(escrita).toHaveBeenCalledTimes(1);
+        }
+      );
     });
 
     describe('permitida', () => {

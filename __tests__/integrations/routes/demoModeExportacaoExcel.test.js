@@ -114,21 +114,21 @@ describe('exportação de Excel com o modo demonstração (router real de src/ro
       .set('Authorization', `Bearer ${tokenDe({ id: ID_ADMIN, role: 'admin' })}`)
       .buffer(true)
       .parse(binario);
-    const livro = res.status === 200 ? XLSX.read(res.body, { type: 'buffer' }) : null;
-    return { res, livro };
+    const pastaLida = res.status === 200 ? XLSX.read(res.body, { type: 'buffer' }) : null;
+    return { res, pastaLida };
   };
 
   describe.each([true, false])('com demoMode = %s', demoMode => {
     test.each(EXPORTACOES)('$nome: 200, xlsx e planilha com as linhas esperadas', async rota => {
       Constants.demoMode = demoMode;
 
-      const { res, livro } = await baixar(rota.url);
+      const { res, pastaLida } = await baixar(rota.url);
 
       expect(res.status).toBe(200);
       expect(res.headers['content-type']).toBe(XLSX_MIME);
       expect(res.headers['content-disposition']).toMatch(/\.xlsx"?$/);
-      expect(livro.SheetNames).toEqual([rota.planilha]);
-      expect(XLSX.utils.sheet_to_json(livro.Sheets[rota.planilha])).toEqual(rota.linhas);
+      expect(pastaLida.SheetNames).toEqual([rota.planilha]);
+      expect(XLSX.utils.sheet_to_json(pastaLida.Sheets[rota.planilha])).toEqual(rota.linhas);
     });
   });
 
@@ -140,8 +140,8 @@ describe('exportação de Excel com o modo demonstração (router real de src/ro
 
     expect(ligado.res.status).toBe(200);
     expect(desligado.res.status).toBe(200);
-    expect(XLSX.utils.sheet_to_json(ligado.livro.Sheets[rota.planilha])).toEqual(
-      XLSX.utils.sheet_to_json(desligado.livro.Sheets[rota.planilha])
+    expect(XLSX.utils.sheet_to_json(ligado.pastaLida.Sheets[rota.planilha])).toEqual(
+      XLSX.utils.sheet_to_json(desligado.pastaLida.Sheets[rota.planilha])
     );
   });
 });
