@@ -45,6 +45,25 @@ describe('AvaliarContaFixaDemoService', () => {
     });
   });
 
+  describe('ação desconhecida (deny-by-default)', () => {
+    const avaliar = (acao, conta = contaFixa()) =>
+      AvaliarContaFixaDemoService.handle({ acao, contaAtual: conta, body: {} });
+
+    test.each([['desconhecida'], [undefined]])('conta fixa com acao %s é recusada', acao => {
+      expect(avaliar(acao)).toEqual({ recusar: true });
+    });
+
+    test('conta fixa com acao editar e body vazio não é recusada', () => {
+      expect(avaliar('editar')).toEqual({ recusar: false });
+    });
+
+    test('conta comum com acao desconhecida não é recusada', () => {
+      expect(avaliar('desconhecida', { ...contaFixa(), email: 'outra@example.com' })).toEqual({
+        recusar: false
+      });
+    });
+  });
+
   describe('edição de conta fixa, um campo por vez', () => {
     test.each([
       ['senha fornecida', { senha: 'nova' }, true],

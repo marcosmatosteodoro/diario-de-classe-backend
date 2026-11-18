@@ -14,7 +14,7 @@ export class AvaliarContaFixaDemoService {
    * @returns {{ recusar: boolean }}
    */
   execute() {
-    // Flag lida a cada chamada e a lista só depois dela: modo desligado ignora a configuração (DEC-002-003 · demonstracao).
+    // Flag lida a cada chamada e a lista só depois dela: modo desligado ignora a configuração (DEC-002-001 · DEC-002-007 · demonstracao).
     if (!Constants.demoMode) return { recusar: false };
 
     const lista = Constants.demoContasFixas;
@@ -22,11 +22,13 @@ export class AvaliarContaFixaDemoService {
 
     if (!lista.includes(this.contaAtual.email)) return { recusar: false };
     if (this.acao === 'excluir') return { recusar: true };
+    // Ação fora do contrato não pode liberar conta fixa por cair no ramo de edição: deny-by-default (DEC-002-009 · demonstracao).
+    if (this.acao !== 'editar') return { recusar: true };
 
     return { recusar: this.#editaCampoProtegido() };
   }
 
-  // `undefined` é "não enviado"; `null` enviado difere do gravado e recusa.
+  // `undefined` é "não enviado"; `null` enviado difere do gravado e recusa (DEC-002-004 · demonstracao).
   #editaCampoProtegido() {
     const { senha } = this.body;
     if (typeof senha === 'string' && senha.trim() !== '') return true;
