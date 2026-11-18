@@ -1,9 +1,12 @@
+import { randomUUID } from 'node:crypto';
 import AbstractService from '../abstractService.js';
 import UserRepository from '../../repositories/userRepository.js';
-import { createJwt } from '../../utilities/createJwt.js';
 import Constants from '../../utilities/constants.js';
 import { GetConfiguracaoService } from '../configuracao/getConfiguracaoService.js';
-import { generatePayload } from '../../utilities/generatePayload.js';
+import SessaoLoginRepository from '../../repositories/sessaoLoginRepository.js';
+import ServiceUnavailableError from '../../utilities/errors/serviceUnavailable.js';
+import { emitirAccess } from '../../utilities/emitirAccess.js';
+import { emitirRefresh } from '../../utilities/emitirRefresh.js';
 import LoggerManager from '../../utilities/loggerManager.js';
 import { SCRYPT_PARAMS, hashSenha, isHash, verificarSenha } from '../../utilities/password.js';
 import { textoIgualEmTempoConstante } from '../../utilities/textoIgualEmTempoConstante.js';
@@ -26,6 +29,11 @@ export class LoginService extends AbstractService {
     this.senha = senha;
   }
 
+  /**
+   * @returns {Promise<{ accessToken: string, refreshToken: string, tokenType: 'Bearer', expiresIn: number, user: Object, configuracao: Object }|null>}
+   *   `null` na recusa; `refreshToken` fica no objeto e o controller o retira do corpo
+   * @throws {ServiceUnavailableError} quando a sessão não pôde ser criada
+   */
   async execute() {
     if (!this.email || !this.senha) {
       return null;
@@ -44,7 +52,7 @@ export class LoginService extends AbstractService {
       return null;
     }
 
-    this.buildToken(user);
+    await this.iniciarSessao(user);
 
     const configuracoes = await GetConfiguracaoService.handle();
 
@@ -118,15 +126,48 @@ export class LoginService extends AbstractService {
     }
   }
 
-  buildToken(user) {
-    const payload = generatePayload(user);
-    this.accessToken = createJwt(payload, Constants.jwtSecret, Constants.accessExp);
-    this.refreshToken = createJwt(
-      { sub: user.id, typ: Constants.refreshTokenType },
-      Constants.jwtRefreshSecret,
-      Constants.refreshExp
-    );
+  /**
+   * Cria a sessão persistida e só então assina as duas credenciais (`sid` nas duas).
+   * Falha ao criar a sessão nega com 503, sem emitir nada.
+   * @throws {ServiceUnavailableError} quando o registro da sessão falha
+   */
+  async iniciarSessao(user) {
+    const sessoes = new SessaoLoginRepository();
+    const jtiAtual = randomUUID();
+    const expiraEm = new Date(Date.now() + Constants.refreshExp * 1000);
+
+    let sessao;
+    try {
+      sessao = await sessoes.criar({ idUsuario: user.id, jtiAtual, expiraEm });
+    } catch (error) {
+      this.registrarFalha('[LoginService] Falha ao criar a sessão de login', error);
+      throw new ServiceUnavailableError();
+    }
+
+    await this.limparSessoesAntigas(sessoes, user.id);
+
+    this.accessToken = emitirAccess(user, sessao.id);
+    this.refreshToken = emitirRefresh({
+      sub: user.id,
+      sid: sessao.id,
+      jti: jtiAtual,
+      expiraEmEpoch: Math.floor(expiraEm.getTime() / 1000)
+    });
     this.accessExp = Constants.accessExp;
+  }
+
+  /** Limpeza oportunista de melhor esforço: a falha é registrada e não derruba o login. */
+  async limparSessoesAntigas(sessoes, idUsuario) {
+    try {
+      await sessoes.limparDoUsuario(idUsuario, Constants.sessionCleanupDays);
+    } catch (error) {
+      this.registrarFalha('[LoginService] Falha na limpeza de sessões antigas', error);
+    }
+  }
+
+  // Só name/code: a mensagem de erro do ORM pode embutir os argumentos da chamada.
+  registrarFalha(rotulo, error) {
+    LoggerManager.error(rotulo, { name: error?.name, code: error?.code });
   }
 
   static async handle(email, senha) {

@@ -1,139 +1,229 @@
+import { jest } from '@jest/globals';
 import isLoggedIn from '../../../../src/middlewares/auth/isLoggedIn.js';
 import UnauthorizedError from '../../../../src/utilities/errors/unauthorized.js';
-import crypto from 'crypto';
+import ServiceUnavailableError from '../../../../src/utilities/errors/serviceUnavailable.js';
 import Constants from '../../../../src/utilities/constants.js';
 import { createJwt } from '../../../../src/utilities/createJwt.js';
+import SessaoLoginRepository from '../../../../src/repositories/sessaoLoginRepository.js';
+import { VerificarSessaoAtivaService } from '../../../../src/services/auth/verificarSessaoAtivaService.js';
+import { tokenDe, sidDe } from '../../../mocks/accessDeTeste.js';
+import {
+  sessaoAtiva,
+  sessaoEncerrada,
+  sessaoVencida,
+  sessaoDeOutroUsuario,
+  sessaoIndisponivel
+} from '../../../mocks/sessaoAtiva.js';
+
+const USUARIO = 'usuario-de-teste';
 
 describe('isLoggedIn middleware', () => {
-  let mockReq, mockRes, mockNext;
+  let req;
+  let next;
+
+  const chamar = async authorization => {
+    req.headers.authorization = authorization;
+    await isLoggedIn(req, {}, next);
+  };
+  const comAccess = (claims = {}) => chamar(`Bearer ${tokenDe({ id: USUARIO, ...claims })}`);
+  const assinar = claims => createJwt({ sub: USUARIO, ...claims }, Constants.jwtSecret, 60);
 
   beforeEach(() => {
-    mockReq = {
-      headers: {},
-      t: key => {
-        const translations = {
-          'api.errors.unauthorized': 'Não autorizado'
-        };
-        return translations[key] || key;
-      }
-    };
-
-    mockRes = {
-      statusCode: null,
-      data: null,
-      status: function (code) {
-        this.statusCode = code;
-        return this;
-      },
-      json: function (data) {
-        this.data = data;
-        return this;
-      }
-    };
-
-    mockNext = {
-      called: false,
-      arg: null,
-      call: function (err) {
-        this.called = true;
-        this.arg = err;
-      }
-    };
+    req = { headers: {} };
+    next = jest.fn();
   });
 
-  test('should call next with UnauthorizedError when Authorization header missing', () => {
-    isLoggedIn(mockReq, mockRes, err => mockNext.call(err));
-
-    expect(mockNext.called).toBe(true);
-    expect(mockNext.arg).toBeInstanceOf(UnauthorizedError);
-  });
-
-  test('should call next with UnauthorizedError when token malformed', () => {
-    mockReq.headers.authorization = 'Bearer malformed.token';
-
-    isLoggedIn(mockReq, mockRes, err => mockNext.call(err));
-
-    expect(mockNext.called).toBe(true);
-    expect(mockNext.arg).toBeInstanceOf(UnauthorizedError);
-  });
-
-  test('should call next with UnauthorizedError when token has invalid signature', () => {
-    // header.payload.signature but signature won't match secret
-    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64');
-    const payload = Buffer.from(
-      JSON.stringify({ sub: '123', exp: Math.floor(Date.now() / 1000) + 60 })
-    ).toString('base64');
-    const badSig = 'invalidsignature';
-    mockReq.headers.authorization = `Bearer ${header}.${payload}.${badSig}`;
-
-    isLoggedIn(mockReq, mockRes, err => mockNext.call(err));
-
-    expect(mockNext.called).toBe(true);
-    expect(mockNext.arg).toBeInstanceOf(UnauthorizedError);
-  });
-
-  test('should call next with UnauthorizedError when token expired', () => {
-    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64');
-    const payload = Buffer.from(
-      JSON.stringify({ sub: '123', exp: Math.floor(Date.now() / 1000) - 10 })
-    ).toString('base64');
-    const sig = 'invalid';
-    mockReq.headers.authorization = `Bearer ${header}.${payload}.${sig}`;
-
-    isLoggedIn(mockReq, mockRes, err => mockNext.call(err));
-
-    expect(mockNext.called).toBe(true);
-    expect(mockNext.arg).toBeInstanceOf(UnauthorizedError);
-  });
-
-  test('should call next without error and set req.user when token valid', () => {
-    // create a valid token using same algorithm as middleware
-    const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64');
-    const payloadObj = {
-      sub: '123',
-      ver: Constants.accessTokenVersion,
-      exp: Math.floor(Date.now() / 1000) + 60
-    };
-    const payload = Buffer.from(JSON.stringify(payloadObj)).toString('base64');
-    const data = `${header}.${payload}`;
-    const sig = crypto
-      .createHmac('sha256', Constants.jwtSecret)
-      .update(data)
-      .digest('base64')
-      .replace(/=+$/, '')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_');
-    mockReq.headers.authorization = `Bearer ${data}.${sig}`;
-
-    isLoggedIn(mockReq, mockRes, err => mockNext.call(err));
-
-    expect(mockNext.called).toBe(true);
-    expect(mockNext.arg).toBeUndefined();
-    expect(mockReq.user).toBeDefined();
-    expect(mockReq.user.sub).toBe('123');
-  });
-
-  describe('claim de versão do access', () => {
-    const assinar = claims => createJwt({ sub: '123', ...claims }, Constants.jwtSecret, 60);
-
-    test('token válido sem ver é recusado', () => {
-      mockReq.headers.authorization = `Bearer ${assinar({})}`;
-      isLoggedIn(mockReq, mockRes, err => mockNext.call(err));
-      expect(mockNext.arg).toBeInstanceOf(UnauthorizedError);
-      expect(mockReq.user).toBeUndefined();
+  describe('credencial inválida (nenhuma consulta ao registro)', () => {
+    let lerEstado;
+    beforeEach(() => {
+      lerEstado = sessaoAtiva(USUARIO);
     });
 
-    test('ver igual ao vigente chama next sem argumento', () => {
-      mockReq.headers.authorization = `Bearer ${assinar({ ver: Constants.accessTokenVersion })}`;
-      isLoggedIn(mockReq, mockRes, err => mockNext.call(err));
-      expect(mockNext.called).toBe(true);
-      expect(mockNext.arg).toBeUndefined();
+    test('sem cabeçalho Authorization: UnauthorizedError', async () => {
+      await isLoggedIn(req, {}, next);
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+      expect(lerEstado).not.toHaveBeenCalled();
     });
 
-    test('ver diferente do vigente (vigente + 1) é recusado', () => {
-      mockReq.headers.authorization = `Bearer ${assinar({ ver: Constants.accessTokenVersion + 1 })}`;
-      isLoggedIn(mockReq, mockRes, err => mockNext.call(err));
-      expect(mockNext.arg).toBeInstanceOf(UnauthorizedError);
+    test('token malformado: UnauthorizedError', async () => {
+      await chamar('Bearer malformed.token');
+
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+      expect(lerEstado).not.toHaveBeenCalled();
+    });
+
+    test('assinatura inválida: UnauthorizedError', async () => {
+      const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64');
+      const payload = Buffer.from(
+        JSON.stringify({ sub: '123', exp: Math.floor(Date.now() / 1000) + 60 })
+      ).toString('base64');
+      await chamar(`Bearer ${header}.${payload}.invalidsignature`);
+
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+      expect(lerEstado).not.toHaveBeenCalled();
+    });
+
+    test('token vencido: UnauthorizedError', async () => {
+      const vencido = createJwt(
+        { sub: USUARIO, ver: Constants.accessTokenVersion, sid: sidDe(USUARIO) },
+        Constants.jwtSecret,
+        -10
+      );
+      await chamar(`Bearer ${vencido}`);
+
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+      expect(lerEstado).not.toHaveBeenCalled();
+    });
+
+    test('role adulterada (assinatura original mantida): UnauthorizedError', async () => {
+      const [cabecalho, corpo, assinatura] = tokenDe({ id: USUARIO, role: 'professor' }).split('.');
+      const claims = JSON.parse(Buffer.from(corpo, 'base64url').toString());
+      const adulterado = Buffer.from(JSON.stringify({ ...claims, role: 'admin' })).toString(
+        'base64url'
+      );
+      await chamar(`Bearer ${cabecalho}.${adulterado}.${assinatura}`);
+
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+      expect(lerEstado).not.toHaveBeenCalled();
+    });
+
+    test('token sem ver é recusado', async () => {
+      await chamar(`Bearer ${assinar({ sid: sidDe(USUARIO) })}`);
+
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+      expect(req.user).toBeUndefined();
+      expect(lerEstado).not.toHaveBeenCalled();
+    });
+
+    test('ver vigente + 1 é recusado', async () => {
+      await comAccess({ ver: Constants.accessTokenVersion + 1 });
+
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+      expect(lerEstado).not.toHaveBeenCalled();
+    });
+
+    // A única causa de recusa é a versão: sid válido, sessão ativa no dublê e sub correto.
+    test('access de ver 2 (formato anterior) com sid válido e sessão ativa: UnauthorizedError', async () => {
+      await comAccess({ ver: 2 });
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+      expect(lerEstado).not.toHaveBeenCalled();
+    });
+
+    test.each([
+      ['sem sid', null],
+      ['sid string vazia', { sid: '' }],
+      ['sid numérico', { sid: 12345 }],
+      ['sid de 10 KB', { sid: 's'.repeat(10 * 1024) }]
+    ])('access %s: UnauthorizedError antes de qualquer consulta', async (_nome, claims) => {
+      if (claims) await comAccess(claims);
+      else await chamar(`Bearer ${assinar({ ver: Constants.accessTokenVersion })}`);
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+      expect(lerEstado).not.toHaveBeenCalled();
+    });
+
+    test('controle: sid válido e desconhecido consulta o registro 1 vez e é recusado', async () => {
+      lerEstado.mockResolvedValue(null);
+
+      await comAccess();
+
+      expect(lerEstado).toHaveBeenCalledTimes(1);
+      expect(lerEstado).toHaveBeenCalledWith(sidDe(USUARIO));
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+    });
+  });
+
+  describe('sessão pelo dublê (contrato de sessaoAtiva.js)', () => {
+    test('sessaoAtiva: next() sem argumento exatamente 1 vez e req.user preenchido', async () => {
+      sessaoAtiva(USUARIO);
+
+      await comAccess({ role: 'professor' });
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next).toHaveBeenCalledWith();
+      expect(req.user.sub).toBe(USUARIO);
+      expect(req.user.isAdmin).toBe(false);
+    });
+
+    test('sessaoAtiva nega por padrão: sid fora da convenção sidDe é 401 e consulta o registro 1 vez', async () => {
+      const lerEstado = sessaoAtiva(USUARIO);
+
+      await comAccess({ role: 'professor', sid: 'sid-fora-da-convencao' });
+
+      expect(lerEstado).toHaveBeenCalledTimes(1);
+      expect(lerEstado).toHaveBeenCalledWith('sid-fora-da-convencao');
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+    });
+
+    test('isAdmin vem só da claim role assinada', async () => {
+      sessaoAtiva(USUARIO);
+
+      await comAccess({ role: 'admin' });
+
+      expect(req.user.isAdmin).toBe(true);
+    });
+
+    test.each([
+      ['sessaoEncerrada', () => sessaoEncerrada(USUARIO)],
+      ['sessaoVencida', () => sessaoVencida(USUARIO)],
+      ['sessaoDeOutroUsuario', () => sessaoDeOutroUsuario()]
+    ])('%s: next com UnauthorizedError e sem req.user', async (_nome, instalar) => {
+      instalar();
+
+      await comAccess();
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+      expect(req.user).toBeUndefined();
+    });
+
+    test('sessaoIndisponivel: next 1 vez com ServiceUnavailableError, nunca next()', async () => {
+      sessaoIndisponivel();
+
+      await comAccess();
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next.mock.calls[0][0]).toBeInstanceOf(ServiceUnavailableError);
+      expect(next).not.toHaveBeenCalledWith();
+    });
+
+    test('exceção não-ORM dentro da verificação: negada, nunca next()', async () => {
+      jest.spyOn(VerificarSessaoAtivaService, 'handle').mockRejectedValue(new TypeError('boom'));
+
+      await comAccess();
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next.mock.calls[0][0]).toBeInstanceOf(ServiceUnavailableError);
+      expect(next).not.toHaveBeenCalledWith();
+    });
+
+    test('exceção não-ORM lançada pelo registro: negada (nunca next())', async () => {
+      jest
+        .spyOn(SessaoLoginRepository.prototype, 'lerEstado')
+        .mockRejectedValue(new TypeError('x'));
+
+      await comAccess();
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next.mock.calls[0][0]).toBeInstanceOf(ServiceUnavailableError);
+      expect(next).not.toHaveBeenCalledWith();
+    });
+  });
+
+  describe('não afrouxado (DEC-005-022)', () => {
+    test('sem o dublê, com o registro vazio de hoje, o access com sid válido é recusado', async () => {
+      await comAccess();
+
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+      expect(req.user).toBeUndefined();
     });
   });
 });

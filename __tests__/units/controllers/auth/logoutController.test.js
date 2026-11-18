@@ -62,6 +62,22 @@ describe('LogoutController', () => {
     expect(LogoutService.handle).toHaveBeenCalledWith(null);
   });
 
+  test('erro do ORM no encerramento: handleError, sem 204 e com o cookie mantido', async () => {
+    req.cookies[COOKIE] = 'x';
+    const erro = new Error('Invalid invocation SENTINELA-SAIR-500');
+    erro.name = 'PrismaClientKnownRequestError';
+    LogoutService.handle.mockRejectedValue(erro);
+    const controller = new LogoutController(req, res);
+    controller.handleError = jest.fn();
+
+    await controller.execute();
+
+    expect(controller.handleError).toHaveBeenCalledTimes(1);
+    expect(controller.handleError).toHaveBeenCalledWith(erro, 'auth.logout.error');
+    expect(res.status).not.toHaveBeenCalledWith(204);
+    expect(res.clearCookie).not.toHaveBeenCalled();
+  });
+
   test('exceção vai para handleError e o cookie permanece', async () => {
     req.cookies[COOKIE] = 'x';
     const erro = new Error('falha');

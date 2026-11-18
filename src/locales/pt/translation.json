@@ -15,6 +15,7 @@
       "internal_error": "Erro interno do servidor",
       "bad_request": "Requisição inválida",
       "unauthorized": "Não autorizado",
+      "service_unavailable": "Serviço temporariamente indisponível",
       "payload_too_large": "Corpo da requisição excede o tamanho permitido",
       "forbidden": "Você não tem permissão para realizar esta ação"
     }

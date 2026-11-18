@@ -7,7 +7,8 @@ const NOMES = [
   'JWT_REFRESH_TOKEN',
   'CORS_ORIGINS',
   'JWT_EXP_SECONDS',
-  'JWT_REFRESH_EXP_SECONDS'
+  'JWT_REFRESH_EXP_SECONDS',
+  'SESSION_ROTATION_GRACE_SECONDS'
 ];
 const ORIGENS = 'https://a.example.com,http://localhost:3001';
 
@@ -168,9 +169,61 @@ describe('Constants — validade da sessão e cookie', () => {
     expect(Constants.accessExp).toBe(900);
   });
 
-  test('sessionCookie é literalmente o nome e o path combinados e a versão do access é 2', async () => {
+  test('sessionCookie é literalmente o nome e o path combinados e a versão do access é 3', async () => {
     const { default: Constants } = await carregar(base, 'test');
     expect(Constants.sessionCookie).toEqual({ name: 'bls_sessao', path: '/api/auth' });
-    expect(Constants.accessTokenVersion).toBe(2);
+    expect(Constants.accessTokenVersion).toBe(3);
+  });
+});
+
+describe('parseSessionRotationGrace', () => {
+  let parseSessionRotationGrace;
+
+  beforeAll(async () => {
+    ({ parseSessionRotationGrace } = await carregar(
+      comOrigens({ JWT_SECRET_TOKEN: SEGREDO, JWT_REFRESH_TOKEN: REFRESH }),
+      'test'
+    ));
+  });
+
+  test.each([
+    [undefined, 900, 30],
+    ['10', 900, 10],
+    ['abc', 900, 30],
+    ['0', 900, 30],
+    ['-5', 900, 30],
+    ['9999', 900, 900]
+  ])('valor %j com accessExp %i resulta em %i', (valor, accessExp, esperado) => {
+    expect(parseSessionRotationGrace(valor, accessExp)).toBe(esperado);
+  });
+});
+
+describe('Constants — tolerância de rotação e limpeza de sessões', () => {
+  const base = comOrigens({ JWT_SECRET_TOKEN: SEGREDO, JWT_REFRESH_TOKEN: REFRESH });
+
+  afterEach(() => {
+    delete process.env.SESSION_ROTATION_GRACE_SECONDS;
+  });
+
+  test('SESSION_ROTATION_GRACE_SECONDS chega em Constants.sessionRotationGraceSeconds', async () => {
+    const { default: Constants } = await carregar(
+      { ...base, SESSION_ROTATION_GRACE_SECONDS: '10' },
+      'test'
+    );
+    expect(Constants.sessionRotationGraceSeconds).toBe(10);
+  });
+
+  test('sem env a tolerância é 30 e a limpeza é de 7 dias', async () => {
+    const { default: Constants } = await carregar(base, 'test');
+    expect(Constants.sessionRotationGraceSeconds).toBe(30);
+    expect(Constants.sessionCleanupDays).toBe(7);
+  });
+
+  test('a tolerância nunca passa de accessExp', async () => {
+    const { default: Constants } = await carregar(
+      { ...base, SESSION_ROTATION_GRACE_SECONDS: '9999', JWT_EXP_SECONDS: '120' },
+      'test'
+    );
+    expect(Constants.sessionRotationGraceSeconds).toBe(120);
   });
 });

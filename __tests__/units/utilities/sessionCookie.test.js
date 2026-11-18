@@ -36,6 +36,21 @@ describe('sessionCookie', () => {
     expect(opcoes).not.toHaveProperty('domain');
   });
 
+  test('setSessionCookie com restante em segundos grava o Max-Age dele e mantém os demais atributos', () => {
+    const res = resFalso();
+    setSessionCookie(res, 'RT', 500000);
+    const opcoes = res.cookie.mock.calls[0][2];
+    expect(opcoes.maxAge).toBe(500000 * 1000);
+    expect(opcoes.maxAge).not.toBe(Constants.refreshExp * 1000);
+    expect([opcoes.httpOnly, opcoes.sameSite, opcoes.path]).toEqual([true, 'strict', '/api/auth']);
+  });
+
+  test('setSessionCookie sem o terceiro argumento mantém Max-Age = refreshExp (o login)', () => {
+    const res = resFalso();
+    setSessionCookie(res, 'RT');
+    expect(res.cookie.mock.calls[0][2].maxAge).toBe(Constants.refreshExp * 1000);
+  });
+
   test('setSessionCookie marca secure em produção', () => {
     Constants.isProduction = true;
     const res = resFalso();

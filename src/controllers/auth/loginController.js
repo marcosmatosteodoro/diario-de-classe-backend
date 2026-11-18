@@ -5,12 +5,17 @@ import AbstractController from '../abstractController.js';
 import LoggerManager from '../../utilities/loggerManager.js';
 import { getLoginClientIp } from '../../utilities/loginAttemptKeys.js';
 import { maskEmail } from '../../utilities/maskEmail.js';
+import ServiceUnavailableError from '../../utilities/errors/serviceUnavailable.js';
 
 export class LoginController extends AbstractController {
   constructor(req, res) {
     super(req, res);
   }
 
+  /**
+   * Responde 200 (refresh só no cookie `bls_sessao`, nunca no corpo), 401 ou 500 (`handleError`).
+   * @throws {ServiceUnavailableError} propagado ao ErrorHandler (503) sem cookie
+   */
   async execute() {
     try {
       const { email, senha } = this.req.body || {};
@@ -37,6 +42,9 @@ export class LoginController extends AbstractController {
 
       return this.res.status(200).json(corpo);
     } catch (error) {
+      if (error instanceof ServiceUnavailableError) {
+        throw error;
+      }
       return this.handleError(error, 'auth.login.error');
     }
   }

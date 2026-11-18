@@ -1,6 +1,7 @@
 import httpStatus from 'http-status';
 import multer from 'multer';
 import UnauthorizedError from '../utilities/errors/unauthorized.js';
+import ServiceUnavailableError from '../utilities/errors/serviceUnavailable.js';
 import Constants from '../utilities/constants.js';
 import { redactErrorForLog } from '../utilities/redactErrorForLog.js';
 
@@ -51,6 +52,13 @@ function logInternalError(err) {
   }
 }
 
+// Indisponibilidade temporária: corpo fixo; o erro de origem (e sua cause) nunca vai a log nem a corpo.
+function logServiceUnavailable() {
+  console.error('[ErrorHandler] Serviço temporariamente indisponível', {
+    name: 'ServiceUnavailableError'
+  });
+}
+
 export default function ErrorHandler(err, req, res) {
   let statusCode = httpStatus.BAD_REQUEST;
   let response = { error: err && err.code ? err.code : null };
@@ -65,6 +73,7 @@ export default function ErrorHandler(err, req, res) {
       'api.errors.bad_request': 'Requisição inválida',
       'api.errors.unauthorized': 'Não autorizado',
       'api.errors.payload_too_large': 'Corpo da requisição excede o tamanho permitido',
+      'api.errors.service_unavailable': 'Serviço temporariamente indisponível',
       'api.errors.internal_error': 'Erro interno do servidor'
     };
     return fallbacks[key] || key;
@@ -83,6 +92,13 @@ export default function ErrorHandler(err, req, res) {
     response = {
       error: 'UnauthorizedError',
       message: t('api.errors.unauthorized')
+    };
+  } else if (err instanceof ServiceUnavailableError) {
+    logServiceUnavailable();
+    statusCode = httpStatus.SERVICE_UNAVAILABLE;
+    response = {
+      error: 'ServiceUnavailableError',
+      message: t('api.errors.service_unavailable')
     };
   } else if (clientError) {
     ({ statusCode, response } = clientError);

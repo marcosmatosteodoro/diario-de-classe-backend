@@ -1,6 +1,12 @@
 import { jest } from '@jest/globals';
 import request from 'supertest';
 import { capturarLog } from '../../mocks/capturaDeLog.js';
+import { refreshDeSessao, sidDe, tokenDe } from '../../mocks/accessDeTeste.js';
+import {
+  criarArmazenamentoExterno,
+  instalarRegistroFalso,
+  semearSessao
+} from '../../mocks/sessoesEmMemoria.js';
 
 // O import a frio da árvore de app.js chega perto do testTimeout global (10s).
 const TIMEOUT_IMPORT_FRIO = 30000;
@@ -19,7 +25,7 @@ describe('trilha de auditoria de autenticação (app real, modo produção)', ()
   let LoginService;
   let LoggerManager;
   let TentativaLoginRepository;
-  let createJwt;
+  let armazenamento;
   let loginOriginal;
   let isProductionOriginal;
 
@@ -31,7 +37,6 @@ describe('trilha de auditoria de autenticação (app real, modo produção)', ()
     ({ default: Constants } = await import('../../../src/utilities/constants.js'));
     ({ default: LoggerManager } = await import('../../../src/utilities/loggerManager.js'));
     ({ LoginService } = await import('../../../src/services/auth/loginService.js'));
-    ({ createJwt } = await import('../../../src/utilities/createJwt.js'));
     ({ default: TentativaLoginRepository } = await import(
       '../../../src/repositories/tentativaLoginRepository.js'
     ));
@@ -43,7 +48,9 @@ describe('trilha de auditoria de autenticação (app real, modo produção)', ()
     ({ default: app } = await import('../../../src/app.js?trilha'));
   }, TIMEOUT_IMPORT_FRIO);
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    armazenamento = criarArmazenamentoExterno();
+    await instalarRegistroFalso(armazenamento);
     jest.spyOn(TentativaLoginRepository.prototype, 'incrementar').mockResolvedValue({
       contagem: 1,
       segundosRestantes: 900,
@@ -64,8 +71,11 @@ describe('trilha de auditoria de autenticação (app real, modo produção)', ()
     Constants.isProduction = isProductionOriginal;
   });
 
-  const accessDe = (role, id = 'p1') =>
-    createJwt({ sub: id, id, role, ver: Constants.accessTokenVersion }, Constants.jwtSecret);
+  // Access com a claim `sid` da sessão semeada no registro em memória: o `isLoggedIn` exige sessão viva.
+  const accessDe = (role, id = 'p1') => {
+    semearSessao(armazenamento, { sid: sidDe(id), idUsuario: id });
+    return tokenDe({ id, role });
+  };
 
   const semSentinelas = cap => {
     for (const sentinela of [SENHA, EMAIL, TERMO, COOKIE, AT, RT]) {
@@ -118,6 +128,20 @@ describe('trilha de auditoria de autenticação (app real, modo produção)', ()
     semSentinelas(cap);
   });
 
+  test('401 de sessão encerrada com access ainda dentro da validade: linha de negação', async () => {
+    const token = accessDe('professor', 'p1');
+    armazenamento.sessoes.get(sidDe('p1')).encerrada = true;
+    const cap = capturarLog();
+
+    const res = await request(app).get('/api/professores').set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(401);
+    const linhas = linhasComEvento(cap, 'auth.acesso_negado');
+    expect(linhas).toHaveLength(1);
+    expect(linhas[0]).toContain('status: 401');
+    expect(cap.texto()).not.toContain(token);
+  });
+
   test('403 de origem cruzada no login: linha de negação', async () => {
     const cap = capturarLog();
 
@@ -167,11 +191,8 @@ describe('trilha de auditoria de autenticação (app real, modo produção)', ()
   });
 
   test('logout: linha com revogado e ip, sem o valor do cookie', async () => {
-    const refresh = createJwt(
-      { sub: 'u1', typ: Constants.refreshTokenType },
-      Constants.jwtRefreshSecret,
-      600
-    );
+    semearSessao(armazenamento, { sid: sidDe('u1'), idUsuario: 'u1' });
+    const refresh = refreshDeSessao({ sub: 'u1', sid: sidDe('u1'), jti: 'jti-atual-de-teste' });
     const cap = capturarLog();
 
     const res = await request(app)

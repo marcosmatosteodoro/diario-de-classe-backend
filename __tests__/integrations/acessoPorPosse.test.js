@@ -1,13 +1,11 @@
 import { jest } from '@jest/globals';
 import request from 'supertest';
 import Constants from '../../src/utilities/constants.js';
-import { createJwt } from '../../src/utilities/createJwt.js';
+import { cuid, tokenDe } from '../mocks/accessDeTeste.js';
+import { sessaoAtiva } from '../mocks/sessaoAtiva.js';
 
 // O import a frio da árvore de app.js chega perto do testTimeout global (10s).
 const TIMEOUT_IMPORT_FRIO = 30000;
-
-// Ids no formato CUID exigido por `validateId`: "c" + 24 caracteres.
-const cuid = nome => `c${nome.padEnd(24, '0')}`;
 
 const SOLICITANTE = cuid('professor1');
 const OUTRO_DONO = cuid('professor2');
@@ -17,15 +15,12 @@ const ID_ALHEIO = cuid('registro2');
 const REGISTRO_PROPRIO = { id: ID_PROPRIO, email: 'proprio@example.com', dono: SOLICITANTE };
 const REGISTRO_ALHEIO = { id: ID_ALHEIO, email: 'alheio@example.com', dono: OUTRO_DONO };
 
-const tokenDe = ({ id, role }, segredo = Constants.jwtSecret) =>
-  `Bearer ${createJwt(
-    { sub: id, id, email: 'usuario@example.com', role, ver: Constants.accessTokenVersion },
-    segredo
-  )}`;
+const bearerDe = (dados, segredo = Constants.jwtSecret) => `Bearer ${tokenDe(dados, segredo)}`;
 
-const TOKEN_PROFESSOR = tokenDe({ id: SOLICITANTE, role: 'professor' });
-const TOKEN_ADMIN = tokenDe({ id: cuid('admin1'), role: 'admin' });
-const TOKEN_SEGREDO_ERRADO = tokenDe(
+const TOKEN_PROFESSOR = bearerDe({ id: SOLICITANTE, role: 'professor' });
+const ID_ADMIN = cuid('admin1');
+const TOKEN_ADMIN = bearerDe({ id: ID_ADMIN, role: 'admin' });
+const TOKEN_SEGREDO_ERRADO = bearerDe(
   { id: SOLICITANTE, role: 'professor' },
   'segredo-que-nao-e-o-do-ambiente'
 );
@@ -59,6 +54,10 @@ describe('Negação de acesso pelo app.js real (integração)', () => {
   let update;
   let remove;
   let create;
+
+  beforeEach(() => {
+    sessaoAtiva(SOLICITANTE, ID_ADMIN);
+  });
 
   beforeAll(async () => {
     jest.unstable_mockModule('../../src/InitialSetting.js', () => ({

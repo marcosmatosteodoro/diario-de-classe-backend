@@ -2,8 +2,8 @@ import express from 'express';
 import request from 'supertest';
 import { jest } from '@jest/globals';
 import routes from '../../../src/routes.js';
-import Constants from '../../../src/utilities/constants.js';
-import { createJwt } from '../../../src/utilities/createJwt.js';
+import { tokenDe } from '../../mocks/accessDeTeste.js';
+import { sessaoAtiva } from '../../mocks/sessaoAtiva.js';
 import AbstractRepository from '../../../src/repositories/abstractRepository.js';
 import { GetUserService } from '../../../src/services/user/getUserService.js';
 import { IsUserEmailExistsService } from '../../../src/services/user/isUserEmailExistsService.js';
@@ -34,7 +34,7 @@ function buildApp() {
 }
 
 function bearerToken({ sub, role }) {
-  return `Bearer ${createJwt({ sub, role, ver: Constants.accessTokenVersion }, Constants.jwtSecret)}`;
+  return `Bearer ${tokenDe({ id: sub, role })}`;
 }
 
 describe('PUT /professores/:id (router real de src/routes.js) - guarda de senha e autorização', () => {
@@ -42,6 +42,7 @@ describe('PUT /professores/:id (router real de src/routes.js) - guarda de senha 
   let updateSpy;
 
   beforeEach(() => {
+    sessaoAtiva('admin-1', 'terceiro-1');
     app = buildApp();
 
     updateSpy = jest
