@@ -33,6 +33,8 @@ export class LoginController extends AbstractController {
       const { refreshToken, ...corpo } = response;
       setSessionCookie(this.res, refreshToken);
 
+      LoggerManager.info('auth.login.ok', { userId: response.user.id, ip });
+
       return this.res.status(200).json(corpo);
     } catch (error) {
       return this.handleError(error, 'auth.login.error');
