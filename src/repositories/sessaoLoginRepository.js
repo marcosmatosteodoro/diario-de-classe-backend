@@ -5,8 +5,9 @@ import AbstractRepository from './abstractRepository.js';
 /**
  * Repository do registro de sessões de login (uma linha por login). As transições que decidem
  * corrida (rotacionar, substituir sucessor, encerrar) são escritas condicionais atômicas: zero
- * linhas afetadas é o sinal de que outro pedido chegou antes. O relógio é o do banco em UTC (`NOW() AT TIME ZONE 'UTC'`): as colunas são `timestamp` sem fuso e o
- * Prisma grava horário UTC; sai se as colunas virarem `timestamptz`.
+ * linhas afetadas é o sinal de que outro pedido chegou antes. O relógio é o do banco em UTC
+ * (`NOW() AT TIME ZONE 'UTC'`): as colunas são `timestamp` sem fuso e o Prisma grava horário UTC;
+ * sai se as colunas virarem `timestamptz`.
  */
 export default class SessaoLoginRepository extends AbstractRepository {
   getEntity() {

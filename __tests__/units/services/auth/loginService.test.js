@@ -34,6 +34,10 @@ jest.unstable_mockModule('../../../../src/utilities/createJwt.js', () => ({
   createJwt: (...args) => {
     ordem.push('createJwt');
     return createJwtReal.createJwt(...args);
+  },
+  assinarJwt: (...args) => {
+    ordem.push('assinarJwt');
+    return createJwtReal.assinarJwt(...args);
   }
 }));
 const emitirAccessReal = await import('../../../../src/utilities/emitirAccess.js');
@@ -711,7 +715,7 @@ describe('LoginService', () => {
 
       const criar = SessaoLoginRepository.prototype.criar;
       expect(criar).toHaveBeenCalledTimes(1);
-      expect(ordem).toEqual(['criar', 'createJwt']);
+      expect(ordem).toEqual(['criar', 'createJwt', 'assinarJwt']);
       const [dados] = criar.mock.calls[0];
       const expiraEm = new Date(AGORA.getTime() + Constants.refreshExp * 1000);
       expect(dados.idUsuario).toBe('user-123');
@@ -738,11 +742,13 @@ describe('LoginService', () => {
         jest.setSystemTime(AGORA.getTime() + 5000);
         return { id: 'sid-1' };
       });
+      jest.setSystemTime(AGORA.getTime() + 789);
 
       const result = await entrar();
 
       const [dados] = SessaoLoginRepository.prototype.criar.mock.calls[0];
       const refresh = parseJwt(result.refreshToken).payload;
+      expect(Number.isInteger(refresh.exp)).toBe(true);
       expect(refresh.exp).toBe(Math.floor(dados.expiraEm.getTime() / 1000));
       expect(refresh.exp).toBe(AGORA.getTime() / 1000 + Constants.refreshExp);
     });
