@@ -1,4 +1,5 @@
 import { LoginService } from '../../services/auth/loginService.js';
+import { setSessionCookie } from '../../utilities/sessionCookie.js';
 import { ZerarTentativasLoginService } from '../../services/auth/zerarTentativasLoginService.js';
 import AbstractController from '../abstractController.js';
 import LoggerManager from '../../utilities/loggerManager.js';
@@ -28,7 +29,11 @@ export class LoginController extends AbstractController {
       }
 
       await ZerarTentativasLoginService.handle(ip, email, this.req.expiraEmReservaIp);
-      return this.res.status(200).json(response);
+
+      const { refreshToken, ...corpo } = response;
+      setSessionCookie(this.res, refreshToken);
+
+      return this.res.status(200).json(corpo);
     } catch (error) {
       return this.handleError(error, 'auth.login.error');
     }

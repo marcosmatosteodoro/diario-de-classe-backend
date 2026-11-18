@@ -1,172 +1,77 @@
+import { jest } from '@jest/globals';
 import { LogoutController } from '../../../../src/controllers/auth/logoutController.js';
 import { LogoutService } from '../../../../src/services/auth/logoutService.js';
+import Constants from '../../../../src/utilities/constants.js';
 
-describe.skip('LogoutController', () => {
-  let mockReq;
-  let mockRes;
-  let originalLogoutServiceHandle;
+const COOKIE = Constants.sessionCookie.name;
+
+describe('LogoutController', () => {
+  let req;
+  let res;
+  let handleOriginal;
 
   beforeEach(() => {
-    mockReq = {
-      body: {}
+    req = { body: {}, cookies: {}, t: jest.fn(chave => chave) };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+      clearCookie: jest.fn()
     };
-
-    mockRes = {
-      status(code) {
-        this.statusCode = code;
-        return this;
-      },
-      json(data) {
-        this.jsonData = data;
-        return this;
-      }
-    };
-
-    originalLogoutServiceHandle = LogoutService.handle;
+    handleOriginal = LogoutService.handle;
+    LogoutService.handle = jest.fn();
   });
 
   afterEach(() => {
-    LogoutService.handle = originalLogoutServiceHandle;
+    LogoutService.handle = handleOriginal;
   });
 
-  test('should return 400 when refreshToken is not provided', async () => {
-    mockReq.body = {};
+  const removeuOCookie = () => {
+    expect(res.clearCookie).toHaveBeenCalledTimes(1);
+    expect(res.clearCookie.mock.calls[0][0]).toBe(COOKIE);
+  };
 
-    const controller = new LogoutController(mockReq, mockRes);
-    await controller.execute();
+  test('com cookie: entrega o valor ao service, responde 204 e remove o cookie', async () => {
+    req.cookies[COOKIE] = 'refresh-do-cookie';
+    LogoutService.handle.mockResolvedValue({ revogado: true });
 
-    expect(mockRes.statusCode).toBe(400);
-    expect(['auth.logout.error', 'Erro ao deslogar', 'Logout error']).toContain(
-      mockRes.jsonData.message
-    );
+    await LogoutController.handle(req, res);
+
+    expect(LogoutService.handle).toHaveBeenCalledWith('refresh-do-cookie');
+    expect(res.status).toHaveBeenCalledWith(204);
+    removeuOCookie();
   });
 
-  test('should return 400 when body is null or undefined', async () => {
-    mockReq.body = null;
+  test('sem cookie: 204 e remoção, sem mensagem de erro', async () => {
+    LogoutService.handle.mockResolvedValue({ revogado: false });
 
-    const controller = new LogoutController(mockReq, mockRes);
-    await controller.execute();
+    await new LogoutController(req, res).execute();
 
-    expect(mockRes.statusCode).toBe(400);
-    expect(['auth.logout.error', 'Erro ao deslogar', 'Logout error']).toContain(
-      mockRes.jsonData.message
-    );
+    expect(LogoutService.handle).toHaveBeenCalledWith(null);
+    expect(res.status).toHaveBeenCalledWith(204);
+    expect(res.json).toHaveBeenCalledWith();
+    removeuOCookie();
   });
 
-  test('should return 400 when LogoutService returns null', async () => {
-    mockReq.body = { refreshToken: 'already-revoked-token' };
-    LogoutService.handle = async () => null;
+  test('ignora o corpo', async () => {
+    req.body = { refreshToken: 'do-corpo' };
+    LogoutService.handle.mockResolvedValue({ revogado: false });
 
-    const controller = new LogoutController(mockReq, mockRes);
-    await controller.execute();
+    await new LogoutController(req, res).execute();
 
-    expect(mockRes.statusCode).toBe(400);
-    expect(['auth.logout.error', 'Erro ao deslogar', 'Logout error']).toContain(
-      mockRes.jsonData.message
-    );
+    expect(LogoutService.handle).toHaveBeenCalledWith(null);
   });
 
-  test('should return 204 when LogoutService succeeds', async () => {
-    const mockResult = {
-      message: 'auth.logout.success',
-      success: true
-    };
-
-    mockReq.body = { refreshToken: 'valid-refresh-token' };
-    LogoutService.handle = async () => mockResult;
-
-    const controller = new LogoutController(mockReq, mockRes);
-    await controller.execute();
-
-    expect(mockRes.statusCode).toBe(204);
-  });
-
-  test('should call LogoutService.handle with correct refreshToken', async () => {
-    let capturedToken = null;
-
-    mockReq.body = { refreshToken: 'test-refresh-token' };
-    LogoutService.handle = async token => {
-      capturedToken = token;
-      return { success: true };
-    };
-
-    const controller = new LogoutController(mockReq, mockRes);
-    await controller.execute();
-
-    expect(capturedToken).toBe('test-refresh-token');
-  });
-
-  test('should handle LogoutService errors gracefully', async () => {
-    mockReq.body = { refreshToken: 'valid-token' };
-    LogoutService.handle = async () => {
-      throw new Error('Database error');
-    };
-
-    let handleErrorCalled = false;
-    let handleErrorError = null;
-    let handleErrorKey = null;
-
-    const controller = new LogoutController(mockReq, mockRes);
-    controller.handleError = (error, key) => {
-      handleErrorCalled = true;
-      handleErrorError = error;
-      handleErrorKey = key;
-    };
+  test('exceção vai para handleError e o cookie permanece', async () => {
+    req.cookies[COOKIE] = 'x';
+    const erro = new Error('falha');
+    LogoutService.handle.mockRejectedValue(erro);
+    const controller = new LogoutController(req, res);
+    controller.handleError = jest.fn();
 
     await controller.execute();
 
-    expect(handleErrorCalled).toBe(true);
-    expect(handleErrorError).toBeInstanceOf(Error);
-    expect(handleErrorKey).toBe('auth.logout.error');
-  });
-
-  test('should call static handle method correctly', async () => {
-    mockReq.body = { refreshToken: 'valid-token' };
-    LogoutService.handle = async () => ({ success: true });
-
-    await LogoutController.handle(mockReq, mockRes);
-
-    expect(mockRes.statusCode).toBe(204);
-  });
-
-  test('should extract refreshToken from request body', async () => {
-    let receivedToken = null;
-
-    mockReq.body = { refreshToken: 'my-refresh-token' };
-    LogoutService.handle = async token => {
-      receivedToken = token;
-      return { success: true };
-    };
-
-    const controller = new LogoutController(mockReq, mockRes);
-    await controller.execute();
-
-    expect(receivedToken).toBe('my-refresh-token');
-  });
-
-  test('should not call LogoutService when refreshToken is missing', async () => {
-    let serviceCalled = false;
-
-    mockReq.body = {};
-    LogoutService.handle = async () => {
-      serviceCalled = true;
-      return null;
-    };
-
-    const controller = new LogoutController(mockReq, mockRes);
-    await controller.execute();
-
-    expect(serviceCalled).toBe(true);
-    expect(mockRes.statusCode).toBe(400);
-  });
-
-  test('should handle missing request body gracefully', async () => {
-    mockReq.body = undefined;
-
-    const controller = new LogoutController(mockReq, mockRes);
-    await controller.execute();
-
-    expect(mockRes.statusCode).toBe(400);
-    expect(mockRes.jsonData).toEqual({ message: 'auth.logout.error' });
+    expect(controller.handleError).toHaveBeenCalledWith(erro, 'auth.logout.error');
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.clearCookie).not.toHaveBeenCalled();
   });
 });

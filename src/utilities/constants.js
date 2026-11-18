@@ -71,9 +71,19 @@ export default class Constants {
 
   static jwtRefreshSecret = requireSecret(process.env.JWT_REFRESH_TOKEN, 'JWT_REFRESH_TOKEN');
 
-  static accessExp = Number(process.env.JWT_EXP_SECONDS) || 60 * 60 * 24 * 7; // 7d
+  static accessExp = Number(process.env.JWT_EXP_SECONDS) || 60 * 15; // 15min
 
-  static refreshExp = Number(process.env.JWT_REFRESH_EXP_SECONDS) || 60 * 60 * 24 * 30; // 30d
+  static refreshExp = Number(process.env.JWT_REFRESH_EXP_SECONDS) || 60 * 60 * 24 * 7; // 7d
+
+  // Claim `typ` do refresh emitido no login: renovar e sair recusam refresh sem ela, o que
+  // separa o refresh da sessão em cookie do legado de 30 dias (DEC-003-018).
+  static refreshTokenType = 'sessao';
+
+  // Cookie do refresh: nome e path são constantes de código, nunca env (DEC-003-015).
+  static sessionCookie = { name: 'bls_sessao', path: '/api/auth' };
+
+  // Claim `ver` do access: isLoggedIn recusa access sem ela ou de outra versão (DEC-003-018).
+  static accessTokenVersion = 2;
 
   // Lida sob demanda: só o seed exige; a API não pode falhar no boot por causa dela.
   static get seedPassword() {

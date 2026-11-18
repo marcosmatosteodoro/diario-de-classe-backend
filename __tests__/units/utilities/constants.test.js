@@ -2,7 +2,13 @@ import { jest } from '@jest/globals';
 
 const SEGREDO = 'sentinela-acesso-0001';
 const REFRESH = 'sentinela-refresh-0002';
-const NOMES = ['JWT_SECRET_TOKEN', 'JWT_REFRESH_TOKEN', 'CORS_ORIGINS'];
+const NOMES = [
+  'JWT_SECRET_TOKEN',
+  'JWT_REFRESH_TOKEN',
+  'CORS_ORIGINS',
+  'JWT_EXP_SECONDS',
+  'JWT_REFRESH_EXP_SECONDS'
+];
 const ORIGENS = 'https://a.example.com,http://localhost:3001';
 
 const envOriginal = { ...process.env };
@@ -133,5 +139,38 @@ describe('Constants.corsOrigins', () => {
     await expect(
       carregar({ JWT_SECRET_TOKEN: SEGREDO, JWT_REFRESH_TOKEN: REFRESH }, 'production')
     ).rejects.toThrow('CORS_ORIGINS');
+  });
+});
+
+describe('Constants — validade da sessão e cookie', () => {
+  const base = comOrigens({ JWT_SECRET_TOKEN: SEGREDO, JWT_REFRESH_TOKEN: REFRESH });
+
+  test('sem env, accessExp é 900 e refreshExp é 604800', async () => {
+    const { default: Constants } = await carregar(base, 'test');
+    expect(process.env.JWT_EXP_SECONDS).toBeUndefined();
+    expect(process.env.JWT_REFRESH_EXP_SECONDS).toBeUndefined();
+    expect(Constants.accessExp).toBe(900);
+    expect(Constants.refreshExp).toBe(604800);
+  });
+
+  test('JWT_EXP_SECONDS define accessExp e não mexe em refreshExp', async () => {
+    const { default: Constants } = await carregar({ ...base, JWT_EXP_SECONDS: '120' }, 'test');
+    expect(Constants.accessExp).toBe(120);
+    expect(Constants.refreshExp).toBe(604800);
+  });
+
+  test('JWT_REFRESH_EXP_SECONDS define refreshExp e não mexe em accessExp', async () => {
+    const { default: Constants } = await carregar(
+      { ...base, JWT_REFRESH_EXP_SECONDS: '240' },
+      'test'
+    );
+    expect(Constants.refreshExp).toBe(240);
+    expect(Constants.accessExp).toBe(900);
+  });
+
+  test('sessionCookie é literalmente o nome e o path combinados e a versão do access é 2', async () => {
+    const { default: Constants } = await carregar(base, 'test');
+    expect(Constants.sessionCookie).toEqual({ name: 'bls_sessao', path: '/api/auth' });
+    expect(Constants.accessTokenVersion).toBe(2);
   });
 });

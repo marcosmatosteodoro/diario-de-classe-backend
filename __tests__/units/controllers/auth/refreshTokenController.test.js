@@ -1,188 +1,84 @@
+import { jest } from '@jest/globals';
 import { RefreshTokenController } from '../../../../src/controllers/auth/refreshTokenController.js';
 import { RefreshTokenService } from '../../../../src/services/auth/refreshTokenService.js';
+import Constants from '../../../../src/utilities/constants.js';
 
-describe.skip('RefreshTokenController', () => {
-  let mockReq;
-  let mockRes;
-  let originalRefreshTokenServiceHandle;
+const COOKIE = Constants.sessionCookie.name;
+
+describe('RefreshTokenController', () => {
+  let req;
+  let res;
+  let handleOriginal;
 
   beforeEach(() => {
-    mockReq = {
-      body: {}
+    req = { body: {}, cookies: {}, t: jest.fn(chave => chave) };
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+      clearCookie: jest.fn()
     };
-
-    mockRes = {
-      status(code) {
-        this.statusCode = code;
-        return this;
-      },
-      json(data) {
-        this.jsonData = data;
-        return this;
-      }
-    };
-
-    originalRefreshTokenServiceHandle = RefreshTokenService.handle;
+    handleOriginal = RefreshTokenService.handle;
+    RefreshTokenService.handle = jest.fn();
   });
 
   afterEach(() => {
-    RefreshTokenService.handle = originalRefreshTokenServiceHandle;
+    RefreshTokenService.handle = handleOriginal;
   });
 
-  test('should return 401 when refreshToken is not provided', async () => {
-    mockReq.body = {};
+  test('lê o refresh do cookie e o entrega ao service', async () => {
+    req.cookies[COOKIE] = 'refresh-do-cookie';
+    RefreshTokenService.handle.mockResolvedValue({ accessToken: 'a' });
 
-    const controller = new RefreshTokenController(mockReq, mockRes);
-    await controller.execute();
+    await RefreshTokenController.handle(req, res);
 
-    expect(mockRes.statusCode).toBe(401);
-    expect(['auth.refresh.unauthorized', 'Token inválido', 'Unauthorized']).toContain(
-      mockRes.jsonData.message
-    );
+    expect(RefreshTokenService.handle).toHaveBeenCalledWith('refresh-do-cookie');
   });
 
-  test('should return 401 when body is null or undefined', async () => {
-    mockReq.body = null;
+  test('ignora o corpo: refresh só no corpo chega ao service como ausente', async () => {
+    req.body = { refreshToken: 'refresh-do-corpo' };
+    RefreshTokenService.handle.mockResolvedValue(null);
 
-    const controller = new RefreshTokenController(mockReq, mockRes);
-    await controller.execute();
+    await RefreshTokenController.handle(req, res);
 
-    expect(mockRes.statusCode).toBe(401);
-    expect(['auth.refresh.unauthorized', 'Token inválido', 'Unauthorized']).toContain(
-      mockRes.jsonData.message
-    );
+    expect(RefreshTokenService.handle).toHaveBeenCalledWith(null);
+    expect(res.status).toHaveBeenCalledWith(401);
   });
 
-  test('should return 401 when RefreshTokenService returns null', async () => {
-    mockReq.body = { refreshToken: 'invalid-token' };
-    RefreshTokenService.handle = async () => null;
+  test('recusa do service responde 401 e remove o cookie', async () => {
+    req.cookies[COOKIE] = 'x';
+    RefreshTokenService.handle.mockResolvedValue(null);
 
-    const controller = new RefreshTokenController(mockReq, mockRes);
-    await controller.execute();
+    await new RefreshTokenController(req, res).execute();
 
-    expect(mockRes.statusCode).toBe(401);
-    expect(['auth.refresh.unauthorized', 'Token inválido', 'Unauthorized']).toContain(
-      mockRes.jsonData.message
-    );
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(res.json).toHaveBeenCalledWith({ message: 'auth.refresh.unauthorized' });
+    expect(res.clearCookie).toHaveBeenCalledTimes(1);
+    expect(res.clearCookie.mock.calls[0][0]).toBe(COOKIE);
   });
 
-  test('should return 200 with new accessToken when refreshToken is valid', async () => {
-    const mockToken = {
-      accessToken: 'new-access-token',
-      tokenType: 'Bearer',
-      expiresIn: 3600
-    };
+  test('sucesso responde 200 com o corpo do service e não mexe no cookie', async () => {
+    req.cookies[COOKIE] = 'x';
+    const corpo = { accessToken: 'a', tokenType: 'Bearer', user: { id: 'u1' }, configuracao: null };
+    RefreshTokenService.handle.mockResolvedValue(corpo);
 
-    mockReq.body = { refreshToken: 'valid-refresh-token' };
-    RefreshTokenService.handle = async () => mockToken;
+    await new RefreshTokenController(req, res).execute();
 
-    const controller = new RefreshTokenController(mockReq, mockRes);
-    await controller.execute();
-
-    expect(mockRes.statusCode).toBe(200);
-    expect(mockRes.jsonData).toEqual(mockToken);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith(corpo);
+    expect(res.clearCookie).not.toHaveBeenCalled();
   });
 
-  test('should call RefreshTokenService.handle with correct refreshToken', async () => {
-    let capturedToken = null;
-
-    mockReq.body = { refreshToken: 'test-refresh-token' };
-    RefreshTokenService.handle = async token => {
-      capturedToken = token;
-      return null;
-    };
-
-    const controller = new RefreshTokenController(mockReq, mockRes);
-    await controller.execute();
-
-    expect(capturedToken).toBe('test-refresh-token');
-  });
-
-  test('should handle RefreshTokenService errors gracefully', async () => {
-    mockReq.body = { refreshToken: 'valid-token' };
-    RefreshTokenService.handle = async () => {
-      throw new Error('Database error');
-    };
-
-    let handleErrorCalled = false;
-    let handleErrorError = null;
-    let handleErrorKey = null;
-
-    const controller = new RefreshTokenController(mockReq, mockRes);
-    controller.handleError = (error, key) => {
-      handleErrorCalled = true;
-      handleErrorError = error;
-      handleErrorKey = key;
-    };
+  test('exceção vai para handleError sem emitir acesso e sem mexer no cookie', async () => {
+    req.cookies[COOKIE] = 'x';
+    const erro = new Error('falha');
+    RefreshTokenService.handle.mockRejectedValue(erro);
+    const controller = new RefreshTokenController(req, res);
+    controller.handleError = jest.fn();
 
     await controller.execute();
 
-    expect(handleErrorCalled).toBe(true);
-    expect(handleErrorError).toBeInstanceOf(Error);
-    expect(handleErrorKey).toBe('auth.refresh.error');
-  });
-
-  test('should call static handle method correctly', async () => {
-    mockReq.body = { refreshToken: 'valid-token' };
-    RefreshTokenService.handle = async () => ({
-      accessToken: 'new-token',
-      tokenType: 'Bearer',
-      expiresIn: 3600
-    });
-
-    await RefreshTokenController.handle(mockReq, mockRes);
-
-    expect(mockRes.statusCode).toBe(200);
-    expect(mockRes.jsonData).toBeDefined();
-    expect(mockRes.jsonData.accessToken).toBe('new-token');
-  });
-
-  test('should return token with all required fields', async () => {
-    const mockToken = {
-      accessToken: 'new-access-token',
-      tokenType: 'Bearer',
-      expiresIn: 3600
-    };
-
-    mockReq.body = { refreshToken: 'valid-refresh-token' };
-    RefreshTokenService.handle = async () => mockToken;
-
-    const controller = new RefreshTokenController(mockReq, mockRes);
-    await controller.execute();
-
-    expect(mockRes.jsonData).toHaveProperty('accessToken');
-    expect(mockRes.jsonData).toHaveProperty('tokenType');
-    expect(mockRes.jsonData).toHaveProperty('expiresIn');
-  });
-
-  test('should extract refreshToken from request body', async () => {
-    let receivedToken = null;
-
-    mockReq.body = { refreshToken: 'my-refresh-token' };
-    RefreshTokenService.handle = async token => {
-      receivedToken = token;
-      return null;
-    };
-
-    const controller = new RefreshTokenController(mockReq, mockRes);
-    await controller.execute();
-
-    expect(receivedToken).toBe('my-refresh-token');
-  });
-
-  test('should not call RefreshTokenService when refreshToken is missing', async () => {
-    let serviceCalled = false;
-
-    mockReq.body = {};
-    RefreshTokenService.handle = async () => {
-      serviceCalled = true;
-      return null;
-    };
-
-    const controller = new RefreshTokenController(mockReq, mockRes);
-    await controller.execute();
-
-    expect(serviceCalled).toBe(true); // agora o serviço é chamado
-    expect(mockRes.statusCode).toBe(401); // bate com o comportamento real
+    expect(controller.handleError).toHaveBeenCalledWith(erro, 'auth.refresh.error');
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.clearCookie).not.toHaveBeenCalled();
   });
 });

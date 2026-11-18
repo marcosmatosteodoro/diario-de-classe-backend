@@ -3,6 +3,7 @@ import { CUSTO_BARATO, passwordCustoBarato } from '../../../mocks/passwordCustoB
 import util from 'node:util';
 import UserRepository from '../../../../src/repositories/userRepository.js';
 import Constants from '../../../../src/utilities/constants.js';
+import { parseJwt } from '../../../../src/utilities/verifyJwt.js';
 import { GetConfiguracaoService } from '../../../../src/services/configuracao/getConfiguracaoService.js';
 
 // O custo de produção é provado em password.test.js; aqui a regravação do legado
@@ -161,6 +162,25 @@ describe('LoginService', () => {
     expect(refreshParts.length).toBe(3);
   });
 
+  test('o refresh emitido leva a claim de tipo da sessão e o sub do usuário', async () => {
+    UserRepository.prototype.selectOne = async () => ({
+      id: 'user-123',
+      email: 'test@example.com',
+      nome: 'Test User',
+      senha: SENHA_HASH
+    });
+
+    const result = await new LoginService(
+      UserRepository,
+      'test@example.com',
+      'password123'
+    ).execute();
+    const { payload } = parseJwt(result.refreshToken);
+
+    expect(payload.typ).toBe(Constants.refreshTokenType);
+    expect(payload.sub).toBe('user-123');
+  });
+
   test('should call selectOne with correct email filter', async () => {
     let capturedParams = null;
     UserRepository.prototype.selectOne = async params => {
@@ -230,6 +250,25 @@ describe('LoginService', () => {
     const result2 = await service2.execute();
 
     expect(result1.accessToken).not.toBe(result2.accessToken);
+  });
+
+  test('o access emitido vive accessExp segundos e carrega a claim ver', async () => {
+    UserRepository.prototype.selectOne = async () => ({
+      id: 'user-123',
+      email: 'test@example.com',
+      nome: 'Test User',
+      senha: SENHA_HASH
+    });
+
+    const result = await new LoginService(
+      UserRepository,
+      'test@example.com',
+      'password123'
+    ).execute();
+    const { payload } = parseJwt(result.accessToken);
+
+    expect(payload.exp - payload.iat).toBe(Constants.accessExp);
+    expect(payload.ver).toBe(Constants.accessTokenVersion);
   });
 
   test('should include user id in accessToken payload', async () => {

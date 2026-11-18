@@ -3,8 +3,9 @@ import UserRepository from '../../repositories/userRepository.js';
 import { createJwt } from '../../utilities/createJwt.js';
 import Constants from '../../utilities/constants.js';
 import tokenRevocationManager from './tokenRevocationManagerService.js';
-import { verifyJwt } from '../../utilities/verifyJwt.js';
+import { verificarRefreshJwt } from '../../utilities/verificarRefreshJwt.js';
 import { generatePayload } from '../../utilities/generatePayload.js';
+import { GetConfiguracaoService } from '../configuracao/getConfiguracaoService.js';
 
 export class RefreshTokenService extends AbstractService {
   constructor(Repository, refreshToken) {
@@ -28,12 +29,13 @@ export class RefreshTokenService extends AbstractService {
       return null;
     }
 
-    // Busca o usuário para validar se ainda existe
+    // Busca o usuário para validar se ainda existe (senha fora da projeção)
     const user = await this.repository.selectOne({
-      where: { id: decoded.sub }
+      where: { id: decoded.sub },
+      select: this.repository.selectFields
     });
 
-    if (!user) {
+    if (!this.usuarioPodeRenovar(user)) {
       return null;
     }
 
@@ -41,16 +43,27 @@ export class RefreshTokenService extends AbstractService {
     const payload = generatePayload(user);
     const newAccessToken = createJwt(payload, Constants.jwtSecret, Constants.accessExp);
 
+    const configuracoes = await GetConfiguracaoService.handle();
+
     return {
       accessToken: newAccessToken,
       tokenType: 'Bearer',
-      expiresIn: Constants.accessExp
+      expiresIn: Constants.accessExp,
+      user,
+      configuracao: configuracoes?.[0] ?? null
     };
   }
 
+  /**
+   * Gancho da decisão "este usuário pode renovar?". Hoje só exige que exista;
+   * a desativação de usuário (Q-002-003) entra aqui.
+   */
+  usuarioPodeRenovar(user) {
+    return Boolean(user);
+  }
+
   verifyRefreshToken() {
-    const payload = verifyJwt(this.refreshToken, Constants.jwtRefreshSecret);
-    return payload || null;
+    return verificarRefreshJwt(this.refreshToken);
   }
 
   static async handle(refreshToken) {

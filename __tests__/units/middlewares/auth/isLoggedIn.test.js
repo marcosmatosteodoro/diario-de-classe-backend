@@ -2,6 +2,7 @@ import isLoggedIn from '../../../../src/middlewares/auth/isLoggedIn.js';
 import UnauthorizedError from '../../../../src/utilities/errors/unauthorized.js';
 import crypto from 'crypto';
 import Constants from '../../../../src/utilities/constants.js';
+import { createJwt } from '../../../../src/utilities/createJwt.js';
 
 describe('isLoggedIn middleware', () => {
   let mockReq, mockRes, mockNext;
@@ -88,7 +89,11 @@ describe('isLoggedIn middleware', () => {
   test('should call next without error and set req.user when token valid', () => {
     // create a valid token using same algorithm as middleware
     const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64');
-    const payloadObj = { sub: '123', exp: Math.floor(Date.now() / 1000) + 60 };
+    const payloadObj = {
+      sub: '123',
+      ver: Constants.accessTokenVersion,
+      exp: Math.floor(Date.now() / 1000) + 60
+    };
     const payload = Buffer.from(JSON.stringify(payloadObj)).toString('base64');
     const data = `${header}.${payload}`;
     const sig = crypto
@@ -106,5 +111,29 @@ describe('isLoggedIn middleware', () => {
     expect(mockNext.arg).toBeUndefined();
     expect(mockReq.user).toBeDefined();
     expect(mockReq.user.sub).toBe('123');
+  });
+
+  describe('claim de versão do access', () => {
+    const assinar = claims => createJwt({ sub: '123', ...claims }, Constants.jwtSecret, 60);
+
+    test('token válido sem ver é recusado', () => {
+      mockReq.headers.authorization = `Bearer ${assinar({})}`;
+      isLoggedIn(mockReq, mockRes, err => mockNext.call(err));
+      expect(mockNext.arg).toBeInstanceOf(UnauthorizedError);
+      expect(mockReq.user).toBeUndefined();
+    });
+
+    test('ver igual ao vigente chama next sem argumento', () => {
+      mockReq.headers.authorization = `Bearer ${assinar({ ver: Constants.accessTokenVersion })}`;
+      isLoggedIn(mockReq, mockRes, err => mockNext.call(err));
+      expect(mockNext.called).toBe(true);
+      expect(mockNext.arg).toBeUndefined();
+    });
+
+    test('ver diferente do vigente (vigente + 1) é recusado', () => {
+      mockReq.headers.authorization = `Bearer ${assinar({ ver: Constants.accessTokenVersion + 1 })}`;
+      isLoggedIn(mockReq, mockRes, err => mockNext.call(err));
+      expect(mockNext.arg).toBeInstanceOf(UnauthorizedError);
+    });
   });
 });

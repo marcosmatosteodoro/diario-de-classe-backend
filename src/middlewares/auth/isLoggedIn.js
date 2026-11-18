@@ -9,7 +9,7 @@ export default function isLoggedIn(req, res, next) {
   }
   const token = authHeader.slice(7);
   const payload = verifyJwt(token, Constants.jwtSecret);
-  if (!payload) {
+  if (!payload || payload.ver !== Constants.accessTokenVersion) {
     return next(new UnauthorizedError());
   }
   req.user = payload;

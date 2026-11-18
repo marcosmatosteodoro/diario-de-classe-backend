@@ -6,17 +6,24 @@ import { RefreshTokenController } from '../controllers/auth/refreshTokenControll
 // Middlewares de validação
 import { validateLoginParams } from '../middlewares/auth/validateLoginParams.js';
 import { limitLoginAttempts } from '../middlewares/auth/limitLoginAttempts.js';
-import { validateRefreshTokenParams } from '../middlewares/auth/validateRefreshTokenParams.js';
+import requireSameOrigin from '../middlewares/auth/requireSameOrigin.js';
 
 const router = express.Router();
 
 // POST /auth/login
-router.post('/login', validateLoginParams, limitLoginAttempts, LoginController.handle);
+// Origem antes do limitador: login cross-site não consome tentativa nem grava cookie.
+router.post(
+  '/login',
+  requireSameOrigin,
+  validateLoginParams,
+  limitLoginAttempts,
+  LoginController.handle
+);
 
 // POST /auth/logout
-router.post('/logout', validateRefreshTokenParams, LogoutController.handle);
+router.post('/logout', requireSameOrigin, LogoutController.handle);
 
 // POST /auth/refresh-token
-router.post('/refresh-token', validateRefreshTokenParams, RefreshTokenController.handle);
+router.post('/refresh-token', requireSameOrigin, RefreshTokenController.handle);
 
 export default router;

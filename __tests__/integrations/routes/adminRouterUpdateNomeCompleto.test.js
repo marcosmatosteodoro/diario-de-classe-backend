@@ -46,7 +46,10 @@ function buildApp() {
 }
 
 const adminToken = () =>
-  `Bearer ${createJwt({ sub: 'admin-1', role: 'admin' }, Constants.jwtSecret)}`;
+  `Bearer ${createJwt(
+    { sub: 'admin-1', role: 'admin', ver: Constants.accessTokenVersion },
+    Constants.jwtSecret
+  )}`;
 
 describe('/admin/update-nomeCompleto (router real de src/routes.js)', () => {
   let app;
@@ -105,7 +108,10 @@ describe('/admin/update-nomeCompleto (router real de src/routes.js)', () => {
       .post('/admin/update-nomeCompleto')
       .set(
         'Authorization',
-        `Bearer ${createJwt({ sub: 'm-1', role: 'member' }, Constants.jwtSecret)}`
+        `Bearer ${createJwt(
+          { sub: 'm-1', role: 'member', ver: Constants.accessTokenVersion },
+          Constants.jwtSecret
+        )}`
       );
 
     expect(response.status).toBe(403);

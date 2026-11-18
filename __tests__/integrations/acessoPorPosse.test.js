@@ -18,7 +18,10 @@ const REGISTRO_PROPRIO = { id: ID_PROPRIO, email: 'proprio@example.com', dono: S
 const REGISTRO_ALHEIO = { id: ID_ALHEIO, email: 'alheio@example.com', dono: OUTRO_DONO };
 
 const tokenDe = ({ id, role }, segredo = Constants.jwtSecret) =>
-  `Bearer ${createJwt({ sub: id, id, email: 'usuario@example.com', role }, segredo)}`;
+  `Bearer ${createJwt(
+    { sub: id, id, email: 'usuario@example.com', role, ver: Constants.accessTokenVersion },
+    segredo
+  )}`;
 
 const TOKEN_PROFESSOR = tokenDe({ id: SOLICITANTE, role: 'professor' });
 const TOKEN_ADMIN = tokenDe({ id: cuid('admin1'), role: 'admin' });

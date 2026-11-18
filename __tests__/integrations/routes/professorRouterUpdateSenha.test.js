@@ -34,7 +34,7 @@ function buildApp() {
 }
 
 function bearerToken({ sub, role }) {
-  return `Bearer ${createJwt({ sub, role }, Constants.jwtSecret)}`;
+  return `Bearer ${createJwt({ sub, role, ver: Constants.accessTokenVersion }, Constants.jwtSecret)}`;
 }
 
 describe('PUT /professores/:id (router real de src/routes.js) - guarda de senha e autorização', () => {

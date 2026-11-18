@@ -7,6 +7,7 @@ import routes from '../../../src/routes.js';
 import Constants from '../../../src/utilities/constants.js';
 import TentativaLoginRepository from '../../../src/repositories/tentativaLoginRepository.js';
 import { LoginService } from '../../../src/services/auth/loginService.js';
+import { cookiesDaSessao } from '../../mocks/cookiesDaSessao.js';
 
 const SENHA_SENTINELA = 'S3nh4-Sent1nela-Z9X8';
 const EMAIL = 'joao.silva@example.com';
@@ -75,8 +76,17 @@ function installStore() {
   return store;
 }
 
-const login = (app, { email = EMAIL, senha = 'errada', ip = IP } = {}) =>
-  request(app).post('/auth/login').set('X-Forwarded-For', ip).send({ email, senha });
+// Toda recusa/erro do login (401, 429, 503, 500) nega também o canal do cookie: o refresh
+// viaja em `bls_sessao`, então só o corpo sem token não basta.
+const login = async (app, { email = EMAIL, senha = 'errada', ip = IP } = {}) => {
+  const r = await request(app)
+    .post('/auth/login')
+    .set('Origin', Constants.corsOrigins[0])
+    .set('X-Forwarded-For', ip)
+    .send({ email, senha });
+  if (r.status !== 200) expect(cookiesDaSessao(r)).toEqual([]);
+  return r;
+};
 
 describe('POST /auth/login (router real) - limite de tentativas por janela', () => {
   let app;
@@ -357,9 +367,13 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
   });
 
   test('credencial ausente segue sem chegar ao serviço (validação existente) e não consome o contador', async () => {
-    const r = await request(app).post('/auth/login').set('X-Forwarded-For', IP).send({});
-
+    const r = await request(app)
+      .post('/auth/login')
+      .set('Origin', Constants.corsOrigins[0])
+      .set('X-Forwarded-For', IP)
+      .send({});
     expect(r.status).toBe(422);
+    expect(cookiesDaSessao(r)).toEqual([]);
     expect(loginSpy).not.toHaveBeenCalled();
     expect(store.size).toBe(0);
   });
@@ -445,6 +459,7 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
 
       expect(r.status).toBe(503);
       expect(r.body).not.toHaveProperty('accessToken');
+      expect(cookiesDaSessao(r)).toEqual([]);
       expect(loginSpy).not.toHaveBeenCalled();
       expect(errorSpy).toHaveBeenCalled();
       const texto = capturado(errorSpy);
@@ -479,6 +494,7 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
 
       expect(r.status).toBe(503);
       expect(r.body).not.toHaveProperty('accessToken');
+      expect(cookiesDaSessao(r)).toEqual([]);
       expect(loginSpy).toHaveBeenCalledTimes(chamadas);
       expect(capturado(errorSpy)).not.toContain(SENHA_SENTINELA);
     });
@@ -502,6 +518,7 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
 
       expect(r.status).toBe(500);
       expect(r.body).not.toHaveProperty('accessToken');
+      expect(cookiesDaSessao(r)).toEqual([]);
     });
 
     test('contador falhando ao decrementar no sucesso: login negado, sem tokens', async () => {
@@ -512,6 +529,7 @@ describe('POST /auth/login (router real) - limite de tentativas por janela', () 
 
       expect(r.status).toBe(500);
       expect(r.body).not.toHaveProperty('accessToken');
+      expect(cookiesDaSessao(r)).toEqual([]);
     });
   });
 });

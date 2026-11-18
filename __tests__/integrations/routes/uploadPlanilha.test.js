@@ -41,7 +41,7 @@ function buildApp() {
   return app;
 }
 
-const token = `Bearer ${createJwt({ sub: 'admin-1', role: 'admin' }, Constants.jwtSecret)}`;
+const token = `Bearer ${createJwt({ sub: 'admin-1', role: 'admin', ver: Constants.accessTokenVersion }, Constants.jwtSecret)}`;
 
 const xlsReal = () => {
   const wb = XLSX.utils.book_new();

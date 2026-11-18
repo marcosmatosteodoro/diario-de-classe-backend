@@ -1,5 +1,6 @@
 import AbstractController from '../abstractController.js';
 import { RefreshTokenService } from '../../services/auth/refreshTokenService.js';
+import { clearSessionCookie, readSessionCookie } from '../../utilities/sessionCookie.js';
 
 export class RefreshTokenController extends AbstractController {
   constructor(req, res) {
@@ -8,15 +9,14 @@ export class RefreshTokenController extends AbstractController {
 
   async execute() {
     try {
-      const { refreshToken } = this.req.body || {};
+      const resultado = await RefreshTokenService.handle(readSessionCookie(this.req));
 
-      const token = await RefreshTokenService.handle(refreshToken);
-
-      if (!token) {
+      if (!resultado) {
+        clearSessionCookie(this.res);
         return this.res.status(401).json({ message: this.req.t('auth.refresh.unauthorized') });
       }
 
-      return this.res.status(200).json(token);
+      return this.res.status(200).json(resultado);
     } catch (error) {
       return this.handleError(error, 'auth.refresh.error');
     }

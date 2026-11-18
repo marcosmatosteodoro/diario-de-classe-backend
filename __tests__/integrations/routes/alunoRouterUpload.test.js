@@ -28,7 +28,8 @@ function buildApp(t = key => key) {
   return app;
 }
 
-const token = role => `Bearer ${createJwt({ sub: `${role}-1`, role }, Constants.jwtSecret)}`;
+const token = role =>
+  `Bearer ${createJwt({ sub: `${role}-1`, role, ver: Constants.accessTokenVersion }, Constants.jwtSecret)}`;
 
 describe('POST /alunos/upload (router real de src/routes.js)', () => {
   let app;
