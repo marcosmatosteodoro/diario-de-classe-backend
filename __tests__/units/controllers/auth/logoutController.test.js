@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { LogoutController } from '../../../../src/controllers/auth/logoutController.js';
+import LoggerManager from '../../../../src/utilities/loggerManager.js';
 import { LogoutService } from '../../../../src/services/auth/logoutService.js';
 import Constants from '../../../../src/utilities/constants.js';
 
@@ -90,4 +91,20 @@ describe('LogoutController', () => {
     expect(res.status).not.toHaveBeenCalled();
     expect(res.clearCookie).not.toHaveBeenCalled();
   });
+
+  test.each([true, false])(
+    'registra o logout com revogado=%s e ip, sem o token',
+    async revogado => {
+      req.ip = '203.0.113.7';
+      req.cookies[COOKIE] = 'refresh-do-cookie';
+      LogoutService.handle.mockResolvedValue({ revogado });
+      const info = jest.spyOn(LoggerManager, 'info').mockImplementation(() => {});
+
+      await LogoutController.handle(req, res);
+
+      expect(info).toHaveBeenCalledTimes(1);
+      expect(info).toHaveBeenCalledWith('auth.logout', { revogado, ip: '203.0.113.7' });
+      info.mockRestore();
+    }
+  );
 });

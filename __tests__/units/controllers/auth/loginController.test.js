@@ -1,6 +1,7 @@
 import { jest } from '@jest/globals';
 import { LoginController } from '../../../../src/controllers/auth/loginController.js';
 import ServiceUnavailableError from '../../../../src/utilities/errors/serviceUnavailable.js';
+import LoggerManager from '../../../../src/utilities/loggerManager.js';
 import { LoginService } from '../../../../src/services/auth/loginService.js';
 
 describe('LoginController', () => {
@@ -125,5 +126,37 @@ describe('LoginController', () => {
     expect(res.status).toHaveBeenCalledWith(500);
     handleError.mockRestore();
     spy.mockRestore();
+  });
+
+  test('200: registra o login com userId e ip, sem e-mail, senha nem tokens', async () => {
+    req.ip = '203.0.113.7';
+    LoginService.handle = async () => ({
+      accessToken: 'AT',
+      refreshToken: 'RT',
+      tokenType: 'Bearer',
+      expiresIn: 900,
+      user: { id: 'u1', email: 'a@example.com' },
+      configuracao: { id: 'c1' }
+    });
+    const info = jest.spyOn(LoggerManager, 'info').mockImplementation(() => {});
+
+    await LoginController.handle(req, res);
+
+    expect(info).toHaveBeenCalledTimes(1);
+    expect(info).toHaveBeenCalledWith('auth.login.ok', { userId: 'u1', ip: '203.0.113.7' });
+    info.mockRestore();
+  });
+
+  test('401: login recusado não registra auth.login.ok', async () => {
+    LoginService.handle = async () => null;
+    const info = jest.spyOn(LoggerManager, 'info').mockImplementation(() => {});
+    const warn = jest.spyOn(LoggerManager, 'warn').mockImplementation(() => {});
+
+    await LoginController.handle(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(401);
+    expect(info).not.toHaveBeenCalled();
+    info.mockRestore();
+    warn.mockRestore();
   });
 });
