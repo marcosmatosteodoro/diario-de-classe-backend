@@ -7,6 +7,10 @@ export class LogoutController extends AbstractController {
     super(req, res);
   }
 
+  /**
+   * Responde 204 em todo sucesso (inclusive sem sessão a encerrar) e remove o cookie; em falha
+   * inesperada mantém o cookie para a saída poder ser repetida.
+   */
   async execute() {
     try {
       await LogoutService.handle(readSessionCookie(this.req));

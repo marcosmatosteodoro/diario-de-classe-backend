@@ -16,6 +16,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
   let app;
   let Constants;
   let UserRepository;
+  let SessaoLoginRepository;
   let GetConfiguracaoService;
   let tokenRevocationManager;
   let createJwt;
@@ -33,6 +34,9 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     }));
     ({ default: Constants } = await import('../../../src/utilities/constants.js'));
     ({ default: UserRepository } = await import('../../../src/repositories/userRepository.js'));
+    ({ default: SessaoLoginRepository } = await import(
+      '../../../src/repositories/sessaoLoginRepository.js'
+    ));
     ({ GetConfiguracaoService } = await import(
       '../../../src/services/configuracao/getConfiguracaoService.js'
     ));
@@ -51,6 +55,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
   });
 
   let selectOne;
+  let encerrar;
   let configuracoes;
   const configuracao = { id: 'c1', nome: 'Config' };
 
@@ -64,6 +69,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
       permissao: 'PROFESSOR',
       nome: 'Ana'
     }));
+    encerrar = jest.spyOn(SessaoLoginRepository.prototype, 'encerrar').mockResolvedValue(true);
     configuracoes = jest.spyOn(GetConfiguracaoService, 'handle').mockResolvedValue([configuracao]);
   });
 
@@ -77,6 +83,17 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
   const subDoCaso = () => `usuario-${sequencia}`;
   const refreshDe = (sub = subDoCaso(), segredo = Constants.jwtRefreshSecret, exp) =>
     createJwt({ sub, typ: Constants.refreshTokenType }, segredo, exp ?? Constants.refreshExp);
+  // Refresh de sessão persistida (com sid e jti), como o login emite.
+  const refreshComSessao = (
+    sid = `sid-${sequencia}`,
+    jti = 'jti-velho',
+    segredo = Constants.jwtRefreshSecret
+  ) =>
+    createJwt(
+      { sub: subDoCaso(), typ: Constants.refreshTokenType, sid, jti },
+      segredo,
+      Constants.refreshExp
+    );
   const refreshLegado = (sub = subDoCaso()) =>
     createJwt({ sub }, Constants.jwtRefreshSecret, Constants.refreshExp);
 
@@ -114,6 +131,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
         expect(cookiesDaSessao(res)).toEqual([]);
         expect(selectOne).not.toHaveBeenCalled();
         expect(tokenRevocationManager.getCount()).toBe(0);
+        expect(encerrar).not.toHaveBeenCalled();
 
         const legitima = await chamar(RENOVAR, { cookie });
         expect(legitima.status).toBe(200);
@@ -254,68 +272,64 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     });
   });
 
-  describe('sair (AC-002-010, AC-002-011, AC-002-035)', () => {
-    test('cookie válido: 204, remoção do cookie, e o mesmo cookie deixa de renovar', async () => {
-      const cookie = refreshDe();
+  describe('sair (AC-004-023, AC-004-002, FR-002-017)', () => {
+    test('cookie válido com jti já trocado: 204, remoção do cookie e a sessão encerrada pelo sid', async () => {
+      const cookie = refreshComSessao('sid-do-cookie', 'jti-velho');
 
       const res = await chamar(SAIR, { cookie });
 
       expect(res.status).toBe(204);
       removeCookie(res);
-
-      const depois = await chamar(RENOVAR, { cookie });
-      expect(depois.status).toBe(401);
-      expect(depois.body).not.toHaveProperty('accessToken');
+      expect(encerrar).toHaveBeenCalledTimes(1);
+      expect(encerrar).toHaveBeenCalledWith('sid-do-cookie', 'sair');
     });
 
     test.each([
+      ['assinatura errada', () => refreshComSessao('sid-x', 'jti', 'outro-segredo')],
       ['não-JWT de 12 KB', () => 'x'.repeat(12 * 1024)],
-      ['JWT de assinatura errada', () => refreshDe(subDoCaso(), 'outro-segredo')],
-      ['JWT vencido', () => refreshDe(subDoCaso(), Constants.jwtRefreshSecret, -10)],
-      ['refresh legado sem a claim de tipo', () => refreshLegado()]
-    ])('%s: 204, cookie limpo e nada entra na lista de revogados', async (_n, valor) => {
+      ['refresh legado sem sid', () => refreshLegado()]
+    ])('%s: 204, cookie limpo e nenhuma sessão encerrada', async (_n, valor) => {
       const res = await chamar(SAIR, { cookie: valor() });
 
       expect(res.status).toBe(204);
       removeCookie(res);
-      expect(tokenRevocationManager.getCount()).toBe(0);
+      expect(encerrar).not.toHaveBeenCalled();
     });
 
-    test('refresh válido revoga exatamente um valor', async () => {
-      const res = await chamar(SAIR, { cookie: refreshDe() });
-
-      expect(res.status).toBe(204);
-      expect(tokenRevocationManager.getCount()).toBe(1);
-    });
-
-    test('duas vezes com o mesmo cookie: 204 e 204', async () => {
-      const cookie = refreshDe();
-
-      expect((await chamar(SAIR, { cookie })).status).toBe(204);
-      const segunda = await chamar(SAIR, { cookie });
-
-      expect(segunda.status).toBe(204);
-      removeCookie(segunda);
-    });
-
-    test('sem cookie: 204, remoção e sem mensagem de erro', async () => {
+    test('sem cookie: 204, remoção e nenhuma sessão encerrada', async () => {
       const res = await chamar(SAIR);
 
       expect(res.status).toBe(204);
       expect(res.body).toEqual({});
       expect(res.text).toBe('');
       removeCookie(res);
+      expect(encerrar).not.toHaveBeenCalled();
     });
 
-    test('falha na revogação: 500 sem set-cookie de sessão (a saída pode ser repetida)', async () => {
-      jest.spyOn(tokenRevocationManager, 'revoke').mockImplementation(() => {
-        throw new Error('revogação fora');
-      });
+    test('duas vezes com o mesmo cookie: 204 e 204', async () => {
+      const cookie = refreshComSessao();
+      encerrar.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
 
-      const res = await chamar(SAIR, { cookie: refreshDe() });
+      const primeira = await chamar(SAIR, { cookie });
+      const segunda = await chamar(SAIR, { cookie });
+
+      expect(primeira.status).toBe(204);
+      expect(segunda.status).toBe(204);
+      removeCookie(segunda);
+      expect(encerrar).toHaveBeenCalledTimes(2);
+    });
+
+    test('falha inesperada no encerramento: 500 sem set-cookie de sessão e sem sentinela no corpo', async () => {
+      Constants.env = 'production-like';
+      const erro = new Error('Invalid invocation SENTINELA-SAIR-500');
+      erro.name = 'PrismaClientKnownRequestError';
+      encerrar.mockRejectedValue(erro);
+
+      const res = await chamar(SAIR, { cookie: refreshComSessao() });
 
       expect(res.status).toBe(500);
       expect(cookiesDaSessao(res)).toEqual([]);
+      expect(JSON.stringify(res.body)).not.toContain('SENTINELA-SAIR-500');
     });
   });
 
@@ -356,15 +370,47 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
       expect(JSON.stringify(res.body)).not.toContain(SENTINELA);
     });
 
-    test('204: sem sentinela em log nem em corpo; captura ativa (controle positivo)', async () => {
+    test('204 (sessão encerrada): sem cookie nem sid em log ou corpo; captura ativa', async () => {
+      const cap = capturarLog();
+      const cookie = refreshComSessao(`sid-${SENTINELA}`, 'jti-velho');
+
+      const res = await chamar(SAIR, { cookie });
+
+      expect(res.status).toBe(204);
+      expect(encerrar).toHaveBeenCalledTimes(1);
+      expect(cap.textos.length).toBeGreaterThan(0);
+      expect(cap.texto()).not.toContain(SENTINELA);
+      expect(cap.texto()).not.toContain(cookie);
+      expect(res.text).not.toContain(SENTINELA);
+    });
+
+    test('204 (no-op): sem sentinela em log nem em corpo; captura ativa', async () => {
       const cap = capturarLog();
 
       const res = await chamar(SAIR, { cookie: SENTINELA });
 
       expect(res.status).toBe(204);
+      expect(encerrar).not.toHaveBeenCalled();
       expect(cap.textos.length).toBeGreaterThan(0);
       expect(cap.texto()).not.toContain(SENTINELA);
       expect(res.text).not.toContain(SENTINELA);
+    });
+
+    test('sair 500 fora de development: erro do ORM fica fora do log e do corpo; log traz só o nome', async () => {
+      Constants.env = 'production-like';
+      encerrar.mockRejectedValue(erroDoOrm());
+      const cap = capturarLog();
+      const cookie = refreshComSessao(`sid-${SENTINELA}`);
+
+      const res = await chamar(SAIR, { cookie });
+
+      expect(res.status).toBe(500);
+      expect(cap.texto()).toContain('LogoutController');
+      expect(cap.texto()).toContain('PrismaClientKnownRequestError');
+      expect(cap.texto()).not.toContain(SENTINELA);
+      expect(cap.texto()).not.toContain(cookie);
+      expect(JSON.stringify(res.body)).not.toContain(SENTINELA);
+      expect(cookiesDaSessao(res)).toEqual([]);
     });
 
     test('500 fora de development: erro do ORM com o sentinela fica fora do log e do corpo', async () => {

@@ -1,7 +1,6 @@
 import AbstractService from '../abstractService.js';
-import UserRepository from '../../repositories/userRepository.js';
+import SessaoLoginRepository from '../../repositories/sessaoLoginRepository.js';
 import { verificarRefreshJwt } from '../../utilities/verificarRefreshJwt.js';
-import tokenRevocationManager from './tokenRevocationManagerService.js';
 
 export class LogoutService extends AbstractService {
   constructor(Repository, refreshToken) {
@@ -10,27 +9,27 @@ export class LogoutService extends AbstractService {
   }
 
   /**
-   * Sair é idempotente: sem token, com token já revogado ou com valor que não é um
-   * refresh válido não há o que revogar e nada lança (o cookie chega do cliente: gravar
-   * qualquer valor na lista de revogados seria memória ilimitada).
-   * @returns {Promise<{ revogado: boolean }>}
+   * Encerra a sessão do login a que o refresh pertence (motivo `sair`), pelo `sid`. O `jti` é
+   * ignorado: ele pode já ter sido trocado por outra aba ou por outro portador. Sair é
+   * idempotente: sem cookie, com valor que não é um refresh válido, sem `sid` ou com a sessão já
+   * encerrada não há o que encerrar e nada lança (o cookie chega do cliente).
+   * @returns {Promise<{ revogado: boolean }>} `revogado` é `true` só se esta chamada encerrou a
+   * sessão daquele login
    */
   async execute() {
-    if (
-      !this.refreshToken ||
-      !verificarRefreshJwt(this.refreshToken) ||
-      tokenRevocationManager.isRevoked(this.refreshToken)
-    ) {
+    if (!this.refreshToken) return { revogado: false };
+
+    const payload = verificarRefreshJwt(this.refreshToken);
+    if (!payload || typeof payload.sid !== 'string' || !payload.sid) {
       return { revogado: false };
     }
 
-    tokenRevocationManager.revoke(this.refreshToken);
-
-    return { revogado: true };
+    const encerrou = await this.repository.encerrar(payload.sid, 'sair');
+    return { revogado: encerrou === true };
   }
 
   static async handle(refreshToken) {
-    const Repository = UserRepository;
+    const Repository = SessaoLoginRepository;
     const service = new LogoutService(Repository, refreshToken);
     return await service.execute();
   }
