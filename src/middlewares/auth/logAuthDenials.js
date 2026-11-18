@@ -1,4 +1,5 @@
 import LoggerManager from '../../utilities/loggerManager.js';
+import { rotaSemQuery } from '../../utilities/rotaSemQuery.js';
 import { getLoginClientIp } from '../../utilities/loginAttemptKeys.js';
 
 const STATUS_DE_NEGACAO = [401, 403];
@@ -12,12 +13,10 @@ export default function logAuthDenials(req, res, next) {
     // A resposta já saiu: o log é observação, não decide acesso; falhar aqui não pode derrubar o processo.
     try {
       if (!STATUS_DE_NEGACAO.includes(res.statusCode)) return;
-      const url = req.originalUrl ?? req.url ?? '';
-      const consulta = url.indexOf('?');
       LoggerManager.warn('auth.acesso_negado', {
         status: res.statusCode,
         metodo: req.method,
-        rota: consulta === -1 ? url : url.slice(0, consulta),
+        rota: rotaSemQuery(req),
         userId: req.user?.id ?? null,
         ip: getLoginClientIp(req)
       });

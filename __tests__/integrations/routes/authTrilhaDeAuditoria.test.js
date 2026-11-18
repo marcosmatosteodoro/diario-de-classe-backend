@@ -37,10 +37,10 @@ describe('trilha de auditoria de autenticação (app real, modo produção)', ()
     ));
     loginOriginal = LoginService.handle;
     isProductionOriginal = Constants.isProduction;
-    // O access log escolhe o formato na montagem do app: o import acontece já em modo produção.
+    // Modo produção vale durante todo o describe: o access log escolhe o formato na montagem do app
+    // e os eventos de auth decidem por Constants.isProduction a cada requisição.
     Constants.isProduction = true;
     ({ default: app } = await import('../../../src/app.js?trilha'));
-    Constants.isProduction = isProductionOriginal;
   }, TIMEOUT_IMPORT_FRIO);
 
   beforeEach(() => {
@@ -57,8 +57,11 @@ describe('trilha de auditoria de autenticação (app real, modo produção)', ()
 
   afterEach(() => {
     LoginService.handle = loginOriginal;
-    Constants.isProduction = isProductionOriginal;
     jest.restoreAllMocks();
+  });
+
+  afterAll(() => {
+    Constants.isProduction = isProductionOriginal;
   });
 
   const accessDe = (role, id = 'p1') =>
@@ -84,6 +87,7 @@ describe('trilha de auditoria de autenticação (app real, modo produção)', ()
 
     const res = await request(app).get(`/api/alunos?busca=${TERMO}&email=${EMAIL}`);
 
+    expect(Constants.isProduction).toBe(true);
     expect(res.status).toBe(401);
     const linhas = linhasComEvento(cap, 'auth.acesso_negado');
     expect(linhas).toHaveLength(1);

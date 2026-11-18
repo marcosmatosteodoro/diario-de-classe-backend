@@ -1,5 +1,6 @@
 import morgan from 'morgan';
 import LoggerManager from '../utilities/loggerManager.js';
+import { rotaSemQuery } from '../utilities/rotaSemQuery.js';
 
 const stream = {
   write: message => {
@@ -11,11 +12,7 @@ const stream = {
 const FORMATO_PRODUCAO =
   ':remote-addr ":method :rota-sem-query" :status :res[content-length] - :response-time ms ":user-agent"';
 
-morgan.token('rota-sem-query', req => {
-  const url = req.originalUrl || req.url || '';
-  const consulta = url.indexOf('?');
-  return consulta === -1 ? url : url.slice(0, consulta);
-});
+morgan.token('rota-sem-query', rotaSemQuery);
 
 /**
  * @param {boolean} isProduction
