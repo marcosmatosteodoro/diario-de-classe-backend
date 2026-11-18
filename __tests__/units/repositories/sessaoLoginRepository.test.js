@@ -63,6 +63,7 @@ describe('SessaoLoginRepository', () => {
 
   describe('lerEstado', () => {
     test('uma leitura por PK parametrizada; a tolerância vem de Constants', async () => {
+      jest.replaceProperty(Constants, 'sessionRotationGraceSeconds', 17);
       const linha = { idUsuario: 'u1', ativa: true };
       queryRaw.mockResolvedValue([linha]);
 
@@ -70,7 +71,7 @@ describe('SessaoLoginRepository', () => {
 
       expect(resultado).toBe(linha);
       const { sql, valores } = chamada(queryRaw);
-      expect(valores).toEqual([Constants.sessionRotationGraceSeconds, 'sid1']);
+      expect(valores).toEqual([17, 'sid1']);
       semDateNemConcatenacao(valores);
       expect(sql).toContain('FROM "sessoes_login" WHERE "id" = ?');
       expect(sql).not.toContain('sid1');
@@ -87,7 +88,7 @@ describe('SessaoLoginRepository', () => {
       expect(sql).toContain(
         `(NOW() - "rotacionadaEm" <= (?::int * INTERVAL '1 second')) AS "dentroDaTolerancia"`
       );
-      expect(sql).toContain('EXTRACT(EPOCH FROM "expiraEm")::int AS "expiraEmEpoch"');
+      expect(sql).toContain('FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch"');
       expect(sql).toContain(
         'GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - NOW())))::int, 0) AS "restanteSegundos"'
       );
@@ -101,7 +102,21 @@ describe('SessaoLoginRepository', () => {
     test('não projeta jti além dos dois que o service precisa nem instantes brutos', async () => {
       queryRaw.mockResolvedValue([]);
       await repository.lerEstado('sid1');
-      expect(chamada(queryRaw).sql).toContain('SELECT "idUsuario", "jtiAtual", "jtiAnterior",');
+      const projecao = chamada(queryRaw).sql.replace(
+        /^.*?SELECT (.*?) FROM "sessoes_login".*$/,
+        '$1'
+      );
+      const colunas = projecao.match(/"\w+"(?= AS|,|$)/g);
+      expect(colunas).toEqual([
+        '"idUsuario"',
+        '"jtiAtual"',
+        '"jtiAnterior"',
+        '"encerrada"',
+        '"ativa"',
+        '"dentroDaTolerancia"',
+        '"expiraEmEpoch"',
+        '"restanteSegundos"'
+      ]);
     });
   });
 
@@ -115,6 +130,7 @@ describe('SessaoLoginRepository', () => {
       expect(resultado).toBe(linha);
       const { sql, valores } = chamada(queryRaw);
       expect(valores).toEqual(['B', 'sid1', 'A']);
+      expect(sql).toContain('FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch"');
       semDateNemConcatenacao(valores);
       expect(sql).toContain(
         'SET "jtiAnterior" = "jtiAtual", "jtiAtual" = ?, "rotacionadaEm" = NOW(), "dataAtualizacao" = NOW()'
@@ -140,6 +156,7 @@ describe('SessaoLoginRepository', () => {
       expect(resultado).toBe(linha);
       const { sql, valores } = chamada(queryRaw);
       expect(valores).toEqual(['D', 'sid1', 'A', 'B']);
+      expect(sql).toContain('FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch"');
       semDateNemConcatenacao(valores);
       expect(sql).toContain('SET "jtiAtual" = ?, "rotacionadaEm" = NOW()');
       expect(sql).not.toContain('"jtiAnterior" = "jtiAtual"');

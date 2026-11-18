@@ -72,7 +72,6 @@ model User {
   aulas            Aula[]
   // Relacionamento com Idiomas
   idiomas          Idioma[]
-  // Relacionamento com SessaoLogin
   sessoes          SessaoLogin[]
 
   @@map("users")

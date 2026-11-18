@@ -55,7 +55,7 @@ export default class SessaoLoginRepository extends AbstractRepository {
         ("encerradaEm" IS NOT NULL) AS "encerrada",
         ("encerradaEm" IS NULL AND "expiraEm" > NOW()) AS "ativa",
         (NOW() - "rotacionadaEm" <= (${Constants.sessionRotationGraceSeconds}::int * INTERVAL '1 second')) AS "dentroDaTolerancia",
-        EXTRACT(EPOCH FROM "expiraEm")::int AS "expiraEmEpoch",
+        FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch",
         GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - NOW())))::int, 0) AS "restanteSegundos"
       FROM "sessoes_login"
       WHERE "id" = ${sid}`;
@@ -75,7 +75,7 @@ export default class SessaoLoginRepository extends AbstractRepository {
       UPDATE "sessoes_login"
       SET "jtiAnterior" = "jtiAtual", "jtiAtual" = ${novoJti}, "rotacionadaEm" = NOW(), "dataAtualizacao" = NOW()
       WHERE "id" = ${sid} AND "jtiAtual" = ${apresentado} AND "encerradaEm" IS NULL AND "expiraEm" > NOW()
-      RETURNING "jtiAtual", "jtiAnterior", EXTRACT(EPOCH FROM "expiraEm")::int AS "expiraEmEpoch", GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - NOW())))::int, 0) AS "restanteSegundos"`;
+      RETURNING "jtiAtual", "jtiAnterior", FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch", GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - NOW())))::int, 0) AS "restanteSegundos"`;
     return rows[0] ?? null;
   }
 
@@ -94,7 +94,7 @@ export default class SessaoLoginRepository extends AbstractRepository {
       UPDATE "sessoes_login"
       SET "jtiAtual" = ${novoJti}, "rotacionadaEm" = NOW(), "dataAtualizacao" = NOW()
       WHERE "id" = ${sid} AND "jtiAnterior" = ${apresentado} AND "jtiAtual" = ${jtiAtualLido} AND "encerradaEm" IS NULL AND "expiraEm" > NOW()
-      RETURNING "jtiAtual", "jtiAnterior", EXTRACT(EPOCH FROM "expiraEm")::int AS "expiraEmEpoch", GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - NOW())))::int, 0) AS "restanteSegundos"`;
+      RETURNING "jtiAtual", "jtiAnterior", FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch", GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - NOW())))::int, 0) AS "restanteSegundos"`;
     return rows[0] ?? null;
   }
 
