@@ -67,7 +67,7 @@ describe('RefreshTokenController', () => {
   describe('reuso (DEC-005-024)', () => {
     const REUSO = { reuso: { idUsuario: 'u-1', idSessao: 'sessao-1' } };
 
-    test('responde como a recusa e registra o evento com exatamente idUsuario, idSessao e ip, antes do status', async () => {
+    test('responde como a recusa e registra o evento com exatamente userId, idSessao e ip, antes do status', async () => {
       req.cookies[COOKIE] = 'x';
       RefreshTokenService.handle.mockResolvedValue(REUSO);
       const ordem = [];
@@ -85,7 +85,7 @@ describe('RefreshTokenController', () => {
       expect(ordem[0]).toEqual([
         'warn',
         'auth.sessao.reuso',
-        { idUsuario: 'u-1', idSessao: 'sessao-1', ip: getLoginClientIp(req) }
+        { userId: 'u-1', idSessao: 'sessao-1', ip: getLoginClientIp(req) }
       ]);
       expect(getLoginClientIp(req)).toBe('203.0.113.7');
       expect(ordem[1]).toEqual(['status', 401]);

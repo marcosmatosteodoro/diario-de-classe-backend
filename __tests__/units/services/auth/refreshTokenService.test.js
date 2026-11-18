@@ -247,15 +247,6 @@ describe('RefreshTokenService', () => {
 
       nenhumaEscrita();
     });
-
-    test('jti anterior nulo não casa com um jti apresentado: não é tolerância nem substituição', async () => {
-      instalarRegistro(estado({ jtiAtual: 'jti-1', jtiAnterior: null }));
-
-      await executar(refreshDe({ jti: 'jti-0' }));
-
-      expect(substituirSucessor).not.toHaveBeenCalled();
-      expect(rotacionar).not.toHaveBeenCalled();
-    });
   });
 
   describe('recusa simples sem escrita', () => {

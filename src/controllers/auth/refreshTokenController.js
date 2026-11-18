@@ -17,7 +17,7 @@ export class RefreshTokenController extends AbstractController {
   /**
    * 200 com o refresh só no cookie `bls_sessao` (nunca no corpo), 401 com remoção do cookie ou 500
    * (`handleError`, cookie intocado). O reuso (`{ reuso }` do service) responde igual à recusa e
-   * registra `auth.sessao.reuso` antes, só com `idUsuario`, `idSessao` e `ip`.
+   * registra `auth.sessao.reuso` antes, só com `userId`, `idSessao` e `ip` (DEC-005-024).
    * @throws {ServiceUnavailableError} propagado ao ErrorHandler (503) sem mexer no cookie
    */
   async execute() {
@@ -47,7 +47,7 @@ export class RefreshTokenController extends AbstractController {
       return;
     }
     LoggerManager.warn('auth.sessao.reuso', {
-      idUsuario: reuso.idUsuario,
+      userId: reuso.idUsuario,
       idSessao: reuso.idSessao,
       ip: getLoginClientIp(this.req)
     });

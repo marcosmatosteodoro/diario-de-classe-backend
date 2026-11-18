@@ -32,6 +32,7 @@ const LISTAGEM = '/api/alunos';
 const SENTINELA = 'SENTINELA-RENOVA-503';
 const RECUSA = { message: pt.auth.refresh.unauthorized };
 
+const eventos = cap => cap.textos.filter(t => t.includes('auth.sessao.reuso'));
 const decodificar = jwt => parseJwt(jwt).payload;
 const valorDoCookie = setCookie => setCookie.split(';')[0].slice('bls_sessao='.length);
 const arquivosJs = pasta =>
@@ -228,6 +229,7 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
       async (_n, gancho) => {
         const cookie = sessaoComCookie({ jti: 'jti-0' });
         armarGanchoEntreLeituraEEscrita(armazenamento, gancho);
+        const cap = capturarLog();
 
         const res = await renovar({ cookie });
 
@@ -239,6 +241,7 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
         expect(registro.rotacionar).toHaveBeenCalledTimes(1);
         expect(registro.encerrar).not.toHaveBeenCalled();
         expect(selectOne).not.toHaveBeenCalled();
+        expect(cap.texto()).not.toContain('auth.sessao.reuso');
       }
     );
   });
@@ -516,8 +519,6 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
   });
 
   describe('reuso derruba a sessão do login (AC-004-006, AC-004-007, FR-004-006)', () => {
-    const eventos = cap => cap.textos.filter(t => t.includes('auth.sessao.reuso'));
-
     // jti0 -> jti1 -> jti2; o original (jti0) volta a ser apresentado.
     const prepararReuso = async () => {
       const cookie0 = sessaoComCookie({ jti: 'jti-0' });
@@ -594,7 +595,8 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
       cookies: res.headers['set-cookie'],
       cabecalhos: Object.fromEntries(
         Object.entries(res.headers).filter(([nome]) => !IGNORADOS.includes(nome))
-      )
+      ),
+      nomesDeCabecalho: Object.keys(res.headers).sort()
     });
 
     const depoisDoSair = async () => {
@@ -685,7 +687,7 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
       expect(depoisDeL.status).toBe(401);
       expect((await listar(deS.body.accessToken)).status).toBe(401);
       expect((await listar(deL.body.accessToken)).status).toBe(401);
-      expect(cap.textos.filter(t => t.includes('auth.sessao.reuso'))).toHaveLength(1);
+      expect(eventos(cap)).toHaveLength(1);
     });
   });
 
@@ -709,7 +711,7 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
       Constants.isProduction = producaoOriginal;
     });
 
-    test('1 evento com exatamente idUsuario, idSessao e ip em produção; 6 sentinelas ausentes, com 6 controles', async () => {
+    test('1 evento com exatamente userId, idSessao e ip em produção; 6 sentinelas ausentes, com 6 controles', async () => {
       expect(Constants.isProduction).toBe(true);
       const cookie0 = sessaoComCookie({ jti: SENT.jti });
       const r1 = await renovar({ cookie: cookie0 });
@@ -727,10 +729,10 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
         .send({ senha: SENT.senha, email: SENT.email, nota: SENT.corpo });
 
       expect(res.status).toBe(401);
-      const linhas = cap.textos.filter(t => t.includes('auth.sessao.reuso'));
+      const linhas = eventos(cap);
       expect(linhas).toHaveLength(1);
       const esperado = util.inspect(
-        { idUsuario: usuarioDoCaso(), idSessao: sidDoCaso(), ip: IP },
+        { userId: usuarioDoCaso(), idSessao: sidDoCaso(), ip: IP },
         { depth: null }
       );
       const escapar = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -760,16 +762,18 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
         b: SENT.access,
         c: SENT.senha,
         d: SENT.email,
+        m: maskEmail(SENT.email),
         e: SENT.jti,
         f: SENT.corpo
       });
-      console.warn('auth.sessao.reuso', { idUsuario: 'x' });
+      console.warn('auth.sessao.reuso', { userId: 'x' });
       const capturado = detecao.texto();
       for (const valor of [
         SENT.cookie,
         SENT.access,
         SENT.senha,
         SENT.email,
+        maskEmail(SENT.email),
         SENT.jti,
         SENT.corpo
       ]) {
