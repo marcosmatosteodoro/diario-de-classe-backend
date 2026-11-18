@@ -1,8 +1,9 @@
 import './guardOnLoad.js';
 import Seed from './seed.js';
 
-// Linha de comando do seed (DEC-004-001 · demonstracao): o guard é o primeiro import porque
-// os módulos seguintes conectam ao banco ao serem carregados.
+// Linha de comando do seed (DEC-004-001 · demonstracao): o guard é o primeiro import para a CLI
+// recusar com mensagem e exit 1 antes de carregar qualquer outro módulo — defesa em profundidade
+// caso seed.js volte a importar algo que conecte ao banco.
 let falhou = false;
 try {
   const quantidades = await Seed.handle();
@@ -16,7 +17,7 @@ try {
   falhou = true;
 } finally {
   try {
-    const { default: prisma } = await import('../db/prisma.js');
+    const { default: prisma } = await import('../prisma.js');
     await prisma.$disconnect();
   } catch (e) {
     console.error('💥 Falha ao desconectar:', e?.name, e?.code);

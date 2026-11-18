@@ -1,5 +1,5 @@
-import { readFileSync } from 'node:fs';
-import { URL } from 'node:url';
+import { existsSync, readFileSync } from 'node:fs';
+import { URL, fileURLToPath } from 'node:url';
 import { jest } from '@jest/globals';
 import { capturarLog } from '../../../mocks/capturaDeLog.js';
 
@@ -7,18 +7,17 @@ const CAMINHO_CLIENT = '../../../../src/db/generated/client/index.js';
 const CAMINHO_ETAPAS = '../../../../src/db/seeds/seedEtapas.js';
 const CAMINHO_SEED = '../../../../src/db/seeds/seed.js';
 const CAMINHO_CLI = '../../../../src/db/seeds/seedCli.js';
-const CAMINHO_PRISMA = '../../../../src/db/prisma.js';
 
 const SENHA = 'valor-de-teste-do-seed';
 
 describe('linha de comando do seed (seedCli.js)', () => {
   const seedPasswordOriginal = process.env.SEED_PASSWORD;
   const construcoes = [];
+  const desconexoes = [];
   let Constants;
   let isProductionOriginal;
   let exitSpy;
   let createUserSpy;
-  let disconnectSpy;
 
   const mockarClient = () =>
     jest.unstable_mockModule(CAMINHO_CLIENT, () => ({
@@ -27,19 +26,20 @@ describe('linha de comando do seed (seedCli.js)', () => {
           construcoes.push(options);
         }
         async $connect() {}
-        async $disconnect() {}
+        async $disconnect() {
+          desconexoes.push(1);
+        }
       }
     }));
 
   beforeEach(async () => {
     jest.resetModules();
     construcoes.length = 0;
+    desconexoes.length = 0;
     // O registro de mocks sobrevive ao resetModules: o que um caso mocka não vaza para o seguinte.
     jest.unstable_unmockModule(CAMINHO_SEED);
     jest.unstable_unmockModule(CAMINHO_ETAPAS);
     mockarClient();
-    disconnectSpy = jest.fn(async () => {});
-    jest.unstable_mockModule(CAMINHO_PRISMA, () => ({ default: { $disconnect: disconnectSpy } }));
     ({ default: Constants } = await import('../../../../src/utilities/constants.js'));
     const { CreateUserService } = await import(
       '../../../../src/services/user/createUserService.js'
@@ -87,7 +87,7 @@ describe('linha de comando do seed (seedCli.js)', () => {
     expect(saida).toContain('Criado 5 professores');
     expect(saida).toContain('Criado 8 alunos');
     expect(exitSpy).not.toHaveBeenCalled();
-    expect(disconnectSpy).toHaveBeenCalledTimes(1);
+    expect(desconexoes).toHaveLength(1);
   });
 
   test('falha do seed encerra com código 1 e ainda desconecta', async () => {
@@ -98,7 +98,7 @@ describe('linha de comando do seed (seedCli.js)', () => {
     await expect(import(CAMINHO_CLI)).rejects.toThrow('exit:1');
 
     expect(exitSpy).toHaveBeenCalledWith(1);
-    expect(disconnectSpy).toHaveBeenCalledTimes(1);
+    expect(desconexoes).toHaveLength(1);
   });
 
   test('o guard é o primeiro import de seedCli.js', () => {
@@ -107,6 +107,17 @@ describe('linha de comando do seed (seedCli.js)', () => {
       .filter(l => l.startsWith('import '))[0];
 
     expect(primeiroImport).toBe("import './guardOnLoad.js';");
+  });
+
+  test('todo import dinâmico de seedCli.js aponta para arquivo existente', () => {
+    const urlCli = new URL(CAMINHO_CLI, import.meta.url);
+    const fonte = readFileSync(urlCli, 'utf8');
+    const specifiers = [...fonte.matchAll(/\bimport\(\s*'([^']+)'\s*\)/g)].map(m => m[1]);
+    const resolve = spec => existsSync(fileURLToPath(new URL(spec, urlCli)));
+
+    expect(specifiers).toContain('../prisma.js');
+    specifiers.forEach(spec => expect(resolve(spec)).toBe(true));
+    expect(resolve('../db/prisma.js')).toBe(false);
   });
 
   test('erro da linha de comando registra só name e code, sem mensagem nem objeto', async () => {

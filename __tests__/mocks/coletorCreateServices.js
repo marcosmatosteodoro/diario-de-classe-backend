@@ -35,7 +35,7 @@ export function coletarCreateServices({ reais = [] } = {}) {
     spies[tipo] = jest.spyOn(Service, 'handle').mockImplementation(async data => {
       argumentos[tipo].push(data);
       if (reais.includes(tipo)) return original.call(Service, data);
-      return { id: cuid(`${tipo}${argumentos[tipo].length}`), ...data };
+      return { id: cuid(`${tipo}${String(argumentos[tipo].length).padStart(4, '0')}`), ...data };
     });
   }
 
