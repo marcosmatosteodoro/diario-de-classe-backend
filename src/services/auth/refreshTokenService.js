@@ -14,6 +14,7 @@ const ACAO = {
   rotacionar: 'rotacionar',
   tolerar: 'tolerar',
   substituir: 'substituir',
+  reuso: 'reuso',
   recusar: 'recusar'
 };
 
@@ -27,8 +28,10 @@ export class RefreshTokenService extends AbstractService {
   /**
    * Renova a sessão do refresh pelas regras da DEC-005-015: (a) `jti` atual rotaciona; (b) `jti`
    * anterior dentro da tolerância recebe o mesmo sucessor, sem escrita; (c) `jti` anterior fora da
-   * tolerância troca o sucessor (resposta perdida); qualquer outro `jti` é recusado. A vida da
+   * tolerância troca o sucessor (resposta perdida); (d) qualquer outro `jti` é reuso. A vida da
    * sessão nunca se estende: o `exp` do refresh novo é o fim absoluto dela (DEC-005-016).
+   * Na regra (d), `jti` que não é o atual nem o anterior de uma sessão ativa, a sessão é
+   * encerrada com o motivo `reuso`; a releitura do perdedor de corrida nunca aplica (d).
    * @returns {Promise<{
    *   accessToken: string,
    *   refreshToken: string,
@@ -37,8 +40,10 @@ export class RefreshTokenService extends AbstractService {
    *   restanteSegundos: number,
    *   user: Object,
    *   configuracao: Object|null
-   * }|false>} `false` na recusa; `refreshToken` e `restanteSegundos` ficam no objeto e o
-   *   controller os leva ao cookie, fora do corpo
+   * }|false|{ reuso: { idUsuario: string, idSessao: string } }>} sucesso (`refreshToken` e
+   *   `restanteSegundos` ficam no objeto e o controller os leva ao cookie, fora do corpo); `false`
+   *   na recusa simples; `{ reuso }` quando a regra (d) encerrou a sessão ativa (o controller
+   *   registra o evento)
    * @throws {ServiceUnavailableError} quando o registro falha ou a corrida não converge em 1 retry
    *   (a causa é logada só com `name` e `code`)
    */
@@ -51,6 +56,9 @@ export class RefreshTokenService extends AbstractService {
     const sessao = await this.resolverSessao(credencial);
     if (!sessao) {
       return false;
+    }
+    if (sessao.reuso) {
+      return sessao;
     }
 
     return await this.montarResposta(credencial, sessao);
@@ -75,7 +83,7 @@ export class RefreshTokenService extends AbstractService {
   /**
    * 1 leitura e 1 escrita no caso comum. Escrita sem linhas (perdeu a corrida) relê uma vez e
    * reclassifica; a releitura só resolve por recusa ou tolerância, nunca por nova escrita.
-   * @returns {Promise<{ estado: Object, jti: string }|null>} `null` na recusa
+   * @returns {Promise<{ estado: Object, jti: string }|{ reuso: Object }|null>} `null` na recusa
    */
   async resolverSessao(credencial) {
     const estado = await this.acessarRegistro(() => this.sessoes.lerEstado(credencial.sid));
@@ -85,6 +93,9 @@ export class RefreshTokenService extends AbstractService {
     }
     if (acao === ACAO.tolerar) {
       return { estado, jti: estado.jtiAtual };
+    }
+    if (acao === ACAO.reuso) {
+      return await this.encerrarPorReuso(credencial);
     }
 
     const novoJti = randomUUID();
@@ -97,10 +108,20 @@ export class RefreshTokenService extends AbstractService {
     return await this.resolverAposPerder(credencial);
   }
 
+  /** `encerrar` sem linhas: a sessão já foi encerrada por outro pedido, então não há derrubada a registrar. */
+  async encerrarPorReuso({ sub, sid }) {
+    const encerrada = await this.acessarRegistro(() => this.sessoes.encerrar(sid, 'reuso'));
+    return encerrada ? { reuso: { idUsuario: sub, idSessao: sid } } : null;
+  }
+
+  /**
+   * O `jti` era o atual na primeira leitura: cair em (d) na releitura (duas rotações no intervalo)
+   * não é sinal de cópia, então recusa sem encerrar.
+   */
   async resolverAposPerder(credencial) {
     const estado = await this.acessarRegistro(() => this.sessoes.lerEstado(credencial.sid));
     const acao = this.classificar(estado, credencial);
-    if (acao === ACAO.recusar) {
+    if (acao === ACAO.recusar || acao === ACAO.reuso) {
       return null;
     }
     if (acao === ACAO.tolerar) {
@@ -118,7 +139,7 @@ export class RefreshTokenService extends AbstractService {
 
   /**
    * Sessão inexistente, de outro dono, encerrada ou vencida e `jti` desconhecido são recusa.
-   * A regra (d) (reuso) é recusa simples, sem encerrar a sessão.
+   * Só sessão ativa chega à regra (d): a encerrada ou vencida é recusa simples, sem reuso.
    */
   classificar(estado, { sub, jti }) {
     if (!estado || estado.ativa !== true || estado.idUsuario !== sub) {
@@ -128,7 +149,7 @@ export class RefreshTokenService extends AbstractService {
       return ACAO.rotacionar;
     }
     if (jti !== estado.jtiAnterior) {
-      return ACAO.recusar;
+      return ACAO.reuso;
     }
     return estado.dentroDaTolerancia ? ACAO.tolerar : ACAO.substituir;
   }

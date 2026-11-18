@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import util from 'node:util';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import request from 'supertest';
@@ -8,6 +9,7 @@ import {
   cookiesDaSessao
 } from '../../mocks/cookiesDaSessao.js';
 import { refreshDeSessao } from '../../mocks/accessDeTeste.js';
+import { maskEmail } from '../../../src/utilities/maskEmail.js';
 import { parseJwt } from '../../../src/utilities/verifyJwt.js';
 import { capturarLog } from '../../mocks/capturaDeLog.js';
 import {
@@ -510,6 +512,270 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
 
       expect(res.status).toBe(403);
       expect(registro.lerEstado).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('reuso derruba a sessão do login (AC-004-006, AC-004-007, FR-004-006)', () => {
+    const eventos = cap => cap.textos.filter(t => t.includes('auth.sessao.reuso'));
+
+    // jti0 -> jti1 -> jti2; o original (jti0) volta a ser apresentado.
+    const prepararReuso = async () => {
+      const cookie0 = sessaoComCookie({ jti: 'jti-0' });
+      const r1 = await renovar({ cookie: cookie0 });
+      const cookie1 = valorDoCookie(cookiesDaSessao(r1)[0]);
+      const r2 = await renovar({ cookie: cookie1 });
+      const cookie2 = valorDoCookie(cookiesDaSessao(r2)[0]);
+      return { cookie0, cookie1, cookie2, accesses: [r1.body.accessToken, r2.body.accessToken] };
+    };
+
+    test('o original apresentado: 401 simples; o access, o refresh mais recente e o original ficam recusados com 1 só evento', async () => {
+      const { cookie0, cookie2, accesses } = await prepararReuso();
+      const cap = capturarLog();
+
+      const reuso = await renovar({ cookie: cookie0 });
+
+      expect(reuso.status).toBe(401);
+      expect(reuso.body).toEqual(RECUSA);
+      afirmarCookieRemovido(reuso);
+      expect(reuso.body).not.toHaveProperty('accessToken');
+      expect(registro.encerrar).toHaveBeenCalledTimes(1);
+      expect(registro.encerrar.mock.calls[0]).toEqual([sidDoCaso(), 'reuso']);
+      expect(armazenamento.sessoes.get(sidDoCaso()).encerrada).toBe(true);
+      for (const access of accesses) {
+        expect((await listar(access)).status).toBe(401);
+      }
+      expect((await renovar({ cookie: cookie2 })).status).toBe(401);
+      expect((await renovar({ cookie: cookie0 })).status).toBe(401);
+      expect(eventos(cap)).toHaveLength(1);
+      expect(registro.encerrar).toHaveBeenCalledTimes(1);
+    });
+
+    test('reuso não toca a sessão B do mesmo usuário (AC-004-008)', async () => {
+      const usuario = usuarioDoCaso();
+      const { cookie0 } = await prepararReuso();
+      semearSessao(armazenamento, {
+        sid: `sid-b-${sequencia}`,
+        idUsuario: usuario,
+        jtiAtual: 'jti-b'
+      });
+      const cookieB = refreshDe({ sub: usuario, sid: `sid-b-${sequencia}`, jti: 'jti-b' });
+      const renovacaoB = await renovar({ cookie: cookieB });
+      const cookieB1 = valorDoCookie(cookiesDaSessao(renovacaoB)[0]);
+
+      expect((await renovar({ cookie: cookie0 })).status).toBe(401);
+
+      expect((await listar(renovacaoB.body.accessToken)).status).toBe(204);
+      expect((await renovar({ cookie: cookieB1 })).status).toBe(200);
+      expect(armazenamento.sessoes.get(`sid-b-${sequencia}`).encerrada).toBe(false);
+    });
+
+    test('sair real em A não toca a renovação de B (AC-004-003, parte)', async () => {
+      const usuario = usuarioDoCaso();
+      const cookieA = sessaoComCookie({ jti: 'jti-a' });
+      semearSessao(armazenamento, {
+        sid: `sid-b-${sequencia}`,
+        idUsuario: usuario,
+        jtiAtual: 'jti-b'
+      });
+      const cookieB = refreshDe({ sub: usuario, sid: `sid-b-${sequencia}`, jti: 'jti-b' });
+
+      expect((await sair(cookieA)).status).toBe(204);
+
+      expect((await renovar({ cookie: cookieB })).status).toBe(200);
+    });
+  });
+
+  describe('as recusas são indistinguíveis (AC-004-017, NFR-004-003)', () => {
+    // Cabeçalhos de tempo do servidor (date, execution-time) e validador de cache variam por pedido.
+    const IGNORADOS = ['date', 'etag', 'execution-time'];
+    const assinatura = res => ({
+      status: res.status,
+      body: res.body,
+      cookies: res.headers['set-cookie'],
+      cabecalhos: Object.fromEntries(
+        Object.entries(res.headers).filter(([nome]) => !IGNORADOS.includes(nome))
+      )
+    });
+
+    const depoisDoSair = async () => {
+      const cookie = sessaoComCookie({ jti: 'jti-0' });
+      await sair(cookie);
+      return renovar({ cookie });
+    };
+    const porReuso = async () => {
+      const cookie0 = sessaoComCookie({ jti: 'jti-0' });
+      const r1 = await renovar({ cookie: cookie0 });
+      await renovar({ cookie: valorDoCookie(cookiesDaSessao(r1)[0]) });
+      return renovar({ cookie: cookie0 });
+    };
+    const semSessao = () => renovar({ cookie: refreshDe({ sid: 'sid-fantasma' }) });
+
+    test('status, corpo, lista ordenada de set-cookie e cabeçalhos iguais nas três recusas', async () => {
+      const sair_ = assinatura(await depoisDoSair());
+      const reuso = assinatura(await porReuso());
+      const fantasma = assinatura(await semSessao());
+
+      expect(sair_.status).toBe(401);
+      expect(reuso).toEqual(sair_);
+      expect(fantasma).toEqual(sair_);
+      expect(reuso.body).toEqual(RECUSA);
+      expect(reuso.cookies.filter(c => !c.startsWith('lng='))).toHaveLength(1);
+      expect(Object.keys(reuso.cabecalhos)).toEqual(
+        expect.arrayContaining(['content-type', 'content-length'])
+      );
+      expect(Object.keys(reuso.cabecalhos)).not.toContain('x-motivo');
+    });
+
+    test('controle de detecção: a comparação enxerga um cabeçalho extra', async () => {
+      const normal = assinatura(await semSessao());
+      const alterada = { ...normal, cabecalhos: { ...normal.cabecalhos, 'x-motivo': 'reuso' } };
+
+      expect(alterada).not.toEqual(normal);
+    });
+  });
+
+  describe('credencial depois do encerramento é recusa simples e sem evento (ACH-14)', () => {
+    test('sair real e depois renovar com o mesmo cookie: 401 e nenhum auth.sessao.reuso', async () => {
+      const cookie = sessaoComCookie({ jti: 'jti-0' });
+      const cap = capturarLog();
+
+      const saida = await sair(cookie);
+      const res = await renovar({ cookie });
+
+      expect(saida.status).toBe(204);
+      expect(res.status).toBe(401);
+      expect(registro.encerrar).toHaveBeenCalledTimes(1);
+      expect(registro.encerrar.mock.calls[0]).toEqual([sidDoCaso(), 'sair']);
+      expect(cap.texto()).not.toContain('auth.sessao.reuso');
+    });
+
+    test('jti estranho contra sessão já encerrada por sair: recusa sem encerrar de novo e sem evento', async () => {
+      const cookie = sessaoComCookie({ jti: 'jti-0' });
+      const r1 = await renovar({ cookie });
+      await renovar({ cookie: valorDoCookie(cookiesDaSessao(r1)[0]) });
+      await sair(valorDoCookie(cookiesDaSessao(r1)[0]));
+      const cap = capturarLog();
+
+      const res = await renovar({ cookie });
+
+      expect(res.status).toBe(401);
+      expect(registro.encerrar).toHaveBeenCalledTimes(1);
+      expect(cap.texto()).not.toContain('auth.sessao.reuso');
+    });
+  });
+
+  describe('segundo portador derruba a cadeia (AC-004-027)', () => {
+    test('S renova primeiro, L renova depois da tolerância, S com o que recebeu: reuso; L: sessão encerrada; 1 evento', async () => {
+      const c0 = sessaoComCookie({ jti: 'jti-0' });
+      const cap = capturarLog();
+      const deS = await renovar({ cookie: c0 });
+      const cS = valorDoCookie(cookiesDaSessao(deS)[0]);
+      armazenamento.avancarRelogio(Constants.sessionRotationGraceSeconds + 1);
+
+      const deL = await renovar({ cookie: c0 });
+      const cL = valorDoCookie(cookiesDaSessao(deL)[0]);
+      const reusoDeS = await renovar({ cookie: cS });
+      const depoisDeL = await renovar({ cookie: cL });
+
+      expect([deS.status, deL.status]).toEqual([200, 200]);
+      expect(jtiDoCookie(deL)).not.toBe(jtiDoCookie(deS));
+      expect(reusoDeS.status).toBe(401);
+      expect(registro.encerrar).toHaveBeenCalledTimes(1);
+      expect(registro.encerrar.mock.calls[0]).toEqual([sidDoCaso(), 'reuso']);
+      expect(depoisDeL.status).toBe(401);
+      expect((await listar(deS.body.accessToken)).status).toBe(401);
+      expect((await listar(deL.body.accessToken)).status).toBe(401);
+      expect(cap.textos.filter(t => t.includes('auth.sessao.reuso'))).toHaveLength(1);
+    });
+  });
+
+  describe('evento de reuso sem dado sensível (AC-004-014, NFR-004-001)', () => {
+    const IP = '::ffff:127.0.0.1';
+    const SENT = {
+      cookie: null,
+      access: null,
+      senha: 'SENTINELA-SENHA-REUSO',
+      email: 'ana@example.com',
+      jti: 'jti-SENTINELA-REUSO',
+      corpo: 'SENTINELA-CORPO-REUSO'
+    };
+    let producaoOriginal;
+
+    beforeAll(() => {
+      producaoOriginal = Constants.isProduction;
+      Constants.isProduction = true;
+    });
+    afterAll(() => {
+      Constants.isProduction = producaoOriginal;
+    });
+
+    test('1 evento com exatamente idUsuario, idSessao e ip em produção; 6 sentinelas ausentes, com 6 controles', async () => {
+      expect(Constants.isProduction).toBe(true);
+      const cookie0 = sessaoComCookie({ jti: SENT.jti });
+      const r1 = await renovar({ cookie: cookie0 });
+      const cookie1 = valorDoCookie(cookiesDaSessao(r1)[0]);
+      const r2 = await renovar({ cookie: cookie1 });
+      SENT.cookie = cookie0;
+      SENT.access = r2.body.accessToken;
+      const cap = capturarLog();
+
+      const res = await request(app)
+        .post(RENOVAR)
+        .set('Origin', ORIGEM)
+        .set('Cookie', `bls_sessao=${cookie0}`)
+        .set('Authorization', `Bearer ${SENT.access}`)
+        .send({ senha: SENT.senha, email: SENT.email, nota: SENT.corpo });
+
+      expect(res.status).toBe(401);
+      const linhas = cap.textos.filter(t => t.includes('auth.sessao.reuso'));
+      expect(linhas).toHaveLength(1);
+      const esperado = util.inspect(
+        { idUsuario: usuarioDoCaso(), idSessao: sidDoCaso(), ip: IP },
+        { depth: null }
+      );
+      const escapar = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      expect(linhas[0]).toMatch(
+        new RegExp(
+          `^\\[WARN\\] \\d{4}-\\d{2}-\\d{2}T[\\d:.]+Z - auth\\.sessao\\.reuso ${escapar(esperado)}$`
+        )
+      );
+
+      const texto = cap.texto() + JSON.stringify(res.body) + JSON.stringify(res.headers);
+      const ausentes = [
+        SENT.cookie,
+        SENT.access,
+        SENT.senha,
+        SENT.email,
+        maskEmail(SENT.email),
+        SENT.jti,
+        SENT.corpo
+      ];
+      for (const valor of ausentes) {
+        expect(texto).not.toContain(valor);
+      }
+
+      const detecao = capturarLog();
+      console.warn('deteccao', {
+        a: SENT.cookie,
+        b: SENT.access,
+        c: SENT.senha,
+        d: SENT.email,
+        e: SENT.jti,
+        f: SENT.corpo
+      });
+      console.warn('auth.sessao.reuso', { idUsuario: 'x' });
+      const capturado = detecao.texto();
+      for (const valor of [
+        SENT.cookie,
+        SENT.access,
+        SENT.senha,
+        SENT.email,
+        SENT.jti,
+        SENT.corpo
+      ]) {
+        expect(capturado).toContain(valor);
+      }
+      expect(detecao.textos.some(t => t.includes('auth.sessao.reuso'))).toBe(true);
     });
   });
 });

@@ -177,20 +177,84 @@ describe('RefreshTokenService', () => {
       expect(['jti-0', 'jti-1']).not.toContain(jti);
     });
 
-    test('(d) jti que não é o atual nem o anterior: recusa simples, sem encerrar e sem escrita', async () => {
+    test('(d) sessão ativa e jti que não é o atual nem o anterior: encerra com (sid, reuso) e devolve só { reuso }', async () => {
       instalarRegistro(estado({ jtiAtual: 'jti-1', jtiAnterior: 'jti-0' }));
+
+      const resultado = await executar(refreshDe({ jti: 'jti-estranho' }));
+
+      expect(resultado).toEqual({ reuso: { idUsuario: USUARIO.id, idSessao: SID } });
+      expect(lerEstado).toHaveBeenCalledTimes(1);
+      expect(encerrar).toHaveBeenCalledTimes(1);
+      expect(encerrar.mock.calls[0]).toEqual([SID, 'reuso']);
+      expect(rotacionar).not.toHaveBeenCalled();
+      expect(substituirSucessor).not.toHaveBeenCalled();
+      expect(selectOne).not.toHaveBeenCalled();
+    });
+
+    test('(d) com jti anterior nulo: o jti desconhecido também é reuso', async () => {
+      instalarRegistro(estado({ jtiAtual: 'jti-1', jtiAnterior: null }));
+
+      expect(await executar(refreshDe({ jti: 'jti-0' }))).toEqual({
+        reuso: { idUsuario: USUARIO.id, idSessao: SID }
+      });
+      expect(encerrar).toHaveBeenCalledWith(SID, 'reuso');
+    });
+
+    test('(d) encerrar sem linhas (encerrada entre a leitura e a escrita): recusa simples, sem { reuso }', async () => {
+      instalarRegistro(estado({ jtiAtual: 'jti-1', jtiAnterior: 'jti-0' }));
+      encerrar.mockResolvedValue(false);
 
       expect(await executar(refreshDe({ jti: 'jti-estranho' }))).toBe(false);
 
-      expect(lerEstado).toHaveBeenCalledTimes(1);
+      expect(encerrar).toHaveBeenCalledTimes(1);
+      expect(rotacionar).not.toHaveBeenCalled();
+      expect(substituirSucessor).not.toHaveBeenCalled();
+    });
+
+    test('(d) encerrar rejeitando: ServiceUnavailableError', async () => {
+      instalarRegistro(estado({ jtiAtual: 'jti-1', jtiAnterior: 'jti-0' }));
+      encerrar.mockRejectedValue(erroDoRegistro());
+      capturarLog();
+
+      await expect(executar(refreshDe({ jti: 'jti-estranho' }))).rejects.toBeInstanceOf(
+        ServiceUnavailableError
+      );
+    });
+
+    test.each([
+      ['encerrada por sair', estado({ jtiAtual: 'jti-1', encerrada: true, ativa: false })],
+      [
+        'encerrada por reuso anterior',
+        estado({ jtiAtual: 'jti-1', jtiAnterior: 'jti-0', encerrada: true, ativa: false })
+      ],
+      ['vencida', estado({ jtiAtual: 'jti-1', ativa: false, restanteSegundos: 0 })]
+    ])(
+      'sessão %s com jti que seria reuso: recusa simples, sem encerrar e sem { reuso } (ACH-14)',
+      async (_n, lido) => {
+        instalarRegistro(lido);
+
+        expect(await executar(refreshDe({ jti: 'jti-estranho' }))).toBe(false);
+
+        expect(lerEstado).toHaveBeenCalledTimes(1);
+        nenhumaEscrita();
+      }
+    );
+
+    test('sessão ativa de outro dono com jti estranho: recusa simples, sem encerrar', async () => {
+      instalarRegistro(estado({ idUsuario: 'outro-usuario', jtiAtual: 'jti-1' }));
+
+      expect(await executar(refreshDe({ jti: 'jti-estranho' }))).toBe(false);
+
       nenhumaEscrita();
     });
 
-    test('jti anterior nulo não casa com um jti apresentado', async () => {
+    test('jti anterior nulo não casa com um jti apresentado: não é tolerância nem substituição', async () => {
       instalarRegistro(estado({ jtiAtual: 'jti-1', jtiAnterior: null }));
 
-      expect(await executar(refreshDe({ jti: 'jti-0' }))).toBe(false);
-      nenhumaEscrita();
+      await executar(refreshDe({ jti: 'jti-0' }));
+
+      expect(substituirSucessor).not.toHaveBeenCalled();
+      expect(rotacionar).not.toHaveBeenCalled();
     });
   });
 
@@ -358,6 +422,32 @@ describe('RefreshTokenService', () => {
         expect(rotacionar).toHaveBeenCalledTimes(1);
         expect(encerrar).not.toHaveBeenCalled();
         expect(selectOne).not.toHaveBeenCalled();
+      }
+    );
+
+    test.each([
+      ['rotacionar', () => estado(), 'rotacionar'],
+      [
+        'substituirSucessor',
+        () => estado({ jtiAtual: 'jti-1', jtiAnterior: 'jti-0', dentroDaTolerancia: false }),
+        'substituirSucessor'
+      ]
+    ])(
+      'perdedor de %s cuja releitura cai em (d): recusa simples, sem encerrar e sem evento',
+      async (_n, primeira, escrita) => {
+        lerEstado
+          .mockResolvedValueOnce(primeira())
+          .mockResolvedValueOnce(estado({ jtiAtual: 'jti-2', jtiAnterior: 'jti-1' }));
+        rotacionar.mockResolvedValue(null);
+        substituirSucessor.mockResolvedValue(null);
+        const cap = capturarLog();
+
+        expect(await executar(refreshDe({ jti: 'jti-0' }))).toBe(false);
+
+        expect(lerEstado).toHaveBeenCalledTimes(2);
+        expect({ rotacionar, substituirSucessor }[escrita]).toHaveBeenCalledTimes(1);
+        expect(encerrar).not.toHaveBeenCalled();
+        expect(cap.texto()).not.toContain('auth.sessao.reuso');
       }
     );
 

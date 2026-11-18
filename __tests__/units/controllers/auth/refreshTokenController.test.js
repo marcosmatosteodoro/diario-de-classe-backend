@@ -2,6 +2,8 @@ import { jest } from '@jest/globals';
 import { RefreshTokenController } from '../../../../src/controllers/auth/refreshTokenController.js';
 import { RefreshTokenService } from '../../../../src/services/auth/refreshTokenService.js';
 import Constants from '../../../../src/utilities/constants.js';
+import LoggerManager from '../../../../src/utilities/loggerManager.js';
+import { getLoginClientIp } from '../../../../src/utilities/loginAttemptKeys.js';
 import ServiceUnavailableError from '../../../../src/utilities/errors/serviceUnavailable.js';
 
 const COOKIE = Constants.sessionCookie.name;
@@ -12,7 +14,7 @@ describe('RefreshTokenController', () => {
   let handleOriginal;
 
   beforeEach(() => {
-    req = { body: {}, cookies: {}, t: jest.fn(chave => chave) };
+    req = { body: {}, cookies: {}, ip: '203.0.113.7', t: jest.fn(chave => chave) };
     res = {
       status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
@@ -60,6 +62,48 @@ describe('RefreshTokenController', () => {
     expect(res.json).toHaveBeenCalledWith({ message: 'auth.refresh.unauthorized' });
     expect(res.clearCookie).toHaveBeenCalledTimes(1);
     expect(res.clearCookie.mock.calls[0][0]).toBe(COOKIE);
+  });
+
+  describe('reuso (DEC-005-024)', () => {
+    const REUSO = { reuso: { idUsuario: 'u-1', idSessao: 'sessao-1' } };
+
+    test('responde como a recusa e registra o evento com exatamente idUsuario, idSessao e ip, antes do status', async () => {
+      req.cookies[COOKIE] = 'x';
+      RefreshTokenService.handle.mockResolvedValue(REUSO);
+      const ordem = [];
+      const warn = jest
+        .spyOn(LoggerManager, 'warn')
+        .mockImplementation((...args) => ordem.push(['warn', ...args]));
+      res.status.mockImplementation(codigo => {
+        ordem.push(['status', codigo]);
+        return res;
+      });
+
+      await new RefreshTokenController(req, res).execute();
+
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(ordem[0]).toEqual([
+        'warn',
+        'auth.sessao.reuso',
+        { idUsuario: 'u-1', idSessao: 'sessao-1', ip: getLoginClientIp(req) }
+      ]);
+      expect(getLoginClientIp(req)).toBe('203.0.113.7');
+      expect(ordem[1]).toEqual(['status', 401]);
+      expect(res.json).toHaveBeenCalledWith({ message: 'auth.refresh.unauthorized' });
+      expect(res.clearCookie).toHaveBeenCalledTimes(1);
+      expect(res.clearCookie.mock.calls[0][0]).toBe(COOKIE);
+      expect(res.cookie).not.toHaveBeenCalled();
+    });
+
+    test('recusa simples (false) não registra o evento', async () => {
+      RefreshTokenService.handle.mockResolvedValue(false);
+      const warn = jest.spyOn(LoggerManager, 'warn').mockImplementation(() => {});
+
+      await new RefreshTokenController(req, res).execute();
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(warn).not.toHaveBeenCalled();
+    });
   });
 
   test('sucesso grava o cookie com (res, refresh, restanteSegundos) e responde 200 sem refreshToken no corpo', async () => {
