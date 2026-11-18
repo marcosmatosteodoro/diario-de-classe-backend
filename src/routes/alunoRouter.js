@@ -16,6 +16,7 @@ import { GetProjecaoCronogramaExcelController } from '../controllers/cronograma/
 import { GetCronogramaListByAlunoController } from '../controllers/cronograma/getCronogramaListByAlunoController.js';
 // Middlewares de validação
 import adminOnly from '../middlewares/adminOnly.js';
+import bloquearEmModoDemo from '../middlewares/bloquearEmModoDemo.js';
 import { validateId } from '../middlewares/validateId.js';
 import { validateCreateAluno } from '../middlewares/aluno/validateCreateAluno.js';
 import { validateUpdateAluno } from '../middlewares/aluno/validateUpdateAluno.js';
@@ -57,6 +58,7 @@ router.get('/:id/aulas', validateId, GetAulasByAlunoController.handle);
 router.post(
   '/upload',
   adminOnly,
+  bloquearEmModoDemo('planilha_alunos'),
   uploadPlanilha.single('file'),
   validateExcelFile,
   UploadAlunoExcelController.handle

@@ -17,6 +17,7 @@ import { validateCreateLivro } from '../middlewares/livro/validateCreateLivro.js
 import { validateUpdateLivro } from '../middlewares/livro/validateUpdateLivro.js';
 import { validateCreateConteudoLivro } from '../middlewares/conteudoLivro/validateCreateConteudoLivro.js';
 import adminOnly from '../middlewares/adminOnly.js';
+import bloquearEmModoDemo from '../middlewares/bloquearEmModoDemo.js';
 
 const router = express.Router();
 
@@ -52,6 +53,7 @@ router.post(
   '/:id/conteudos/upload',
   adminOnly,
   validateId,
+  bloquearEmModoDemo('planilha_conteudos_livro'),
   uploadPlanilha.single('file'),
   validateExcelFile,
   UploadConteudoLivroExcelController.handle
