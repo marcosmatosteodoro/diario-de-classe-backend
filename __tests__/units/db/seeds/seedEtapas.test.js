@@ -13,6 +13,7 @@ import ContratoRepository from '../../../../src/repositories/contratoRepository.
 
 const HOJE = '2026-11-20';
 const SENHA = 'senha-sentinela-etapas';
+const LEITURA_DE_ENV = /^[^/*]*process\.env/;
 
 const diasDoBoot = () =>
   ['SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO', 'DOMINGO'].map(diaSemana => ({
@@ -294,6 +295,8 @@ describe('executarEtapas', () => {
   });
 
   test('nenhum arquivo do seed lê process.env', () => {
+    expect(LEITURA_DE_ENV.test('const x = process.env.X')).toBe(true);
+
     const arquivos = readdirSync('src/db/seeds', { recursive: true, withFileTypes: true })
       .filter(e => e.isFile() && e.name.endsWith('.js'))
       .map(e => `${e.parentPath}/${e.name}`);
@@ -301,9 +304,8 @@ describe('executarEtapas', () => {
     const comEnv = arquivos.filter(a =>
       readFileSync(a, 'utf8')
         .split('\n')
-        .some(l => /^[^/*]*process\.env/.test(l))
+        .some(l => LEITURA_DE_ENV.test(l))
     );
-    expect(/^[^/*]*process\.env/.test('const x = process.env.X')).toBe(true);
     expect(comEnv).toEqual([]);
   });
 });
