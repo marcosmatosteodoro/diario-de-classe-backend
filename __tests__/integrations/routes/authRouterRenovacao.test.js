@@ -2,7 +2,13 @@ import { jest } from '@jest/globals';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import request from 'supertest';
-import { cookiesDaSessao } from '../../mocks/cookiesDaSessao.js';
+import {
+  afirmarCookieRemovido,
+  afirmarInvariantesDaRenovacao,
+  cookiesDaSessao
+} from '../../mocks/cookiesDaSessao.js';
+import { refreshDeSessao } from '../../mocks/accessDeTeste.js';
+import { parseJwt } from '../../../src/utilities/verifyJwt.js';
 import { capturarLog } from '../../mocks/capturaDeLog.js';
 import {
   armarBarreiraDeLeitura,
@@ -24,7 +30,7 @@ const LISTAGEM = '/api/alunos';
 const SENTINELA = 'SENTINELA-RENOVA-503';
 const RECUSA = { message: pt.auth.refresh.unauthorized };
 
-const decodificar = jwt => JSON.parse(Buffer.from(jwt.split('.')[1], 'base64').toString('utf8'));
+const decodificar = jwt => parseJwt(jwt).payload;
 const valorDoCookie = setCookie => setCookie.split(';')[0].slice('bls_sessao='.length);
 const arquivosJs = pasta =>
   readdirSync(pasta).flatMap(nome => {
@@ -95,11 +101,7 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
   const usuarioDoCaso = () => `usuario-${sequencia}`;
   const sidDoCaso = () => `sid-${sequencia}`;
   const refreshDe = ({ sub = usuarioDoCaso(), sid = sidDoCaso(), jti = 'jti-0' } = {}) =>
-    createJwt(
-      { sub, typ: Constants.refreshTokenType, sid, jti },
-      Constants.jwtRefreshSecret,
-      Constants.refreshExp
-    );
+    refreshDeSessao({ sub, sid, jti });
   // Arrange só com o identificador: a sessão existe no armazenamento e o cookie leva sid/jti.
   const sessaoComCookie = ({
     jti = 'jti-0',
@@ -111,14 +113,6 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
     return refreshDe({ sub: idUsuario, sid, jti });
   };
 
-  const removeCookie = res => {
-    const cookies = cookiesDaSessao(res);
-    expect(cookies).toHaveLength(1);
-    expect(cookies[0].startsWith('bls_sessao=;')).toBe(true);
-    expect(cookies[0]).toContain('Path=/api/auth');
-    expect(cookies[0]).toMatch(/Expires=Thu, 01 Jan 1970/);
-  };
-
   const chamar = (rota, { cookie, origem = ORIGEM } = {}) => {
     let req = request(app).post(rota);
     if (origem !== null) req = req.set('Origin', origem);
@@ -126,21 +120,9 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
     return req;
   };
 
-  // Invariantes de todo caminho (credencial que muda de canal): o refresh nunca vai no corpo;
-  // 200 grava 1 cookie novo, 401 remove 1; 403, 500 e 503 não mexem no cookie.
   const renovar = async opcoes => {
     const res = await chamar(RENOVAR, opcoes);
-    expect(JSON.stringify(res.body)).not.toContain('refreshToken');
-    const cookies = cookiesDaSessao(res);
-    if (res.status === 200) {
-      expect(cookies).toHaveLength(1);
-      expect(cookies[0].startsWith('bls_sessao=')).toBe(true);
-      expect(cookies[0].startsWith('bls_sessao=;')).toBe(false);
-    } else if (res.status === 401) {
-      removeCookie(res);
-    } else {
-      expect(cookies).toEqual([]);
-    }
+    afirmarInvariantesDaRenovacao(res);
     return res;
   };
 
@@ -195,6 +177,7 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
 
         const respostas = await Promise.all([1, 2, 3].map(() => renovar({ cookie })));
 
+        expect(armazenamento.liberacoes).toEqual(ordem);
         expect(respostas.map(r => r.status)).toEqual([200, 200, 200]);
         expect(registro.lerEstado).toHaveBeenCalledTimes(5);
         expect(registro.rotacionar).toHaveBeenCalledTimes(3);
@@ -248,7 +231,7 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
 
         expect(res.status).toBe(401);
         expect(res.body).toEqual(RECUSA);
-        removeCookie(res);
+        afirmarCookieRemovido(res);
         expect(res.body).not.toHaveProperty('accessToken');
         expect(registro.lerEstado).toHaveBeenCalledTimes(2);
         expect(registro.rotacionar).toHaveBeenCalledTimes(1);
@@ -466,6 +449,17 @@ describe('renovar pela rota real (app real, registro falso atômico)', () => {
       expect(registro.rotacionar).toHaveBeenCalledTimes(1);
       const demais = [registro.criar, registro.substituirSucessor, registro.encerrar, limpar];
       expect(demais.map(m => m.mock.calls.length)).toEqual([0, 0, 0, 0]);
+    });
+
+    test('controle positivo: criar e limparDoUsuario são vistos pelos espiões quando chamados', async () => {
+      const limpar = contar();
+      const repositorio = new SessaoLoginRepository();
+
+      await repositorio.criar({ idUsuario: usuarioDoCaso(), jtiAtual: 'jti-x' });
+      await repositorio.limparDoUsuario(usuarioDoCaso());
+
+      expect(registro.criar).toHaveBeenCalledTimes(1);
+      expect(limpar).toHaveBeenCalledTimes(1);
     });
 
     test('controle positivo: a regra (c) é vista pelo contador (substituirSucessor 1)', async () => {

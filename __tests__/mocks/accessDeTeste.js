@@ -25,3 +25,11 @@ export const tokenDe = ({ id, role, sid = sidDe(id), ...extras }, segredo = Cons
     },
     segredo
   );
+
+/** Refresh de sessão de teste (`typ` refresh, `sid`, `jti`), assinado com `segredo`; `exp` sobrescreve a validade. */
+export const refreshDeSessao = ({ sub, sid, jti, segredo = Constants.jwtRefreshSecret, exp }) =>
+  createJwt(
+    { sub, typ: Constants.refreshTokenType, sid, jti },
+    segredo,
+    exp ?? Constants.refreshExp
+  );

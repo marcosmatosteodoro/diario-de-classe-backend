@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { setImmediate } from 'node:timers';
 import { estadoDeSessao } from './estadoDeSessao.js';
 
 const VIDA_PADRAO_MS = 3600 * 1000;
@@ -12,6 +13,7 @@ const VIDA_PADRAO_MS = 3600 * 1000;
  *   sessoes: Map<string, object>,
  *   relogioMs: number,
  *   barreira: object|null,
+ *   liberacoes: number[],
  *   gancho: Function|null,
  *   avancarRelogio: (segundos: number) => void
  * }}
@@ -21,6 +23,7 @@ export const criarArmazenamentoExterno = () => {
     sessoes: new Map(),
     relogioMs: Date.now(),
     barreira: null,
+    liberacoes: [],
     gancho: null,
     avancarRelogio: segundos => {
       armazenamento.relogioMs += segundos * 1000;
@@ -46,7 +49,9 @@ export const semearSessao = (armazenamento, { sid, ...dados }) => {
  * Barreira no `lerEstado`: as `quantidade` próximas leituras fotografam o estado na chegada e só
  * retornam quando as `quantidade` já leram — força o intercalamento que `Promise.all` contra
  * dublê síncrono não força. `ordemDeLiberacao` permuta os índices de chegada (padrão: ordem de
- * chegada); a barreira vale uma vez, as releituras seguintes passam livres.
+ * chegada): a liberação ocorre num turno seguinte ao da última chegada, na ordem pedida, e a ordem
+ * efetiva fica em `armazenamento.liberacoes`. A barreira vale uma vez, as releituras seguintes
+ * passam livres.
  */
 export const armarBarreiraDeLeitura = (armazenamento, quantidade, ordemDeLiberacao) => {
   armazenamento.barreira = {
@@ -72,7 +77,13 @@ const aguardarBarreira = async armazenamento => {
   const liberacao = new Promise(resolver => barreira.chegadas.push({ indice, resolver }));
   if (barreira.chegadas.length === barreira.quantidade) {
     armazenamento.barreira = null;
-    for (const posicao of barreira.ordem) barreira.chegadas[posicao].resolver();
+    // Fora da chamada do último a chegar: a continuação dele não ganha a vez só por ter liberado.
+    setImmediate(() => {
+      for (const posicao of barreira.ordem) {
+        armazenamento.liberacoes.push(posicao);
+        barreira.chegadas[posicao].resolver();
+      }
+    });
   }
   await liberacao;
 };
