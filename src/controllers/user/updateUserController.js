@@ -2,6 +2,8 @@ import AbstractController from '../abstractController.js';
 import { GetUserService } from '../../services/user/getUserService.js';
 import { UpdateUserService } from '../../services/user/updateUserService.js';
 import { IsUserEmailExistsService } from '../../services/user/isUserEmailExistsService.js';
+import { AvaliarContaFixaDemoService } from '../../services/user/avaliarContaFixaDemoService.js';
+import { registrarRecusaDemo } from '../../utilities/registrarRecusaDemo.js';
 
 export class UpdateUserController extends AbstractController {
   constructor(req, res) {
@@ -16,6 +18,20 @@ export class UpdateUserController extends AbstractController {
       if (!user) {
         return this.res.status(404).json({
           message: this.req.t('users.get.not_found')
+        });
+      }
+
+      // Antes do 409 e do service: conta fixa recusada não recebe campo algum, nem o permitido enviado junto (DEC-002-004 · demonstracao).
+      if (
+        AvaliarContaFixaDemoService.handle({
+          acao: 'editar',
+          contaAtual: user,
+          body: this.req.body
+        }).recusar
+      ) {
+        registrarRecusaDemo(this.req, { acao: 'editar_conta_fixa', contaAlvoId: id });
+        return this.res.status(403).json({
+          message: this.req.t('api.errors.demo_mode_blocked')
         });
       }
 
