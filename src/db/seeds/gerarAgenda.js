@@ -1,8 +1,20 @@
 import { diaDaSemana, paraDataAula, somarDias } from './seedCalendario.js';
 
+/** Dias antes de `hoje` em que o contrato demo começa.
+ * @type {number}
+ */
 export const CONTRATO_INICIO_DIAS_ANTES = 45;
+/** Dias depois de `hoje` em que o contrato demo termina.
+ * @type {number}
+ */
 export const CONTRATO_TERMINO_DIAS_DEPOIS = 180;
+/** Janela de aulas passadas, em dias antes de `hoje`.
+ * @type {number}
+ */
 export const AULAS_PASSADAS_DIAS_ANTES = 28;
+/** Janela de aulas futuras, em dias depois de `hoje`.
+ * @type {number}
+ */
 export const AULAS_FUTURAS_DIAS_DEPOIS = 35;
 
 const MODULO_FALTA = 6;
@@ -59,6 +71,18 @@ function gerarAulasDoAluno(hoje, aluno) {
   return aulas;
 }
 
+/**
+ * Gera contratos, dias de aula e aulas do seed a partir de `hoje`, sem sortear e sem mutar
+ * `alunos`.
+ * @param {string} hoje dia civil de referência `YYYY-MM-DD`
+ * @param {Array<{chave: string, chaveProfessor: string, diasAula: string[], horaInicial: string, horaFinal: string}>} alunos
+ * @returns {{
+ *   contratos: Array<{chaveAluno: string, dataInicio: Date, dataTermino: Date, status: 'ATIVO'}>,
+ *   diasAula: Array<{chaveAluno: string, diaSemana: string, quantidadeAulas: number, horaInicial: string, horaFinal: string}>,
+ *   aulas: Array<{chaveAluno: string, chaveProfessor: string, dataAula: Date, horaInicial: string, horaFinal: string, status: 'CONCLUIDA'|'CANCELADA'|'CANCELADA_POR_FALTA'|'AGENDADA', tipo: 'PADRAO'|'REPOSICAO', observacao: string}>
+ * }} `contratos` na ordem de `alunos`; `aulas` passadas registradas e de hoje em diante agendadas
+ * @throws {RangeError} quando `hoje` não está no formato `YYYY-MM-DD`
+ */
 export function gerarAgenda(hoje, alunos) {
   const dataInicio = paraDataAula(somarDias(hoje, -CONTRATO_INICIO_DIAS_ANTES));
   const dataTermino = paraDataAula(somarDias(hoje, CONTRATO_TERMINO_DIAS_DEPOIS));

@@ -58,6 +58,33 @@ describe('seedCatalogo', () => {
     expect(new Set(LIVROS_DEMO.map(l => l.nome)).size).toBe(20);
   });
 
+  it('tem 18 livros ativos e 2 fora de catálogo, com os nomes literais', () => {
+    expect(LIVROS_DEMO.filter(l => l.ativo)).toHaveLength(18);
+    expect(LIVROS_DEMO.filter(l => !l.ativo).map(l => l.nome)).toEqual([
+      'English Mastery 8',
+      'Espanhol Avançado 6'
+    ]);
+  });
+
+  it('congela os arrays do catálogo e seus itens em profundidade', () => {
+    expect(() => LIVROS_DEMO.push({})).toThrow(TypeError);
+    expect(() => {
+      LIVROS_DEMO[0].ativo = false;
+    }).toThrow(TypeError);
+    expect(() => {
+      ALUNOS_DEMO[0].diasAula.push('SABADO');
+    }).toThrow(TypeError);
+    expect(() => {
+      ALUNOS_DEMO[0].nome = 'X';
+    }).toThrow(TypeError);
+    expect(() => {
+      CONTAS_FIXAS_DEMO[0].email = 'x@gmail.com';
+    }).toThrow(TypeError);
+    expect(() => {
+      PROFESSORES_DEMO[0].nome = 'X';
+    }).toThrow(TypeError);
+  });
+
   it('dá aos 4 alunos do professor fixo os dias literais', () => {
     expect(alunosDaFixa.map(a => a.diasAula)).toEqual([
       ['SEGUNDA', 'QUARTA'],

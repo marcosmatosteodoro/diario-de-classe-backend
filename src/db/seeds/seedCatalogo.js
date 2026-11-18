@@ -1,6 +1,51 @@
 const DOMINIO_FICTICIO = 'example.com';
 
-export const CONTAS_FIXAS_DEMO = [
+// Catálogo é dado puro: congelado em profundidade para que rodadas repetidas do seed no mesmo
+// processo não vazem estado (DEC-004-005 · demonstracao).
+function congelar(valor) {
+  if (valor && typeof valor === 'object' && !Object.isFrozen(valor)) {
+    Object.values(valor).forEach(congelar);
+    Object.freeze(valor);
+  }
+  return valor;
+}
+
+/**
+ * @typedef {object} ContaDemo
+ * @property {string} chave
+ * @property {string} nome
+ * @property {string} sobrenome
+ * @property {string} email e-mail fictício em example.com
+ * @property {null} telefone
+ * @property {'admin'|'member'} permissao
+ * @property {boolean} resetarSenha
+ */
+
+/**
+ * @typedef {object} AlunoDemo
+ * @property {string} chave
+ * @property {string} nome
+ * @property {string} sobrenome
+ * @property {string} email e-mail fictício em example.com
+ * @property {null} telefone
+ * @property {string} chaveProfessor chave de uma conta de professor do catálogo
+ * @property {string[]} diasAula dias da semana de aula (SEGUNDA a SEXTA)
+ * @property {string} horaInicial `HH:MM`
+ * @property {string} horaFinal `HH:MM`, 40 minutos após `horaInicial`
+ */
+
+/**
+ * @typedef {object} LivroDemo
+ * @property {string} nome
+ * @property {string} idioma
+ * @property {number|null} nivel
+ * @property {boolean} ativo
+ */
+
+/** Contas fixas (admin e professor) com e-mail estável.
+ * @type {ReadonlyArray<Readonly<ContaDemo>>}
+ */
+export const CONTAS_FIXAS_DEMO = congelar([
   {
     chave: 'adminFixo',
     nome: 'Helena',
@@ -19,9 +64,12 @@ export const CONTAS_FIXAS_DEMO = [
     permissao: 'member',
     resetarSenha: false
   }
-];
+]);
 
-export const PROFESSORES_DEMO = [
+/** Professores fictícios além da conta fixa.
+ * @type {ReadonlyArray<Readonly<ContaDemo>>}
+ */
+export const PROFESSORES_DEMO = congelar([
   {
     chave: 'professorA',
     nome: 'Camila',
@@ -49,13 +97,16 @@ export const PROFESSORES_DEMO = [
     permissao: 'member',
     resetarSenha: false
   }
-];
+]);
 
 const PROFESSOR_FIXO = CONTAS_FIXAS_DEMO[1].chave;
 
 // Os 4 primeiros são da conta fixa de professor: juntos cobrem SEGUNDA a SEXTA e, nos dias
 // em comum, os slots de 40 minutos não se sobrepõem.
-export const ALUNOS_DEMO = [
+/** Alunos fictícios; os 4 primeiros são da conta fixa de professor.
+ * @type {ReadonlyArray<Readonly<AlunoDemo>>}
+ */
+export const ALUNOS_DEMO = congelar([
   {
     chave: 'aluno1',
     nome: 'Lucas',
@@ -144,11 +195,14 @@ export const ALUNOS_DEMO = [
     horaInicial: '09:00',
     horaFinal: '09:40'
   }
-];
+]);
 
-const livro = (nome, idioma, nivel) => ({ nome, idioma, nivel, ativo: true });
+const livro = (nome, idioma, nivel, ativo = true) => ({ nome, idioma, nivel, ativo });
 
-export const LIVROS_DEMO = [
+/** Catálogo de 20 livros, 18 ativos e 2 fora de catálogo.
+ * @type {ReadonlyArray<Readonly<LivroDemo>>}
+ */
+export const LIVROS_DEMO = congelar([
   livro('English Foundations 1', 'INGLES', 1),
   livro('English Foundations 2', 'INGLES', 2),
   livro('English Essentials 3', 'INGLES', 3),
@@ -156,17 +210,17 @@ export const LIVROS_DEMO = [
   livro('English Intermediate 5', 'INGLES', 5),
   livro('English Intermediate 6', 'INGLES', 6),
   livro('English Advanced 7', 'INGLES', 7),
-  livro('English Mastery 8', 'INGLES', 8),
+  livro('English Mastery 8', 'INGLES', 8, false),
   livro('Espanhol Básico 1', 'ESPANHOL', 1),
   livro('Espanhol Básico 2', 'ESPANHOL', 2),
   livro('Espanhol Intermediário 3', 'ESPANHOL', 3),
   livro('Espanhol Intermediário 4', 'ESPANHOL', 4),
   livro('Espanhol Avançado 5', 'ESPANHOL', 5),
-  livro('Espanhol Avançado 6', 'ESPANHOL', 6),
+  livro('Espanhol Avançado 6', 'ESPANHOL', 6, false),
   livro('Espanhol Conversação', 'ESPANHOL', null),
   livro('Francês Iniciante 1', 'FRANCES', 1),
   livro('Francês Iniciante 2', 'FRANCES', 2),
   livro('Francês Intermediário 3', 'FRANCES', 3),
   livro('Francês Avançado 4', 'FRANCES', 4),
   livro('Francês para Negócios', 'FRANCES', null)
-];
+]);

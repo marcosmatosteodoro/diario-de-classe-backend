@@ -43,9 +43,49 @@ const aulasEmFimDeSemana = aulas =>
 const duplicadasPorAlunoEDia = aulas =>
   aulas.length - new Set(aulas.map(a => `${a.chaveAluno}|${dia(a)}`)).size;
 
+const aulasOrfas = (aulas, diasAula) =>
+  aulas.filter(a => {
+    const casados = diasAula.filter(
+      d =>
+        d.chaveAluno === a.chaveAluno &&
+        d.diaSemana === diaDaSemana(dia(a)) &&
+        d.horaInicial === a.horaInicial &&
+        d.horaFinal === a.horaFinal
+    );
+    return casados.length !== 1;
+  });
+
+const futurasReposicao = (aulas, hoje) =>
+  aulas.filter(a => dia(a) >= hoje && a.tipo === 'REPOSICAO');
+
 describe('gerarAgenda', () => {
   describe.each(MATRIZ_HOJE)('hoje = %s', hoje => {
-    const { contratos, aulas } = gerarAgenda(hoje, ALUNOS_DEMO);
+    const { contratos, diasAula, aulas } = gerarAgenda(hoje, ALUNOS_DEMO);
+
+    it('liga cada aula a exatamente 1 diaAula gerado (chave, dia da semana e horário)', () => {
+      expect(aulas.length).toBeGreaterThan(0);
+      expect(aulasOrfas(aulas, diasAula)).toHaveLength(0);
+    });
+
+    it('aponta aula órfã quando o diaSemana gerado é adulterado (controle positivo)', () => {
+      const adulterado = diasAula.map(d => ({ ...d }));
+      adulterado[0].diaSemana = adulterado[0].diaSemana === 'SABADO' ? 'DOMINGO' : 'SABADO';
+      expect(aulasOrfas(aulas, adulterado).length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('gera por aluno exatamente os diasAula do catálogo, com quantidadeAulas 1', () => {
+      for (const aluno of ALUNOS_DEMO) {
+        const geradosDoAluno = diasAula.filter(d => d.chaveAluno === aluno.chave);
+        expect(geradosDoAluno.map(d => d.diaSemana).sort()).toEqual([...aluno.diasAula].sort());
+        expect(geradosDoAluno).toHaveLength(aluno.diasAula.length);
+      }
+      expect(diasAula).toHaveLength(ALUNOS_DEMO.reduce((n, a) => n + a.diasAula.length, 0));
+      diasAula.forEach(d => expect(d.quantidadeAulas).toBe(1));
+    });
+
+    it('gera os contratos na ordem literal dos alunos', () => {
+      expect(contratos.map(c => c.chaveAluno)).toEqual(ALUNOS_DEMO.map(a => a.chave));
+    });
 
     it('gera um contrato ATIVO vigente por aluno', () => {
       expect(contratos).toHaveLength(ALUNOS_DEMO.length);
@@ -171,7 +211,10 @@ describe('gerarAgenda', () => {
         reposicoes += reposicao.length;
       }
       expect(reposicoes).toBe(8);
-      expect(aulas.filter(a => a.tipo === 'REPOSICAO' && dia(a) >= hoje)).toHaveLength(0);
+      expect(futurasReposicao(aulas, hoje)).toHaveLength(0);
+      const adulteradas = aulas.map(a => ({ ...a }));
+      adulteradas.find(a => dia(a) >= hoje).tipo = 'REPOSICAO';
+      expect(futurasReposicao(adulteradas, hoje)).toHaveLength(1);
     });
 
     it('a reposição é a 4ª passada (índice 3) de cada aluno', () => {
