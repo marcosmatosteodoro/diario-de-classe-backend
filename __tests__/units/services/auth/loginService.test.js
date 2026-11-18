@@ -5,6 +5,9 @@ import UserRepository from '../../../../src/repositories/userRepository.js';
 import Constants from '../../../../src/utilities/constants.js';
 import { parseJwt } from '../../../../src/utilities/verifyJwt.js';
 import { GetConfiguracaoService } from '../../../../src/services/configuracao/getConfiguracaoService.js';
+import SessaoLoginRepository from '../../../../src/repositories/sessaoLoginRepository.js';
+import ServiceUnavailableError from '../../../../src/utilities/errors/serviceUnavailable.js';
+import { capturarLog } from '../../../mocks/capturaDeLog.js';
 
 // O custo de produção é provado em password.test.js; aqui a regravação do legado
 // (hashSenha sem params) usa custo barato. SCRYPT_PARAMS segue o de produção: o hash
@@ -19,6 +22,25 @@ jest.unstable_mockModule('../../../../src/utilities/password.js', () => ({
   verificarSenha: (senha, gravada) => {
     verificacoes.push({ senha, gravada });
     return passwordReal.verificarSenha(senha, gravada);
+  }
+}));
+
+// `ordem` registra a sequência de assinaturas e de criação da sessão; `chamadasEmitirAccess`
+// confere a fiação com o único caminho de emissão do access.
+const ordem = [];
+const chamadasEmitirAccess = [];
+const createJwtReal = await import('../../../../src/utilities/createJwt.js');
+jest.unstable_mockModule('../../../../src/utilities/createJwt.js', () => ({
+  createJwt: (...args) => {
+    ordem.push('createJwt');
+    return createJwtReal.createJwt(...args);
+  }
+}));
+const emitirAccessReal = await import('../../../../src/utilities/emitirAccess.js');
+jest.unstable_mockModule('../../../../src/utilities/emitirAccess.js', () => ({
+  emitirAccess: (...args) => {
+    chamadasEmitirAccess.push(args);
+    return emitirAccessReal.emitirAccess(...args);
   }
 }));
 const { hashSenha, isHash } = await import('../../../../src/utilities/password.js');
@@ -38,6 +60,14 @@ describe('LoginService', () => {
     originalSelectOne = UserRepository.prototype.selectOne;
     originalGetConfiguracaoHandle = GetConfiguracaoService.handle;
 
+    ordem.length = 0;
+    chamadasEmitirAccess.length = 0;
+    jest.spyOn(SessaoLoginRepository.prototype, 'criar').mockImplementation(async () => {
+      ordem.push('criar');
+      return { id: 'sid-1' };
+    });
+    jest.spyOn(SessaoLoginRepository.prototype, 'limparDoUsuario').mockResolvedValue(0);
+
     // Mock padrão para configuração
     GetConfiguracaoService.handle = async () => [
       {
@@ -49,6 +79,8 @@ describe('LoginService', () => {
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
+    jest.useRealTimers();
     UserRepository.prototype.selectOne = originalSelectOne;
     GetConfiguracaoService.handle = originalGetConfiguracaoHandle;
   });
@@ -659,6 +691,136 @@ describe('LoginService', () => {
           expect(verificacoes[0].gravada.split('$').slice(1, 4)).toEqual([N, r, p].map(String));
         });
       });
+    });
+  });
+  describe('sessão persistida no login', () => {
+    const USER = { id: 'user-123', email: 'test@example.com', permissao: 'admin' };
+    const AGORA = new Date('2026-11-18T15:00:00.000Z');
+    const entrar = () => LoginService.handle('test@example.com', 'password123');
+
+    beforeEach(() => {
+      jest.useFakeTimers({
+        doNotFake: ['nextTick', 'setImmediate', 'setTimeout', 'queueMicrotask']
+      });
+      jest.setSystemTime(AGORA);
+      UserRepository.prototype.selectOne = async () => ({ ...USER, senha: SENHA_HASH });
+    });
+
+    test('cria a sessão 1 vez, antes de qualquer assinatura, e as claims saem corretas', async () => {
+      const result = await entrar();
+
+      const criar = SessaoLoginRepository.prototype.criar;
+      expect(criar).toHaveBeenCalledTimes(1);
+      expect(ordem).toEqual(['criar', 'createJwt', 'createJwt']);
+      const [dados] = criar.mock.calls[0];
+      const expiraEm = new Date(AGORA.getTime() + Constants.refreshExp * 1000);
+      expect(dados.idUsuario).toBe('user-123');
+      expect(typeof dados.jtiAtual).toBe('string');
+      expect(dados.jtiAtual).not.toBe('');
+      expect(dados.expiraEm).toEqual(expiraEm);
+
+      const access = parseJwt(result.accessToken).payload;
+      expect(access.sid).toBe('sid-1');
+      expect(typeof access.jti).toBe('string');
+      expect(access.ver).toBe(Constants.accessTokenVersion);
+      expect(access.exp - access.iat).toBe(900);
+
+      const refresh = parseJwt(result.refreshToken).payload;
+      expect(refresh.sub).toBe('user-123');
+      expect(refresh.typ).toBe(Constants.refreshTokenType);
+      expect(refresh.sid).toBe('sid-1');
+      expect(refresh.jti).toBe(dados.jtiAtual);
+      expect(refresh.exp).toBe(expiraEm.getTime() / 1000);
+    });
+
+    test('o access sai de emitirAccess(user, sid)', async () => {
+      await entrar();
+
+      expect(chamadasEmitirAccess).toHaveLength(1);
+      expect(chamadasEmitirAccess[0][0].id).toBe('user-123');
+      expect(chamadasEmitirAccess[0][1]).toBe('sid-1');
+    });
+
+    test('dois logins: sid distintos e 4 jti distintos', async () => {
+      SessaoLoginRepository.prototype.criar
+        .mockResolvedValueOnce({ id: 'sid-1' })
+        .mockResolvedValueOnce({ id: 'sid-2' });
+
+      const a = await entrar();
+      const b = await entrar();
+      const claims = [a, b].map(r => ({
+        access: parseJwt(r.accessToken).payload,
+        refresh: parseJwt(r.refreshToken).payload
+      }));
+
+      expect(claims[0].access.sid).toBe('sid-1');
+      expect(claims[0].refresh.sid).toBe('sid-1');
+      expect(claims[1].access.sid).toBe('sid-2');
+      expect(claims[1].refresh.sid).toBe('sid-2');
+      const jtis = claims.flatMap(c => [c.access.jti, c.refresh.jti]);
+      expect(new Set(jtis).size).toBe(4);
+      expect(claims[0].access.jti).not.toBe(claims[0].refresh.jti);
+    });
+
+    test('limparDoUsuario é chamada 1 vez, depois de criar, com (user.id, 7)', async () => {
+      const limpar = SessaoLoginRepository.prototype.limparDoUsuario;
+      limpar.mockImplementation(async () => {
+        ordem.push('limpar');
+        return 0;
+      });
+
+      await entrar();
+
+      expect(limpar).toHaveBeenCalledTimes(1);
+      expect(limpar).toHaveBeenCalledWith('user-123', 7);
+      expect(Constants.sessionCleanupDays).toBe(7);
+      expect(ordem.slice(0, 2)).toEqual(['criar', 'limpar']);
+    });
+
+    test('falha da limpeza não derruba o login e fica no log só com name/code', async () => {
+      const erro = new Error('args SENTINELA-LIMPEZA');
+      erro.name = 'PrismaClientKnownRequestError';
+      erro.code = 'P2010';
+      SessaoLoginRepository.prototype.limparDoUsuario.mockRejectedValue(erro);
+      const cap = capturarLog();
+
+      const result = await entrar();
+
+      expect(result.accessToken).toEqual(expect.any(String));
+      expect(SessaoLoginRepository.prototype.criar).toHaveBeenCalledTimes(1);
+      expect(cap.texto()).toContain('Falha na limpeza de sessões antigas');
+      expect(cap.texto()).toContain('PrismaClientKnownRequestError');
+      expect(cap.texto()).toContain('P2010');
+      expect(cap.texto()).not.toContain('SENTINELA-LIMPEZA');
+    });
+
+    test('só criar e limparDoUsuario tocam o registro (nenhum outro método)', async () => {
+      const ausentes = ['lerEstado', 'rotacionar', 'encerrar', 'substituirSucessor'].map(m =>
+        jest.spyOn(SessaoLoginRepository.prototype, m)
+      );
+
+      await entrar();
+
+      expect(SessaoLoginRepository.prototype.criar).toHaveBeenCalledTimes(1);
+      expect(SessaoLoginRepository.prototype.limparDoUsuario).toHaveBeenCalledTimes(1);
+      for (const spy of ausentes) expect(spy).not.toHaveBeenCalled();
+    });
+
+    test('criar rejeitando: ServiceUnavailableError, nada assinado, log só com name/code', async () => {
+      const erro = new Error('args SENTINELA-LOGIN-503');
+      erro.name = 'PrismaClientKnownRequestError';
+      erro.code = 'P1001';
+      SessaoLoginRepository.prototype.criar.mockRejectedValue(erro);
+      const cap = capturarLog();
+
+      await expect(entrar()).rejects.toBeInstanceOf(ServiceUnavailableError);
+
+      expect(ordem).toEqual([]);
+      expect(chamadasEmitirAccess).toHaveLength(0);
+      expect(SessaoLoginRepository.prototype.limparDoUsuario).not.toHaveBeenCalled();
+      expect(cap.texto()).toContain('Falha ao criar a sessão de login');
+      expect(cap.texto()).toContain('P1001');
+      expect(cap.texto()).not.toContain('SENTINELA-LOGIN-503');
     });
   });
 });

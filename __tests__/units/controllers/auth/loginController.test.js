@@ -1,5 +1,6 @@
 import { jest } from '@jest/globals';
 import { LoginController } from '../../../../src/controllers/auth/loginController.js';
+import ServiceUnavailableError from '../../../../src/utilities/errors/serviceUnavailable.js';
 import { LoginService } from '../../../../src/services/auth/loginService.js';
 
 describe('LoginController', () => {
@@ -92,6 +93,37 @@ describe('LoginController', () => {
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json.mock.calls[0][0].message).toBe('auth.login.error');
     expect(res.cookie).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  test('ServiceUnavailableError do service é relançada, sem handleError, sem cookie', async () => {
+    const erro = new ServiceUnavailableError();
+    LoginService.handle = jest.fn(async (email, senha) => {
+      expect([email, senha]).toEqual(['a@example.com', 'segredo']);
+      throw erro;
+    });
+    const handleError = jest.spyOn(LoginController.prototype, 'handleError');
+
+    await expect(LoginController.handle(req, res)).rejects.toBe(erro);
+
+    expect(handleError).not.toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
+    expect(res.cookie).not.toHaveBeenCalled();
+    handleError.mockRestore();
+  });
+
+  test('outro erro do service segue para handleError (500)', async () => {
+    LoginService.handle = async () => {
+      throw new Error('falha');
+    };
+    const handleError = jest.spyOn(LoginController.prototype, 'handleError');
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    await LoginController.handle(req, res);
+
+    expect(handleError).toHaveBeenCalledTimes(1);
+    expect(res.status).toHaveBeenCalledWith(500);
+    handleError.mockRestore();
     spy.mockRestore();
   });
 });
