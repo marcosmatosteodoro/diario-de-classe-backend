@@ -15,6 +15,7 @@
       "internal_error": "Internal server error",
       "bad_request": "Invalid request",
       "unauthorized": "Unauthorized",
+      "service_unavailable": "Service temporarily unavailable",
       "payload_too_large": "Request body exceeds the allowed size",
       "forbidden": "You do not have permission to perform this action"
     }

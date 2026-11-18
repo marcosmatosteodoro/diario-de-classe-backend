@@ -2,6 +2,10 @@ import { describe, test, expect, jest, beforeEach, afterEach } from '@jest/globa
 import ErrorHandler, { ThrowErrors } from '../../../src/middlewares/error-handler.js';
 import Constants from '../../../src/utilities/constants.js';
 import UnauthorizedError from '../../../src/utilities/errors/unauthorized.js';
+import ServiceUnavailableError from '../../../src/utilities/errors/serviceUnavailable.js';
+import { capturarLog } from '../../mocks/capturaDeLog.js';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 // Mock das dependências
 jest.mock('http-status', () => ({
@@ -373,5 +377,97 @@ describe('ErrorHandler - detalhe do erro interno na resposta', () => {
       error: 'Internal Server Error',
       message: 'Erro interno do servidor'
     });
+  });
+});
+
+describe('ErrorHandler - ServiceUnavailableError', () => {
+  const SENTINELA = 'SENTINELA-503-CAUSA';
+  let req, res;
+
+  function erroComCausa() {
+    const causa = Object.assign(new Error(`falha ${SENTINELA}`), {
+      name: 'PrismaClientKnownRequestError'
+    });
+    const err = new ServiceUnavailableError();
+    err.cause = causa;
+    return err;
+  }
+
+  beforeEach(() => {
+    req = {
+      t: jest.fn(key =>
+        key === 'api.errors.service_unavailable' ? 'Indisponível (traduzido)' : key
+      )
+    };
+    res = { status: jest.fn().mockReturnThis(), json: jest.fn() };
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('responde 503 com o corpo exato e chama req.t com a chave', () => {
+    capturarLog();
+
+    ErrorHandler(new ServiceUnavailableError(), req, res);
+
+    expect(res.status).toHaveBeenCalledWith(503);
+    const body = res.json.mock.calls[0][0];
+    expect(body).toEqual({
+      error: 'ServiceUnavailableError',
+      message: 'Indisponível (traduzido)'
+    });
+    expect(Object.keys(body)).toHaveLength(2);
+    expect(req.t.mock.calls[0][0]).toBe('api.errors.service_unavailable');
+  });
+
+  test('sem req.t o message é o fallback em português, não a chave', () => {
+    capturarLog();
+
+    ErrorHandler(new ServiceUnavailableError(), {}, res);
+
+    expect(res.json).toHaveBeenCalledWith({
+      error: 'ServiceUnavailableError',
+      message: 'Serviço temporariamente indisponível'
+    });
+  });
+
+  test('nada do erro de origem vai ao log nem ao corpo', () => {
+    const captura = capturarLog();
+
+    ErrorHandler(erroComCausa(), req, res);
+
+    expect(captura.texto()).not.toContain(SENTINELA);
+    expect(JSON.stringify(res.json.mock.calls[0][0])).not.toContain(SENTINELA);
+  });
+
+  test('controle de detecção: a captura enxerga o sentinela num console.error', () => {
+    const captura = capturarLog();
+
+    console.error('[x]', erroComCausa().cause);
+
+    expect(captura.texto()).toContain(SENTINELA);
+  });
+
+  test('controle positivo: o ramo 503 emite o rótulo fixo no log', () => {
+    const captura = capturarLog();
+
+    ErrorHandler(erroComCausa(), req, res);
+
+    const ocorrencias = captura.texto().split('Serviço temporariamente indisponível').length - 1;
+    expect(ocorrencias).toBeGreaterThanOrEqual(1);
+  });
+
+  test('chave i18n existe nos dois idiomas e difere entre eles', () => {
+    const ler = lang =>
+      JSON.parse(readFileSync(resolve('src/locales', lang, 'translation.json'), 'utf8'));
+    const pt = ler('pt').api.errors.service_unavailable;
+    const en = ler('en').api.errors.service_unavailable;
+
+    expect(typeof pt).toBe('string');
+    expect(pt.length).toBeGreaterThan(0);
+    expect(typeof en).toBe('string');
+    expect(en.length).toBeGreaterThan(0);
+    expect(pt).not.toBe(en);
   });
 });
