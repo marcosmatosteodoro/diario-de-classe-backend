@@ -128,16 +128,16 @@ export default class Constants {
     return undefined;
   }
 
-  // DEMO_MODE: liga o modo demonstração só com o texto exato `true` (sem trim nem caixa);
-  // qualquer outro valor, inclusive ausente, mantém desligado.
+  // Só o texto exato `true` liga (sem trim/caixa, ao contrário de parseTrustProxy): ligar por
+  // engano em produção é o risco; ausente ou outro valor mantém desligado (DEC-002-001 · demonstracao).
   static demoMode = Constants.parseDemoMode(process.env.DEMO_MODE);
 
   static parseDemoMode(value) {
     return value === 'true';
   }
 
-  // DEMO_CONTAS_FIXAS: e-mails separados por vírgula; só os espaços ao redor são removidos e a
-  // caixa é preservada (a comparação é literal contra o e-mail do seed).
+  // Lista de e-mails por vírgula, só sem espaços ao redor e sem normalizar caixa: a comparação é
+  // exata com o e-mail gravado, então normalizar poderia proteger conta que não é a fixa (DEC-002-002 · demonstracao).
   static demoContasFixas = Constants.parseDemoContasFixas(process.env.DEMO_CONTAS_FIXAS);
 
   static parseDemoContasFixas(value) {

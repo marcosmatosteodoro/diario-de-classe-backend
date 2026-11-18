@@ -60,13 +60,15 @@ describe('registrarRecusaDemo', () => {
     expect(texto).not.toContain('sentinela@example.com');
     expect(texto).not.toContain('senha-sentinela-1');
     expect(texto).not.toContain('203.0.113.7');
-  });
 
-  test('controle de detecção: a captura enxerga o conteúdo procurado', () => {
-    const captura = capturarLog();
-
-    console.warn('controle', { email: 'sentinela@example.com' });
-
-    expect(captura.texto()).toContain('sentinela@example.com');
+    console.warn('controle', {
+      email: 'sentinela@example.com',
+      senha: 'senha-sentinela-1',
+      ip: '203.0.113.7'
+    });
+    const comControle = captura.texto();
+    expect(comControle).toContain('sentinela@example.com');
+    expect(comControle).toContain('senha-sentinela-1');
+    expect(comControle).toContain('203.0.113.7');
   });
 });
