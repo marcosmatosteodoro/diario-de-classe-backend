@@ -3,7 +3,6 @@ import bodyParser from 'body-parser';
 import compress from 'compression';
 import cors from 'cors';
 import helmet from 'helmet';
-import morgan from 'morgan';
 import httpStatus from 'http-status';
 import responseTime from 'response-time';
 import cookieParser from 'cookie-parser';
@@ -13,6 +12,8 @@ import routes from './routes.js';
 import LoggerManager from './utilities/loggerManager.js';
 import ErrorHandler from './middlewares/error-handler.js';
 import cleanRequest from './middlewares/cleanRequest.js';
+import createAccessLog from './middlewares/accessLog.js';
+import logAuthDenials from './middlewares/auth/logAuthDenials.js';
 import i18nMiddleware from './middlewares/i18n.js';
 
 import { InitialSetting } from './InitialSetting.js';
@@ -34,17 +35,7 @@ if (Constants.trustProxy !== undefined) {
   app.set('trust proxy', Constants.trustProxy);
 }
 
-if (!Constants.isProduction) {
-  app.use(
-    morgan('combined', {
-      stream: {
-        write: message => {
-          LoggerManager.expressLogger(message.substring(0, message.lastIndexOf('\n')));
-        }
-      }
-    })
-  );
-}
+app.use(createAccessLog(Constants.isProduction));
 
 // Middleware de internacionalização - deve vir antes das rotas
 app.use(i18nMiddleware);
@@ -61,6 +52,9 @@ app.use(cookieParser()); // Habilita parsing de cookies nas requisições
 app.use(helmet()); // Adiciona headers de segurança para proteger a aplicação
 app.use(cors({ origin: Constants.corsOrigins, methods: ['GET', 'POST', 'PUT', 'DELETE'] })); // Restringe o CORS às origens configuradas em CORS_ORIGINS
 app.use(cleanRequest); // Middleware customizado para limpeza/sanitização das requisições
+
+// Antes das rotas: observa o status final de toda resposta, inclusive 401/403 de middleware e de erro
+app.use(logAuthDenials);
 
 // Definir rotas
 app.use('/api', routes); // Importa e usa as rotas definidas no arquivo routes.js
