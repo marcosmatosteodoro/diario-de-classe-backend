@@ -55,8 +55,10 @@ describe('entrada do seed (seed.js)', () => {
     expect(createUserSpy).not.toHaveBeenCalled();
   });
 
-  test('fora de produção constrói o client e cria usuário com a senha do ambiente', async () => {
+  test('fora de produção constrói o client e delega às etapas com a senha do ambiente e o dia civil', async () => {
     Constants.isProduction = false;
+    const executarEtapas = jest.fn(async () => ({}));
+    jest.unstable_mockModule('../../../../src/db/seeds/seedEtapas.js', () => ({ executarEtapas }));
 
     await expect(import('../../../../src/db/seeds/seed.js')).resolves.toBeDefined();
     expect(construcoes).toHaveLength(1);
@@ -64,8 +66,10 @@ describe('entrada do seed (seed.js)', () => {
     await new Promise(r => setImmediate(r));
 
     expect(exitSpy).not.toHaveBeenCalled();
-    expect(createUserSpy).toHaveBeenCalled();
-    expect(createUserSpy.mock.calls[0][0].senha).toBe(process.env.SEED_PASSWORD);
+    expect(executarEtapas).toHaveBeenCalledTimes(1);
+    const [opcoes] = executarEtapas.mock.calls[0];
+    expect(opcoes.senha).toBe('valor-de-teste-do-seed');
+    expect(opcoes.hoje).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
   test('o guard é o primeiro import de seed.js', () => {

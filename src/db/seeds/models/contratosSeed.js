@@ -6,31 +6,17 @@ export class ContratosSeed extends BaseSeed {
     super(params);
   }
 
-  getDisponibilidade(aluno) {
-    const agora = new Date();
-
-    return {
-      idAluno: aluno.id,
-      dataInicio: agora,
-      dataTermino: new Date(agora.setMonth(agora.getMonth() + 6))
-    };
-  }
-
   generateMocks(params) {
-    const models = [];
-
-    if (!params || !params.alunos || params.alunos.length === 0) {
-      throw new Error('Alunos não encontrados para gerar seeds de contratos');
+    if (!params || !params.contratos || params.contratos.length === 0) {
+      throw new Error('Contratos não encontrados para gerar seeds de contratos');
     }
 
-    const { alunos } = params;
-
-    alunos.map(aluno => {
-      const model = this.getDisponibilidade(aluno);
-      models.push(model);
-    });
-
-    return models;
+    return params.contratos.map(contrato => ({
+      idAluno: params.idAlunoPorChave.get(contrato.chaveAluno),
+      dataInicio: contrato.dataInicio,
+      dataTermino: contrato.dataTermino,
+      status: contrato.status
+    }));
   }
 
   getCreateEntityService() {

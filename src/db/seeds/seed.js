@@ -1,73 +1,25 @@
 import './guardOnLoad.js';
 import { PrismaClient } from '../generated/client/index.js';
-import { ProfessoresSeed } from './models/professoresSeed.js';
-import { DisponibilidadeProfessorSeed } from './models/disponibilidadeProfessorSeed.js';
-import { AlunosSeed } from './models/alunosSeed.js';
-import { ContratosSeed } from './models/contratosSeed.js';
-import { DiaAulasSeed } from './models/diaAulasSeed.js';
-import { AulasSeed } from './models/aulasSeed.js';
-import { LivrosSeed } from './models/livrosSeed.js';
+import Constants from '../../utilities/constants.js';
+import { diaCivilSaoPaulo } from './seedCalendario.js';
 
 export default class Seed {
   constructor(prisma) {
     this.prisma = prisma;
-    this.seeds = [
-      'professores',
-      'disponibilidadeProfessores',
-      'alunos',
-      'contratos',
-      'diaAulas',
-      'aulas',
-      'livros'
-    ];
   }
 
   async execute() {
     console.log('🌱 Iniciando seed do banco de dados...');
 
-    console.log('👥 Criando professores...');
-    this.professores = await ProfessoresSeed.handle(this.params);
-    this.updateParams();
-
-    console.log('👥 Criando disponibilidades de professores...');
-    this.disponibilidadeProfessores = await DisponibilidadeProfessorSeed.handle(this.params);
-    this.updateParams();
-
-    console.log('👥 Criando alunos...');
-    this.alunos = await AlunosSeed.handle(this.params);
-    this.updateParams();
-
-    console.log('👥 Criando contratos...');
-    this.contratos = await ContratosSeed.handle(this.params);
-    this.updateParams();
-
-    console.log('👥 Criando dias de aulas...');
-    this.diaAulas = await DiaAulasSeed.handle(this.params);
-    this.updateParams();
-
-    console.log('👥 Criando aulas...');
-    this.aulas = await AulasSeed.handle(this.params);
-    this.updateParams();
-
-    console.log('📚 Criando livros...');
-    this.livros = await LivrosSeed.handle(this.params);
-    this.updateParams();
-
-    this.seeds.forEach(seed => {
-      console.log(`✅ Criado ${this[seed].length} ${seed}`);
+    const { executarEtapas } = await import('./seedEtapas.js');
+    const contagens = await executarEtapas({
+      hoje: diaCivilSaoPaulo(new Date()),
+      senha: Constants.seedPassword
     });
-  }
 
-  updateParams() {
-    this.params = {
-      professores: this.professores,
-      disponibilidadeProfessores: this.disponibilidadeProfessores,
-      alunos: this.alunos,
-      contratos: this.contratos,
-      diaAulas: this.diaAulas,
-      aulas: this.aulas,
-      livros: this.livros
-    };
+    Object.entries(contagens).forEach(([etapa, total]) => {
+      console.log(`✅ Criado ${total} ${etapa}`);
+    });
   }
 
   static async handle() {

@@ -18,7 +18,7 @@ const INDICE_REPOSICAO = 3;
 const OBSERVACAO_POR_STATUS = {
   CONCLUIDA: 'Aula realizada conforme o planejado.',
   CANCELADA: 'Aula cancelada com aviso prévio.',
-  CANCELADA_POR_FALTA: 'Aluno não compareceu à aula.',
+  CANCELADA_POR_FALTA: 'Aluno não compareceu; falta registrada.',
   AGENDADA: 'Aula agendada para este dia.'
 };
 
