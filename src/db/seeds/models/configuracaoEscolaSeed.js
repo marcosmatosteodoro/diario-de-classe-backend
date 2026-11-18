@@ -15,7 +15,7 @@ export class ConfiguracaoEscolaSeed {
     for (const dia of dias) {
       if (DIAS_INATIVOS.includes(dia.diaSemana)) {
         const atualizado = await UpdateDiaDeFuncionamentoService.handle(dia.id, { ativo: false });
-        resultado.push({ ...dia, ...atualizado, ativo: false });
+        resultado.push({ ...dia, ...atualizado });
       } else {
         resultado.push(dia);
       }
@@ -31,6 +31,10 @@ export class ConfiguracaoEscolaSeed {
     return { configuracoes, dias: resultado };
   }
 
+  /**
+   * @returns {Promise<{configuracoes: number, dias: object[]}>} `configuracoes` é o nº de
+   * `configuracaoId` distintos entre os dias, porque `InitialSetting.handle()` devolve undefined
+   */
   static async handle() {
     const seed = new ConfiguracaoEscolaSeed();
     return await seed.execute();

@@ -159,6 +159,65 @@ describe('executarEtapas', () => {
       }
     );
 
+    test('toda chave de ligação gravada aponta ao registro criado a que pertence', async () => {
+      await executarEtapas({ hoje: HOJE, senha: SENHA });
+
+      const { argumentos, spies } = coletor;
+      const devolvidos = async tipo => Promise.all(spies[tipo].mock.results.map(r => r.value));
+      const alunos = await devolvidos('aluno');
+      const usuarios = await devolvidos('usuario');
+      const idsAlunos = alunos.map(a => a.id);
+      const contratos = await devolvidos('contrato');
+      const idsContratos = contratos.map(c => c.id);
+      const contratoPorId = new Map(contratos.map(c => [c.id, c]));
+
+      expect(contratos).toHaveLength(8);
+      expect(new Set(contratos.map(c => c.idAluno)).size).toBe(8);
+      for (const contrato of contratos) expect(idsAlunos).toContain(contrato.idAluno);
+
+      expect(argumentos.diaAula).toHaveLength(16);
+      const diasPorContrato = new Map();
+      for (const dia of argumentos.diaAula) {
+        expect(idsContratos).toContain(dia.idContrato);
+        expect(contratoPorId.get(dia.idContrato).idAluno).toBe(dia.idAluno);
+        expect(typeof dia.diaSemana).toBe('string');
+        expect(dia.horaInicial).toMatch(/^\d{2}:\d{2}$/);
+        expect(dia.horaFinal).toMatch(/^\d{2}:\d{2}$/);
+        diasPorContrato.set(dia.idContrato, [...(diasPorContrato.get(dia.idContrato) ?? []), dia]);
+      }
+      expect(diasPorContrato.size).toBe(8);
+      for (const dias of diasPorContrato.values()) expect(dias).toHaveLength(2);
+
+      expect(argumentos.aula.length).toBeGreaterThan(0);
+      const professorPorAluno = new Map();
+      for (const aula of argumentos.aula) {
+        const contrato = contratoPorId.get(aula.idContrato);
+        expect(contrato).toBeDefined();
+        expect(contrato.idAluno).toBe(aula.idAluno);
+
+        const diaSemana = NOME_POR_NUMERO[aula.dataAula.getUTCDay()];
+        const dia = diasPorContrato.get(aula.idContrato).find(d => d.diaSemana === diaSemana);
+        expect(dia).toBeDefined();
+        expect(aula.horaInicial).toBe(dia.horaInicial);
+        expect(aula.horaFinal).toBe(dia.horaFinal);
+
+        expect(professorPorAluno.get(aula.idAluno) ?? aula.idProfessor).toBe(aula.idProfessor);
+        professorPorAluno.set(aula.idAluno, aula.idProfessor);
+      }
+
+      const idDeConta = email => {
+        const i = argumentos.usuario.findIndex(u => u.email === email);
+        expect(i).toBeGreaterThanOrEqual(0);
+        return usuarios[i].id;
+      };
+      const idProfessorFixo = idDeConta('professor.demo@example.com');
+      const idAdmin = idDeConta('admin.demo@example.com');
+      const alunosDoFixo = [...professorPorAluno].filter(([, p]) => p === idProfessorFixo);
+      expect(alunosDoFixo).toHaveLength(4);
+      expect(professorPorAluno.size).toBe(8);
+      expect([...professorPorAluno.values()]).not.toContain(idAdmin);
+    });
+
     test('falha alto quando o seed de alunos devolve menos registros que o catálogo', async () => {
       const original = AlunosSeed.handle.bind(AlunosSeed);
       jest.spyOn(AlunosSeed, 'handle').mockImplementation(async () => {
@@ -244,6 +303,7 @@ describe('executarEtapas', () => {
         .split('\n')
         .some(l => /^[^/*]*process\.env/.test(l))
     );
+    expect(/^[^/*]*process\.env/.test('const x = process.env.X')).toBe(true);
     expect(comEnv).toEqual([]);
   });
 });
