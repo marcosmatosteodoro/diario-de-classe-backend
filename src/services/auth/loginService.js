@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import AbstractService from '../abstractService.js';
 import UserRepository from '../../repositories/userRepository.js';
-import { createJwt } from '../../utilities/createJwt.js';
 import Constants from '../../utilities/constants.js';
 import { GetConfiguracaoService } from '../configuracao/getConfiguracaoService.js';
 import SessaoLoginRepository from '../../repositories/sessaoLoginRepository.js';
 import ServiceUnavailableError from '../../utilities/errors/serviceUnavailable.js';
 import { emitirAccess } from '../../utilities/emitirAccess.js';
+import { emitirRefresh } from '../../utilities/emitirRefresh.js';
 import LoggerManager from '../../utilities/loggerManager.js';
 import { SCRYPT_PARAMS, hashSenha, isHash, verificarSenha } from '../../utilities/password.js';
 import { textoIgualEmTempoConstante } from '../../utilities/textoIgualEmTempoConstante.js';
@@ -147,11 +147,12 @@ export class LoginService extends AbstractService {
     await this.limparSessoesAntigas(sessoes, user.id);
 
     this.accessToken = emitirAccess(user, sessao.id);
-    this.refreshToken = createJwt(
-      { sub: user.id, typ: Constants.refreshTokenType, sid: sessao.id, jti: jtiAtual },
-      Constants.jwtRefreshSecret,
-      Constants.refreshExp
-    );
+    this.refreshToken = emitirRefresh({
+      sub: user.id,
+      sid: sessao.id,
+      jti: jtiAtual,
+      expiraEmEpoch: Math.floor(expiraEm.getTime() / 1000)
+    });
     this.accessExp = Constants.accessExp;
   }
 

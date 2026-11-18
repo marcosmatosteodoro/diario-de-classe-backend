@@ -711,7 +711,7 @@ describe('LoginService', () => {
 
       const criar = SessaoLoginRepository.prototype.criar;
       expect(criar).toHaveBeenCalledTimes(1);
-      expect(ordem).toEqual(['criar', 'createJwt', 'createJwt']);
+      expect(ordem).toEqual(['criar', 'createJwt']);
       const [dados] = criar.mock.calls[0];
       const expiraEm = new Date(AGORA.getTime() + Constants.refreshExp * 1000);
       expect(dados.idUsuario).toBe('user-123');
@@ -731,6 +731,20 @@ describe('LoginService', () => {
       expect(refresh.sid).toBe('sid-1');
       expect(refresh.jti).toBe(dados.jtiAtual);
       expect(refresh.exp).toBe(expiraEm.getTime() / 1000);
+    });
+
+    test('o exp do refresh é o expiraEm da sessão, mesmo com o relógio andando durante a criação', async () => {
+      SessaoLoginRepository.prototype.criar.mockImplementation(async () => {
+        jest.setSystemTime(AGORA.getTime() + 5000);
+        return { id: 'sid-1' };
+      });
+
+      const result = await entrar();
+
+      const [dados] = SessaoLoginRepository.prototype.criar.mock.calls[0];
+      const refresh = parseJwt(result.refreshToken).payload;
+      expect(refresh.exp).toBe(Math.floor(dados.expiraEm.getTime() / 1000));
+      expect(refresh.exp).toBe(AGORA.getTime() / 1000 + Constants.refreshExp);
     });
 
     test('o access sai de emitirAccess(user, sid)', async () => {

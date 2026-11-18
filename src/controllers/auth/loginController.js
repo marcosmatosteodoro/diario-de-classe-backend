@@ -13,7 +13,7 @@ export class LoginController extends AbstractController {
   }
 
   /**
-   * Responde 200 (refresh só no cookie `bls_sessao`, nunca no corpo) ou 401.
+   * Responde 200 (refresh só no cookie `bls_sessao`, nunca no corpo), 401 ou 500 (`handleError`).
    * @throws {ServiceUnavailableError} propagado ao ErrorHandler (503) sem cookie
    */
   async execute() {

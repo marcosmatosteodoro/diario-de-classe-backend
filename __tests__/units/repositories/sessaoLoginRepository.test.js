@@ -140,6 +140,9 @@ describe('SessaoLoginRepository', () => {
       expect(sql).toContain(
         `WHERE "id" = ? AND "jtiAtual" = ? AND "encerradaEm" IS NULL AND "expiraEm" > (NOW() AT TIME ZONE 'UTC') RETURNING`
       );
+      expect(sql).toContain(
+        `GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - (NOW() AT TIME ZONE 'UTC'))))::int, 0) AS "restanteSegundos"`
+      );
     });
 
     test('zero linhas (perdeu a corrida) devolve null', async () => {
@@ -160,10 +163,15 @@ describe('SessaoLoginRepository', () => {
       expect(valores).toEqual(['D', 'sid1', 'A', 'B']);
       expect(sql).toContain('FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch"');
       semDateNemConcatenacao(valores);
-      expect(sql).toContain(`SET "jtiAtual" = ?, "rotacionadaEm" = (NOW() AT TIME ZONE 'UTC')`);
+      expect(sql).toContain(
+        `SET "jtiAtual" = ?, "rotacionadaEm" = (NOW() AT TIME ZONE 'UTC'), "dataAtualizacao" = (NOW() AT TIME ZONE 'UTC')`
+      );
       expect(sql).not.toContain('"jtiAnterior" = "jtiAtual"');
       expect(sql).toContain(
         `WHERE "id" = ? AND "jtiAnterior" = ? AND "jtiAtual" = ? AND "encerradaEm" IS NULL AND "expiraEm" > (NOW() AT TIME ZONE 'UTC') RETURNING`
+      );
+      expect(sql).toContain(
+        `GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - (NOW() AT TIME ZONE 'UTC'))))::int, 0) AS "restanteSegundos"`
       );
     });
 
@@ -181,7 +189,7 @@ describe('SessaoLoginRepository', () => {
       const { sql, valores } = chamada(queryRaw);
       expect(valores).toEqual(['sair', 'sid1']);
       expect(sql).toContain(
-        `SET "encerradaEm" = (NOW() AT TIME ZONE 'UTC'), "motivoEncerramento" = ?`
+        `SET "encerradaEm" = (NOW() AT TIME ZONE 'UTC'), "motivoEncerramento" = ?, "dataAtualizacao" = (NOW() AT TIME ZONE 'UTC')`
       );
       expect(sql).toContain('WHERE "id" = ? AND "encerradaEm" IS NULL RETURNING');
       await expect(repository.encerrar('sid1', 'sair')).resolves.toBe(false);
