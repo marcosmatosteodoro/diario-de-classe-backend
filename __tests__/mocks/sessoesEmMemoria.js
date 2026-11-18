@@ -1,4 +1,5 @@
 import { jest } from '@jest/globals';
+import { estadoDeSessao } from './estadoDeSessao.js';
 
 /**
  * Armazenamento de sessões vivo no escopo do teste, fora do grafo de módulos do app: sobrevive a
@@ -37,16 +38,11 @@ export const instalarRegistroFalso = async armazenamento => {
   const lerEstado = jest.spyOn(prototipo, 'lerEstado').mockImplementation(async sid => {
     const sessao = armazenamento.sessoes.get(sid);
     if (!sessao) return null;
-    return {
-      idUsuario: sessao.idUsuario,
+    return estadoDeSessao(sessao.idUsuario, {
       jtiAtual: sessao.jtiAtual,
-      jtiAnterior: null,
       encerrada: sessao.encerrada,
-      ativa: !sessao.encerrada,
-      dentroDaTolerancia: true,
-      expiraEmEpoch: Math.floor(Date.now() / 1000) + 3600,
-      restanteSegundos: 3600
-    };
+      ativa: !sessao.encerrada
+    });
   });
 
   const encerrar = jest.spyOn(prototipo, 'encerrar').mockImplementation(async sid => {

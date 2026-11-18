@@ -1,5 +1,6 @@
 import AbstractService from '../abstractService.js';
 import SessaoLoginRepository from '../../repositories/sessaoLoginRepository.js';
+import LoggerManager from '../../utilities/loggerManager.js';
 import ServiceUnavailableError from '../../utilities/errors/serviceUnavailable.js';
 
 export class VerificarSessaoAtivaService extends AbstractService {
@@ -21,7 +22,7 @@ export class VerificarSessaoAtivaService extends AbstractService {
     try {
       estado = await this.repository.lerEstado(this.sid);
     } catch (error) {
-      console.error('[VerificarSessaoAtivaService] Falha ao ler a sessão', {
+      LoggerManager.error('[VerificarSessaoAtivaService] Falha ao ler a sessão', {
         name: error?.name,
         code: error?.code
       });

@@ -17,7 +17,7 @@ const TIMEOUT_IMPORT_FRIO = 30000;
 const pt = JSON.parse(readFileSync(join(process.cwd(), 'src/locales/pt/translation.json'), 'utf8'));
 const ORIGEM = 'https://app.example.com';
 const LISTAGEM = '/api/alunos';
-// Status de GET /api/alunos com o acesso a dado simulado devolvendo lista vazia (medido no baseline).
+// Status de GET /api/alunos com o acesso a dado simulado devolvendo lista vazia.
 const STATUS_ROTA_AUTENTICADA = 204;
 const SAIR = '/api/auth/logout';
 const USUARIO = cuid('professor1');
@@ -235,11 +235,21 @@ describe('sessão consultada a cada requisição autenticada (app real, registro
         '../../../src/repositories/sessaoLoginRepository.js'
       );
       const prototipo = SessaoLoginRepository.prototype;
-      return Object.getOwnPropertyNames(prototipo)
-        .filter(n => !['constructor', 'lerEstado', 'getEntity', 'getSelectFields'].includes(n))
-        .map(nome => jest.spyOn(prototipo, nome));
+      const heranca = Object.getPrototypeOf(prototipo);
+      const espioes = [prototipo, heranca].flatMap(alvo =>
+        Object.getOwnPropertyNames(alvo)
+          .filter(n => !['constructor', 'lerEstado', 'getEntity', 'getSelectFields'].includes(n))
+          .map(nome => jest.spyOn(alvo, nome))
+      );
+      espioes.Registro = SessaoLoginRepository;
+      return espioes;
     };
-    const somaDeChamadas = espioes => espioes.reduce((t, e) => t + e.mock.calls.length, 0);
+    // O pai é compartilhado com os repositories da rota: só contam as chamadas feitas num registro de sessão.
+    const somaDeChamadas = espioes =>
+      espioes.reduce(
+        (t, e) => t + e.mock.contexts.filter(c => c instanceof espioes.Registro).length,
+        0
+      );
 
     test('uma requisição autenticada: lerEstado 1 vez e nenhum outro método do repository', async () => {
       const outros = await espiarOutros();
