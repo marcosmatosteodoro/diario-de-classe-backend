@@ -101,9 +101,8 @@ export const PROFESSORES_DEMO = congelar([
 
 const PROFESSOR_FIXO = CONTAS_FIXAS_DEMO[1].chave;
 
-// Os 4 primeiros são da conta fixa de professor: juntos cobrem SEGUNDA a SEXTA e, nos dias
-// em comum, os slots de 40 minutos não se sobrepõem.
-/** Alunos fictícios; os 4 primeiros são da conta fixa de professor.
+/** Alunos fictícios; os 4 primeiros são da conta fixa de professor: juntos cobrem SEGUNDA a
+ * SEXTA e, nos dias em comum, os slots de 40 minutos não se sobrepõem.
  * @type {ReadonlyArray<Readonly<AlunoDemo>>}
  */
 export const ALUNOS_DEMO = congelar([

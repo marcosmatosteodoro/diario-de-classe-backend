@@ -1,20 +1,12 @@
 import { diaDaSemana, paraDataAula, somarDias } from './seedCalendario.js';
 
-/** Dias antes de `hoje` em que o contrato demo começa.
- * @type {number}
- */
+/** Dias antes de `hoje` em que o contrato demo começa. */
 export const CONTRATO_INICIO_DIAS_ANTES = 45;
-/** Dias depois de `hoje` em que o contrato demo termina.
- * @type {number}
- */
+/** Dias depois de `hoje` em que o contrato demo termina. */
 export const CONTRATO_TERMINO_DIAS_DEPOIS = 180;
-/** Janela de aulas passadas, em dias antes de `hoje`.
- * @type {number}
- */
+/** Janela de aulas passadas, em dias antes de `hoje`. */
 export const AULAS_PASSADAS_DIAS_ANTES = 28;
-/** Janela de aulas futuras, em dias depois de `hoje`.
- * @type {number}
- */
+/** Janela de aulas futuras, em dias depois de `hoje`. */
 export const AULAS_FUTURAS_DIAS_DEPOIS = 35;
 
 const MODULO_FALTA = 6;
