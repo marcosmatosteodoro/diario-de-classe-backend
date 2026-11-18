@@ -128,6 +128,26 @@ export default class Constants {
     return undefined;
   }
 
+  // DEMO_MODE: liga o modo demonstração só com o texto exato `true` (sem trim nem caixa);
+  // qualquer outro valor, inclusive ausente, mantém desligado.
+  static demoMode = Constants.parseDemoMode(process.env.DEMO_MODE);
+
+  static parseDemoMode(value) {
+    return value === 'true';
+  }
+
+  // DEMO_CONTAS_FIXAS: e-mails separados por vírgula; só os espaços ao redor são removidos e a
+  // caixa é preservada (a comparação é literal contra o e-mail do seed).
+  static demoContasFixas = Constants.parseDemoContasFixas(process.env.DEMO_CONTAS_FIXAS);
+
+  static parseDemoContasFixas(value) {
+    if (typeof value !== 'string') return [];
+    return value
+      .split(',')
+      .map(item => item.trim())
+      .filter(item => item !== '');
+  }
+
   /* Database */
   // static database = {
   //   host: process.env.DATABASE_HOST,
