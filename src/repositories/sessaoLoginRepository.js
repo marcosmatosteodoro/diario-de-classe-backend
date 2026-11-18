@@ -53,10 +53,10 @@ export default class SessaoLoginRepository extends AbstractRepository {
     const rows = await prisma.$queryRaw`
       SELECT "idUsuario", "jtiAtual", "jtiAnterior",
         ("encerradaEm" IS NOT NULL) AS "encerrada",
-        ("encerradaEm" IS NULL AND "expiraEm" > NOW()) AS "ativa",
-        (NOW() - "rotacionadaEm" <= (${Constants.sessionRotationGraceSeconds}::int * INTERVAL '1 second')) AS "dentroDaTolerancia",
+        ("encerradaEm" IS NULL AND "expiraEm" > (NOW() AT TIME ZONE 'UTC')) AS "ativa",
+        ((NOW() AT TIME ZONE 'UTC') - "rotacionadaEm" <= (${Constants.sessionRotationGraceSeconds}::int * INTERVAL '1 second')) AS "dentroDaTolerancia",
         FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch",
-        GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - NOW())))::int, 0) AS "restanteSegundos"
+        GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - (NOW() AT TIME ZONE 'UTC'))))::int, 0) AS "restanteSegundos"
       FROM "sessoes_login"
       WHERE "id" = ${sid}`;
     return rows[0] ?? null;
@@ -73,9 +73,9 @@ export default class SessaoLoginRepository extends AbstractRepository {
   async rotacionar(sid, apresentado, novoJti) {
     const rows = await prisma.$queryRaw`
       UPDATE "sessoes_login"
-      SET "jtiAnterior" = "jtiAtual", "jtiAtual" = ${novoJti}, "rotacionadaEm" = NOW(), "dataAtualizacao" = NOW()
-      WHERE "id" = ${sid} AND "jtiAtual" = ${apresentado} AND "encerradaEm" IS NULL AND "expiraEm" > NOW()
-      RETURNING "jtiAtual", "jtiAnterior", FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch", GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - NOW())))::int, 0) AS "restanteSegundos"`;
+      SET "jtiAnterior" = "jtiAtual", "jtiAtual" = ${novoJti}, "rotacionadaEm" = (NOW() AT TIME ZONE 'UTC'), "dataAtualizacao" = (NOW() AT TIME ZONE 'UTC')
+      WHERE "id" = ${sid} AND "jtiAtual" = ${apresentado} AND "encerradaEm" IS NULL AND "expiraEm" > (NOW() AT TIME ZONE 'UTC')
+      RETURNING "jtiAtual", "jtiAnterior", FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch", GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - (NOW() AT TIME ZONE 'UTC'))))::int, 0) AS "restanteSegundos"`;
     return rows[0] ?? null;
   }
 
@@ -92,9 +92,9 @@ export default class SessaoLoginRepository extends AbstractRepository {
   async substituirSucessor(sid, apresentado, jtiAtualLido, novoJti) {
     const rows = await prisma.$queryRaw`
       UPDATE "sessoes_login"
-      SET "jtiAtual" = ${novoJti}, "rotacionadaEm" = NOW(), "dataAtualizacao" = NOW()
-      WHERE "id" = ${sid} AND "jtiAnterior" = ${apresentado} AND "jtiAtual" = ${jtiAtualLido} AND "encerradaEm" IS NULL AND "expiraEm" > NOW()
-      RETURNING "jtiAtual", "jtiAnterior", FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch", GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - NOW())))::int, 0) AS "restanteSegundos"`;
+      SET "jtiAtual" = ${novoJti}, "rotacionadaEm" = (NOW() AT TIME ZONE 'UTC'), "dataAtualizacao" = (NOW() AT TIME ZONE 'UTC')
+      WHERE "id" = ${sid} AND "jtiAnterior" = ${apresentado} AND "jtiAtual" = ${jtiAtualLido} AND "encerradaEm" IS NULL AND "expiraEm" > (NOW() AT TIME ZONE 'UTC')
+      RETURNING "jtiAtual", "jtiAnterior", FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch", GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - (NOW() AT TIME ZONE 'UTC'))))::int, 0) AS "restanteSegundos"`;
     return rows[0] ?? null;
   }
 
@@ -107,7 +107,7 @@ export default class SessaoLoginRepository extends AbstractRepository {
   async encerrar(sid, motivo) {
     const rows = await prisma.$queryRaw`
       UPDATE "sessoes_login"
-      SET "encerradaEm" = NOW(), "motivoEncerramento" = ${motivo}, "dataAtualizacao" = NOW()
+      SET "encerradaEm" = (NOW() AT TIME ZONE 'UTC'), "motivoEncerramento" = ${motivo}, "dataAtualizacao" = (NOW() AT TIME ZONE 'UTC')
       WHERE "id" = ${sid} AND "encerradaEm" IS NULL
       RETURNING "id"`;
     return rows.length > 0;
@@ -123,7 +123,7 @@ export default class SessaoLoginRepository extends AbstractRepository {
     return await prisma.$executeRaw`
       DELETE FROM "sessoes_login"
       WHERE "idUsuario" = ${idUsuario}
-        AND (NOW() - (${dias}::int * INTERVAL '1 day') > "expiraEm"
-          OR NOW() - (${dias}::int * INTERVAL '1 day') > "encerradaEm")`;
+        AND ((NOW() AT TIME ZONE 'UTC') - (${dias}::int * INTERVAL '1 day') > "expiraEm"
+          OR (NOW() AT TIME ZONE 'UTC') - (${dias}::int * INTERVAL '1 day') > "encerradaEm")`;
   }
 }

@@ -84,13 +84,15 @@ describe('SessaoLoginRepository', () => {
 
       const { sql } = chamada(queryRaw);
       expect(sql).toContain('("encerradaEm" IS NOT NULL) AS "encerrada"');
-      expect(sql).toContain('("encerradaEm" IS NULL AND "expiraEm" > NOW()) AS "ativa"');
       expect(sql).toContain(
-        `(NOW() - "rotacionadaEm" <= (?::int * INTERVAL '1 second')) AS "dentroDaTolerancia"`
+        `("encerradaEm" IS NULL AND "expiraEm" > (NOW() AT TIME ZONE 'UTC')) AS "ativa"`
+      );
+      expect(sql).toContain(
+        `((NOW() AT TIME ZONE 'UTC') - "rotacionadaEm" <= (?::int * INTERVAL '1 second')) AS "dentroDaTolerancia"`
       );
       expect(sql).toContain('FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch"');
       expect(sql).toContain(
-        'GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - NOW())))::int, 0) AS "restanteSegundos"'
+        `GREATEST(CEIL(EXTRACT(EPOCH FROM ("expiraEm" - (NOW() AT TIME ZONE 'UTC'))))::int, 0) AS "restanteSegundos"`
       );
     });
 
@@ -133,10 +135,10 @@ describe('SessaoLoginRepository', () => {
       expect(sql).toContain('FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch"');
       semDateNemConcatenacao(valores);
       expect(sql).toContain(
-        'SET "jtiAnterior" = "jtiAtual", "jtiAtual" = ?, "rotacionadaEm" = NOW(), "dataAtualizacao" = NOW()'
+        `SET "jtiAnterior" = "jtiAtual", "jtiAtual" = ?, "rotacionadaEm" = (NOW() AT TIME ZONE 'UTC'), "dataAtualizacao" = (NOW() AT TIME ZONE 'UTC')`
       );
       expect(sql).toContain(
-        'WHERE "id" = ? AND "jtiAtual" = ? AND "encerradaEm" IS NULL AND "expiraEm" > NOW() RETURNING'
+        `WHERE "id" = ? AND "jtiAtual" = ? AND "encerradaEm" IS NULL AND "expiraEm" > (NOW() AT TIME ZONE 'UTC') RETURNING`
       );
     });
 
@@ -158,10 +160,10 @@ describe('SessaoLoginRepository', () => {
       expect(valores).toEqual(['D', 'sid1', 'A', 'B']);
       expect(sql).toContain('FLOOR(EXTRACT(EPOCH FROM "expiraEm"))::int AS "expiraEmEpoch"');
       semDateNemConcatenacao(valores);
-      expect(sql).toContain('SET "jtiAtual" = ?, "rotacionadaEm" = NOW()');
+      expect(sql).toContain(`SET "jtiAtual" = ?, "rotacionadaEm" = (NOW() AT TIME ZONE 'UTC')`);
       expect(sql).not.toContain('"jtiAnterior" = "jtiAtual"');
       expect(sql).toContain(
-        'WHERE "id" = ? AND "jtiAnterior" = ? AND "jtiAtual" = ? AND "encerradaEm" IS NULL AND "expiraEm" > NOW() RETURNING'
+        `WHERE "id" = ? AND "jtiAnterior" = ? AND "jtiAtual" = ? AND "encerradaEm" IS NULL AND "expiraEm" > (NOW() AT TIME ZONE 'UTC') RETURNING`
       );
     });
 
@@ -178,7 +180,9 @@ describe('SessaoLoginRepository', () => {
       await expect(repository.encerrar('sid1', 'sair')).resolves.toBe(true);
       const { sql, valores } = chamada(queryRaw);
       expect(valores).toEqual(['sair', 'sid1']);
-      expect(sql).toContain('SET "encerradaEm" = NOW(), "motivoEncerramento" = ?');
+      expect(sql).toContain(
+        `SET "encerradaEm" = (NOW() AT TIME ZONE 'UTC'), "motivoEncerramento" = ?`
+      );
       expect(sql).toContain('WHERE "id" = ? AND "encerradaEm" IS NULL RETURNING');
       await expect(repository.encerrar('sid1', 'sair')).resolves.toBe(false);
     });
@@ -195,7 +199,7 @@ describe('SessaoLoginRepository', () => {
       expect(valores).toEqual(['u1', 7, 7]);
       expect(sql).toContain('DELETE FROM "sessoes_login" WHERE "idUsuario" = ?');
       expect(sql).toContain(
-        `AND (NOW() - (?::int * INTERVAL '1 day') > "expiraEm" OR NOW() - (?::int * INTERVAL '1 day') > "encerradaEm")`
+        `AND ((NOW() AT TIME ZONE 'UTC') - (?::int * INTERVAL '1 day') > "expiraEm" OR (NOW() AT TIME ZONE 'UTC') - (?::int * INTERVAL '1 day') > "encerradaEm")`
       );
     });
   });
