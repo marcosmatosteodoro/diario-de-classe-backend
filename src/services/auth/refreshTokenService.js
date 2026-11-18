@@ -1,54 +1,169 @@
+import { randomUUID } from 'node:crypto';
 import AbstractService from '../abstractService.js';
 import UserRepository from '../../repositories/userRepository.js';
-import { createJwt } from '../../utilities/createJwt.js';
+import SessaoLoginRepository from '../../repositories/sessaoLoginRepository.js';
 import Constants from '../../utilities/constants.js';
-import tokenRevocationManager from './tokenRevocationManagerService.js';
+import ServiceUnavailableError from '../../utilities/errors/serviceUnavailable.js';
+import LoggerManager from '../../utilities/loggerManager.js';
+import { emitirAccess } from '../../utilities/emitirAccess.js';
+import { emitirRefresh } from '../../utilities/emitirRefresh.js';
 import { verificarRefreshJwt } from '../../utilities/verificarRefreshJwt.js';
-import { generatePayload } from '../../utilities/generatePayload.js';
 import { GetConfiguracaoService } from '../configuracao/getConfiguracaoService.js';
+
+const ACAO = {
+  rotacionar: 'rotacionar',
+  tolerar: 'tolerar',
+  substituir: 'substituir',
+  recusar: 'recusar'
+};
 
 export class RefreshTokenService extends AbstractService {
   constructor(Repository, refreshToken) {
     super(Repository);
     this.refreshToken = refreshToken;
+    this.sessoes = new SessaoLoginRepository();
   }
 
+  /**
+   * Renova a sessão do refresh pelas regras da DEC-005-015: (a) `jti` atual rotaciona; (b) `jti`
+   * anterior dentro da tolerância recebe o mesmo sucessor, sem escrita; (c) `jti` anterior fora da
+   * tolerância troca o sucessor (resposta perdida); qualquer outro `jti` é recusado. A vida da
+   * sessão nunca se estende: o `exp` do refresh novo é o fim absoluto dela (DEC-005-016).
+   * @returns {Promise<{
+   *   accessToken: string,
+   *   refreshToken: string,
+   *   tokenType: 'Bearer',
+   *   expiresIn: number,
+   *   restanteSegundos: number,
+   *   user: Object,
+   *   configuracao: Object|null
+   * }|false>} `false` na recusa; `refreshToken` e `restanteSegundos` ficam no objeto e o
+   *   controller os leva ao cookie, fora do corpo
+   * @throws {ServiceUnavailableError} quando o registro falha ou a corrida não converge em 1 retry
+   *   (a causa é logada só com `name` e `code`)
+   */
   async execute() {
+    const credencial = this.lerCredencial();
+    if (!credencial) {
+      return false;
+    }
+
+    const sessao = await this.resolverSessao(credencial);
+    if (!sessao) {
+      return false;
+    }
+
+    return await this.montarResposta(credencial, sessao);
+  }
+
+  /** Refresh com `sid` e `jti`: sem eles (credencial legada) não há o que consultar. */
+  lerCredencial() {
     if (!this.refreshToken) {
       return null;
     }
-
-    // Verifica se o token foi revogado
-    if (tokenRevocationManager.isRevoked(this.refreshToken)) {
+    const payload = this.verifyRefreshToken();
+    if (!payload || !this.ehTextoNaoVazio(payload.sid) || !this.ehTextoNaoVazio(payload.jti)) {
       return null;
     }
+    return { sub: payload.sub, sid: payload.sid, jti: payload.jti };
+  }
 
-    // Valida o refresh token (decodifica e verifica assinatura)
-    const decoded = this.verifyRefreshToken();
-    if (!decoded) {
+  ehTextoNaoVazio(valor) {
+    return typeof valor === 'string' && valor !== '';
+  }
+
+  /**
+   * 1 leitura e 1 escrita no caso comum. Escrita sem linhas (perdeu a corrida) relê uma vez e
+   * reclassifica; a releitura só resolve por recusa ou tolerância, nunca por nova escrita.
+   * @returns {Promise<{ estado: Object, jti: string }|null>} `null` na recusa
+   */
+  async resolverSessao(credencial) {
+    const estado = await this.acessarRegistro(() => this.sessoes.lerEstado(credencial.sid));
+    const acao = this.classificar(estado, credencial);
+    if (acao === ACAO.recusar) {
       return null;
     }
+    if (acao === ACAO.tolerar) {
+      return { estado, jti: estado.jtiAtual };
+    }
 
-    // Busca o usuário para validar se ainda existe (senha fora da projeção)
+    const novoJti = randomUUID();
+    const escrita = await this.acessarRegistro(() =>
+      this.escrever(acao, credencial, estado, novoJti)
+    );
+    if (escrita) {
+      return { estado, jti: novoJti };
+    }
+    return await this.resolverAposPerder(credencial);
+  }
+
+  async resolverAposPerder(credencial) {
+    const estado = await this.acessarRegistro(() => this.sessoes.lerEstado(credencial.sid));
+    const acao = this.classificar(estado, credencial);
+    if (acao === ACAO.recusar) {
+      return null;
+    }
+    if (acao === ACAO.tolerar) {
+      return { estado, jti: estado.jtiAtual };
+    }
+    throw new ServiceUnavailableError();
+  }
+
+  escrever(acao, { sid, jti }, estado, novoJti) {
+    if (acao === ACAO.rotacionar) {
+      return this.sessoes.rotacionar(sid, jti, novoJti);
+    }
+    return this.sessoes.substituirSucessor(sid, jti, estado.jtiAtual, novoJti);
+  }
+
+  /**
+   * Sessão inexistente, de outro dono, encerrada ou vencida e `jti` desconhecido são recusa.
+   * A regra (d) (reuso) é recusa simples, sem encerrar a sessão.
+   */
+  classificar(estado, { sub, jti }) {
+    if (!estado || estado.ativa !== true || estado.idUsuario !== sub) {
+      return ACAO.recusar;
+    }
+    if (jti === estado.jtiAtual) {
+      return ACAO.rotacionar;
+    }
+    if (jti !== estado.jtiAnterior) {
+      return ACAO.recusar;
+    }
+    return estado.dentroDaTolerancia ? ACAO.tolerar : ACAO.substituir;
+  }
+
+  /** Falha do registro nega com 503; o cookie do cliente fica como está e a renovação é repetível. */
+  async acessarRegistro(operacao) {
+    try {
+      return await operacao();
+    } catch (error) {
+      LoggerManager.error('[RefreshTokenService] Falha ao acessar o registro de sessões', {
+        name: error?.name,
+        code: error?.code
+      });
+      throw new ServiceUnavailableError();
+    }
+  }
+
+  async montarResposta({ sub, sid }, { estado, jti }) {
     const user = await this.repository.selectOne({
-      where: { id: decoded.sub },
+      where: { id: sub },
       select: this.repository.selectFields
     });
 
     if (!this.usuarioPodeRenovar(user)) {
-      return null;
+      return false;
     }
-
-    // Gera novo access token
-    const payload = generatePayload(user);
-    const newAccessToken = createJwt(payload, Constants.jwtSecret, Constants.accessExp);
 
     const configuracoes = await GetConfiguracaoService.handle();
 
     return {
-      accessToken: newAccessToken,
+      accessToken: emitirAccess(user, sid),
+      refreshToken: emitirRefresh({ sub, sid, jti, expiraEmEpoch: estado.expiraEmEpoch }),
       tokenType: 'Bearer',
       expiresIn: Constants.accessExp,
+      restanteSegundos: estado.restanteSegundos,
       user,
       configuracao: configuracoes?.[0] ?? null
     };

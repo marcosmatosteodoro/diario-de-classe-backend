@@ -151,6 +151,17 @@ describe('isLoggedIn middleware', () => {
       expect(req.user.isAdmin).toBe(false);
     });
 
+    test('sessaoAtiva nega por padrão: sid fora da convenção sidDe é 401 e consulta o registro 1 vez', async () => {
+      const lerEstado = sessaoAtiva(USUARIO);
+
+      await comAccess({ role: 'professor', sid: 'sid-fora-da-convencao' });
+
+      expect(lerEstado).toHaveBeenCalledTimes(1);
+      expect(lerEstado).toHaveBeenCalledWith('sid-fora-da-convencao');
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+    });
+
     test('isAdmin vem só da claim role assinada', async () => {
       sessaoAtiva(USUARIO);
 

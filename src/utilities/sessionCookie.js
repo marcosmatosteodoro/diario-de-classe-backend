@@ -9,10 +9,14 @@ const atributosDeEscopo = () => ({
   path: Constants.sessionCookie.path
 });
 
-export function setSessionCookie(res, refreshToken) {
+/**
+ * @param {number} [maxAgeSeconds] vida do cookie em segundos; a renovação passa o restante da
+ *   sessão (nunca estende), o login usa `Constants.refreshExp`
+ */
+export function setSessionCookie(res, refreshToken, maxAgeSeconds = Constants.refreshExp) {
   res.cookie(Constants.sessionCookie.name, refreshToken, {
     ...atributosDeEscopo(),
-    maxAge: Constants.refreshExp * 1000
+    maxAge: maxAgeSeconds * 1000
   });
 }
 

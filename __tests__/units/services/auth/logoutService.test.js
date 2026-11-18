@@ -3,7 +3,6 @@ import { LogoutService } from '../../../../src/services/auth/logoutService.js';
 import SessaoLoginRepository from '../../../../src/repositories/sessaoLoginRepository.js';
 import { createJwt } from '../../../../src/utilities/createJwt.js';
 import Constants from '../../../../src/utilities/constants.js';
-import tokenRevocationManager from '../../../../src/services/auth/tokenRevocationManagerService.js';
 
 const SID = 'sid-1';
 
@@ -85,17 +84,5 @@ describe('LogoutService', () => {
 
       expect(encerrar).toHaveBeenCalledTimes(1);
     });
-  });
-
-  test('não usa o Set em memória do TokenRevocationManager', async () => {
-    const revoke = jest.spyOn(tokenRevocationManager, 'revoke');
-
-    await LogoutService.handle(refresh());
-    expect(revoke).not.toHaveBeenCalled();
-
-    // controle positivo: o espião enxerga uma chamada direta
-    tokenRevocationManager.revoke('controle');
-    expect(revoke).toHaveBeenCalledTimes(1);
-    tokenRevocationManager.clear();
   });
 });

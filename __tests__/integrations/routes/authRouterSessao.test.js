@@ -2,6 +2,11 @@ import { jest } from '@jest/globals';
 import request from 'supertest';
 import { cookiesDaSessao } from '../../mocks/cookiesDaSessao.js';
 import { capturarLog } from '../../mocks/capturaDeLog.js';
+import {
+  criarArmazenamentoExterno,
+  instalarRegistroFalso,
+  semearSessao
+} from '../../mocks/sessoesEmMemoria.js';
 
 // O import a frio da árvore de app.js chega perto do testTimeout global (10s).
 const TIMEOUT_IMPORT_FRIO = 30000;
@@ -16,9 +21,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
   let app;
   let Constants;
   let UserRepository;
-  let SessaoLoginRepository;
   let GetConfiguracaoService;
-  let tokenRevocationManager;
   let createJwt;
   let verifyJwt;
   let envOriginal;
@@ -34,14 +37,8 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     }));
     ({ default: Constants } = await import('../../../src/utilities/constants.js'));
     ({ default: UserRepository } = await import('../../../src/repositories/userRepository.js'));
-    ({ default: SessaoLoginRepository } = await import(
-      '../../../src/repositories/sessaoLoginRepository.js'
-    ));
     ({ GetConfiguracaoService } = await import(
       '../../../src/services/configuracao/getConfiguracaoService.js'
-    ));
-    ({ default: tokenRevocationManager } = await import(
-      '../../../src/services/auth/tokenRevocationManagerService.js'
     ));
     ({ createJwt } = await import('../../../src/utilities/createJwt.js'));
     ({ verifyJwt } = await import('../../../src/utilities/verifyJwt.js'));
@@ -54,14 +51,17 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     else process.env.CORS_ORIGINS = corsOriginal;
   });
 
+  let armazenamento;
   let selectOne;
   let encerrar;
+  let rotacionar;
   let configuracoes;
   const configuracao = { id: 'c1', nome: 'Config' };
 
-  beforeEach(() => {
-    tokenRevocationManager.clear();
+  beforeEach(async () => {
     sequencia += 1;
+    armazenamento = criarArmazenamentoExterno();
+    ({ encerrar, rotacionar } = await instalarRegistroFalso(armazenamento));
     Constants.env = 'test';
     selectOne = jest.spyOn(UserRepository.prototype, 'selectOne').mockImplementation(async arg => ({
       id: arg.where.id,
@@ -69,31 +69,33 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
       permissao: 'PROFESSOR',
       nome: 'Ana'
     }));
-    encerrar = jest.spyOn(SessaoLoginRepository.prototype, 'encerrar').mockResolvedValue(true);
     configuracoes = jest.spyOn(GetConfiguracaoService, 'handle').mockResolvedValue([configuracao]);
   });
 
   afterEach(() => {
     Constants.env = envOriginal;
     jest.restoreAllMocks();
-    tokenRevocationManager.clear();
   });
 
-  // `sub` próprio por caso: JWTs do mesmo `sub` no mesmo segundo são idênticos.
   const subDoCaso = () => `usuario-${sequencia}`;
-  const refreshDe = (sub = subDoCaso(), segredo = Constants.jwtRefreshSecret, exp) =>
-    createJwt({ sub, typ: Constants.refreshTokenType }, segredo, exp ?? Constants.refreshExp);
-  // Refresh de sessão persistida (com sid e jti), como o login emite.
-  const refreshComSessao = (
-    sid = `sid-${sequencia}`,
+  const sidDoCaso = () => `sid-${sequencia}`;
+  const refreshDeSessao = ({
+    sub = subDoCaso(),
+    sid = sidDoCaso(),
     jti = 'jti-velho',
-    segredo = Constants.jwtRefreshSecret
-  ) =>
+    segredo = Constants.jwtRefreshSecret,
+    exp
+  } = {}) =>
     createJwt(
-      { sub: subDoCaso(), typ: Constants.refreshTokenType, sid, jti },
+      { sub, typ: Constants.refreshTokenType, sid, jti },
       segredo,
-      Constants.refreshExp
+      exp ?? Constants.refreshExp
     );
+  // Cookie de uma sessão que existe no armazenamento, do dono do caso.
+  const cookieDeSessao = (jti = 'jti-velho') => {
+    semearSessao(armazenamento, { sid: sidDoCaso(), idUsuario: subDoCaso(), jtiAtual: jti });
+    return refreshDeSessao({ jti });
+  };
   const refreshLegado = (sub = subDoCaso()) =>
     createJwt({ sub }, Constants.jwtRefreshSecret, Constants.refreshExp);
 
@@ -102,6 +104,24 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     if (origem !== null) req = req.set('Origin', origem);
     if (cookie !== undefined) req = req.set('Cookie', `bls_sessao=${cookie}`);
     return corpo === undefined ? req : req.send(corpo);
+  };
+
+  // Invariantes de toda resposta de renovar: o refresh nunca vai no corpo; 200 grava 1 cookie novo,
+  // 401 remove 1; 403 e 500 não mexem no cookie.
+  const renovar = async opcoes => {
+    const res = await chamar(RENOVAR, opcoes);
+    expect(JSON.stringify(res.body)).not.toContain('refreshToken');
+    const cookies = cookiesDaSessao(res);
+    if (res.status === 200) {
+      expect(cookies).toHaveLength(1);
+      expect(cookies[0].startsWith('bls_sessao=')).toBe(true);
+      expect(cookies[0].startsWith('bls_sessao=;')).toBe(false);
+    } else if (res.status === 401) {
+      removeCookie(res);
+    } else {
+      expect(cookies).toEqual([]);
+    }
+    return res;
   };
 
   const removeCookie = res => {
@@ -122,7 +142,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     ])(
       '%s com origem forjada: 403, nada emitido, nenhum cookie, nada revogado',
       async (_n, rota) => {
-        const cookie = refreshDe();
+        const cookie = cookieDeSessao();
 
         const res = await chamar(rota, { cookie, origem: ORIGEM_FORJADA });
 
@@ -130,10 +150,10 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
         expect(res.body).not.toHaveProperty('accessToken');
         expect(cookiesDaSessao(res)).toEqual([]);
         expect(selectOne).not.toHaveBeenCalled();
-        expect(tokenRevocationManager.getCount()).toBe(0);
         expect(encerrar).not.toHaveBeenCalled();
+        expect(rotacionar).not.toHaveBeenCalled();
 
-        const legitima = await chamar(RENOVAR, { cookie });
+        const legitima = await renovar({ cookie });
         expect(legitima.status).toBe(200);
       }
     );
@@ -142,7 +162,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
       ['renovar', RENOVAR],
       ['sair', SAIR]
     ])('%s sem Origin: 403 sem cookie', async (_n, rota) => {
-      const res = await chamar(rota, { cookie: refreshDe(), origem: null });
+      const res = await chamar(rota, { cookie: cookieDeSessao(), origem: null });
 
       expect(res.status).toBe(403);
       expect(cookiesDaSessao(res)).toEqual([]);
@@ -150,7 +170,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     });
 
     test('Sec-Fetch-Site cross-site com Origin listada: 403', async () => {
-      const res = await chamar(RENOVAR, { cookie: refreshDe() }).set(
+      const res = await chamar(RENOVAR, { cookie: cookieDeSessao() }).set(
         'Sec-Fetch-Site',
         'cross-site'
       );
@@ -161,10 +181,10 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
   });
 
   describe('renovar (AC-002-019, AC-002-012)', () => {
-    test('cookie válido, sem corpo: 200 com o contrato completo e nenhum cookie de sessão', async () => {
+    test('cookie válido, sem corpo: 200 com o contrato completo e o cookie rotacionado', async () => {
       const sub = subDoCaso();
 
-      const res = await chamar(RENOVAR, { cookie: refreshDe(sub) });
+      const res = await renovar({ cookie: cookieDeSessao('jti-velho') });
 
       expect(res.status).toBe(200);
       const claims = verifyJwt(res.body.accessToken, Constants.jwtSecret);
@@ -179,11 +199,11 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
         where: { id: sub },
         select: new UserRepository().selectFields
       });
-      expect(cookiesDaSessao(res)).toEqual([]);
+      expect(cookiesDaSessao(res)).toHaveLength(1);
     });
 
     test('refresh legado sem a claim de tipo: 401 com remoção do cookie', async () => {
-      const res = await chamar(RENOVAR, { cookie: refreshLegado() });
+      const res = await renovar({ cookie: refreshLegado() });
 
       expect(res.status).toBe(401);
       removeCookie(res);
@@ -197,7 +217,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
         Constants.jwtRefreshSecret,
         Constants.refreshExp
       );
-      const res = await chamar(RENOVAR, { cookie });
+      const res = await renovar({ cookie });
 
       expect(res.status).toBe(401);
       removeCookie(res);
@@ -206,23 +226,23 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     test('sem configuração, configuracao é null', async () => {
       configuracoes.mockResolvedValue([]);
 
-      const res = await chamar(RENOVAR, { cookie: refreshDe() });
+      const res = await renovar({ cookie: cookieDeSessao() });
 
       expect(res.status).toBe(200);
       expect(res.body.configuracao).toBeNull();
     });
 
     test('o corpo é ignorado', async () => {
-      const cookie = refreshDe();
+      const cookie = cookieDeSessao();
 
-      const res = await chamar(RENOVAR, { cookie, corpo: { refreshToken: 'x', qualquer: 1 } });
+      const res = await renovar({ cookie, corpo: { refreshToken: 'x', qualquer: 1 } });
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveProperty('accessToken');
     });
 
     test('sem cookie: 401 com a mensagem traduzida e remoção do cookie', async () => {
-      const res = await chamar(RENOVAR);
+      const res = await renovar();
 
       expect(res.status).toBe(401);
       expect(res.body).toEqual({ message: 'Refresh token inválido ou expirado' });
@@ -230,7 +250,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     });
 
     test('refresh válido só no corpo: 401, repositório não chamado', async () => {
-      const res = await chamar(RENOVAR, { corpo: { refreshToken: refreshDe() } });
+      const res = await renovar({ corpo: { refreshToken: cookieDeSessao() } });
 
       expect(res.status).toBe(401);
       expect(res.body).not.toHaveProperty('accessToken');
@@ -239,10 +259,10 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     });
 
     test.each([
-      ['segredo errado', () => refreshDe(subDoCaso(), 'outro-segredo-qualquer')],
-      ['vencido', () => refreshDe(subDoCaso(), Constants.jwtRefreshSecret, -10)]
+      ['segredo errado', () => refreshDeSessao({ segredo: 'outro-segredo-qualquer' })],
+      ['vencido', () => refreshDeSessao({ exp: -10 })]
     ])('cookie %s: 401 com remoção', async (_n, gerar) => {
-      const res = await chamar(RENOVAR, { cookie: gerar() });
+      const res = await renovar({ cookie: gerar() });
 
       expect(res.status).toBe(401);
       expect(res.body).not.toHaveProperty('accessToken');
@@ -252,7 +272,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     test('usuário removido: 401 com remoção do cookie', async () => {
       selectOne.mockResolvedValue(null);
 
-      const res = await chamar(RENOVAR, { cookie: refreshDe() });
+      const res = await renovar({ cookie: cookieDeSessao() });
 
       expect(res.status).toBe(401);
       expect(res.body).not.toHaveProperty('accessToken');
@@ -260,10 +280,10 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     });
 
     test('repositório rejeitando: 500 sem accessToken e sem set-cookie de sessão', async () => {
-      const cookie = refreshDe();
+      const cookie = cookieDeSessao();
       selectOne.mockRejectedValue(new Error('banco fora'));
 
-      const res = await chamar(RENOVAR, { cookie });
+      const res = await renovar({ cookie });
 
       expect(res.status).toBe(500);
       expect(res.body).not.toHaveProperty('accessToken');
@@ -274,7 +294,8 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
 
   describe('sair (AC-004-023, AC-004-002, FR-002-017)', () => {
     test('cookie válido com jti já trocado: 204, remoção do cookie e a sessão encerrada pelo sid', async () => {
-      const cookie = refreshComSessao('sid-do-cookie', 'jti-velho');
+      semearSessao(armazenamento, { sid: 'sid-do-cookie', idUsuario: subDoCaso() });
+      const cookie = refreshDeSessao({ sid: 'sid-do-cookie', jti: 'jti-velho' });
 
       const res = await chamar(SAIR, { cookie });
 
@@ -285,7 +306,10 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     });
 
     test.each([
-      ['assinatura errada', () => refreshComSessao('sid-x', 'jti', 'outro-segredo')],
+      [
+        'assinatura errada',
+        () => refreshDeSessao({ sid: 'sid-x', jti: 'jti', segredo: 'outro-segredo' })
+      ],
       ['não-JWT de 12 KB', () => 'x'.repeat(12 * 1024)],
       ['refresh legado sem sid', () => refreshLegado()]
     ])('%s: 204, cookie limpo e nenhuma sessão encerrada', async (_n, valor) => {
@@ -307,8 +331,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     });
 
     test('duas vezes com o mesmo cookie: 204 e 204', async () => {
-      const cookie = refreshComSessao();
-      encerrar.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+      const cookie = cookieDeSessao();
 
       const primeira = await chamar(SAIR, { cookie });
       const segunda = await chamar(SAIR, { cookie });
@@ -325,7 +348,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
       erro.name = 'PrismaClientKnownRequestError';
       encerrar.mockRejectedValue(erro);
 
-      const res = await chamar(SAIR, { cookie: refreshComSessao() });
+      const res = await chamar(SAIR, { cookie: cookieDeSessao() });
 
       expect(res.status).toBe(500);
       expect(cookiesDaSessao(res)).toEqual([]);
@@ -351,7 +374,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
     test('401: sem sentinela em log nem em corpo; captura ativa (controle positivo)', async () => {
       const cap = capturarLog();
 
-      const res = await chamar(RENOVAR, { cookie: `${SENTINELA}.x.y` });
+      const res = await renovar({ cookie: `${SENTINELA}.x.y` });
 
       expect(res.status).toBe(401);
       expect(cap.textos.length).toBeGreaterThan(0);
@@ -372,7 +395,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
 
     test('204 (sessão encerrada): sem cookie nem sid em log ou corpo; captura ativa', async () => {
       const cap = capturarLog();
-      const cookie = refreshComSessao(`sid-${SENTINELA}`, 'jti-velho');
+      const cookie = refreshDeSessao({ sid: `sid-${SENTINELA}`, jti: 'jti-velho' });
 
       const res = await chamar(SAIR, { cookie });
 
@@ -400,7 +423,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
       Constants.env = 'production-like';
       encerrar.mockRejectedValue(erroDoOrm());
       const cap = capturarLog();
-      const cookie = refreshComSessao(`sid-${SENTINELA}`);
+      const cookie = refreshDeSessao({ sid: `sid-${SENTINELA}` });
 
       const res = await chamar(SAIR, { cookie });
 
@@ -418,7 +441,7 @@ describe('renovar e sair pela sessão em cookie (app real)', () => {
       selectOne.mockRejectedValue(erroDoOrm());
       const cap = capturarLog();
 
-      const res = await chamar(RENOVAR, { cookie: refreshDe() });
+      const res = await renovar({ cookie: cookieDeSessao() });
 
       expect(res.status).toBe(500);
       expect(cap.texto()).toContain('RefreshTokenController');
