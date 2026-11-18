@@ -72,6 +72,8 @@ model User {
   aulas            Aula[]
   // Relacionamento com Idiomas
   idiomas          Idioma[]
+  // Relacionamento com SessaoLogin
+  sessoes          SessaoLogin[]
 
   @@map("users")
 }
@@ -299,4 +301,24 @@ model TentativaLogin {
   dataAtualizacao DateTime @updatedAt
 
   @@map("tentativas_login")
+}
+
+// Uma linha por login: a sessão revogável do refresh (`sid`). `jtiAtual`/`jtiAnterior`
+// identificam o refresh vigente e o imediatamente anterior (rotação com tolerância).
+model SessaoLogin {
+  id                 String    @id @default(cuid())
+  idUsuario          String
+  jtiAtual           String
+  jtiAnterior        String?
+  rotacionadaEm      DateTime  @default(now())
+  expiraEm           DateTime
+  encerradaEm        DateTime?
+  motivoEncerramento String?
+  dataCriacao        DateTime  @default(now())
+  dataAtualizacao    DateTime  @updatedAt
+
+  user User @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+
+  @@index([idUsuario])
+  @@map("sessoes_login")
 }

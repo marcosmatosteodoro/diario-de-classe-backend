@@ -53,6 +53,14 @@ export function parseCorsOrigins(value, isProduction) {
   return origens;
 }
 
+const SESSION_ROTATION_GRACE_PADRAO = 30;
+
+export function parseSessionRotationGrace(value, accessExp) {
+  const segundos = Number(value);
+  if (!Number.isFinite(segundos) || segundos <= 0) return SESSION_ROTATION_GRACE_PADRAO;
+  return Math.min(segundos, accessExp);
+}
+
 export default class Constants {
   /* Config */
   static env = process.env.NODE_ENV;
@@ -74,6 +82,15 @@ export default class Constants {
   static accessExp = Number(process.env.JWT_EXP_SECONDS) || 60 * 15; // 15min
 
   static refreshExp = Number(process.env.JWT_REFRESH_EXP_SECONDS) || 60 * 60 * 24 * 7; // 7d
+
+  // Tolerância de concorrência da renovação: refresh anterior ainda aceito por este tempo.
+  static sessionRotationGraceSeconds = parseSessionRotationGrace(
+    process.env.SESSION_ROTATION_GRACE_SECONDS,
+    Constants.accessExp
+  );
+
+  // Sessões do usuário vencidas/encerradas há mais de N dias são apagadas no login.
+  static sessionCleanupDays = 7;
 
   // Claim `typ` do refresh emitido no login: renovar e sair recusam refresh sem ela, o que
   // separa o refresh da sessão em cookie do legado de 30 dias (DEC-003-018).
