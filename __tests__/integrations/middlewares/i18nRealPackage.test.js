@@ -19,7 +19,8 @@ describe('i18nMiddleware com pacote real', () => {
     ['?lng=en', '/t?lng=en', {}, TEXTO_EN, 'en'],
     ['?lng=pt', '/t?lng=pt', {}, TEXTO_PT, 'pt'],
     ['Accept-Language: en sem query', '/t', { 'Accept-Language': 'en' }, TEXTO_EN, 'en'],
-    ['idioma fora de supportedLngs (?lng=xx)', '/t?lng=xx', {}, TEXTO_PT, 'pt']
+    ['idioma fora de supportedLngs (?lng=xx)', '/t?lng=xx', {}, TEXTO_PT, 'pt'],
+    ['Cookie: lng=en sem Accept-Language nem query', '/t', { Cookie: 'lng=en' }, TEXTO_EN, 'en']
   ])('%s', async (_nome, url, headers, texto, idioma) => {
     const res = await request(app).get(url).set(headers);
 
@@ -35,5 +36,20 @@ describe('i18nMiddleware com pacote real', () => {
     expect(res.headers['content-language']).toBe('pt');
     const cookies = [].concat(res.headers['set-cookie'] || []);
     expect(cookies.some(c => c.includes('x=y'))).toBe(false);
+  });
+
+  test('CR/LF no cookie lng não injeta header nem quebra a resposta', async () => {
+    const res = await request(app).get('/t').set('Cookie', 'lng=en%0d%0aX-Injected:%201');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-language']).toBe('pt');
+    expect(res.headers['x-injected']).toBeUndefined();
+  });
+
+  test('cookie lng com percent-encoding malformado cai no idioma padrão sem exceção', async () => {
+    const res = await request(app).get('/t').set('Cookie', 'lng=%E0%A4%A');
+
+    expect(res.status).toBe(200);
+    expect(res.body.idioma).toBe('pt');
   });
 });
