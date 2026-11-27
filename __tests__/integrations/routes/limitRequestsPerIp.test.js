@@ -31,6 +31,7 @@ let carregamentos = 0;
 // Constants e TRUST_PROXY são lidos no import.
 async function carregar(env) {
   jest.resetModules();
+  process.env = { ...envOriginal };
   NOMES_ENV.forEach(n => delete process.env[n]);
   process.env.CORS_ORIGINS = ORIGEM;
   Object.assign(process.env, env);
@@ -52,9 +53,11 @@ async function carregar(env) {
   );
   const { LoginService } = await import('../../../src/services/auth/loginService.js');
   const { healthCheck } = await import('../../../src/controllers/healthController.js');
+  const { default: LoggerManager } = await import('../../../src/utilities/loggerManager.js');
   return {
     app,
     Constants,
+    LoggerManager,
     TentativaLoginRepository,
     AbstractRepository,
     LoginService,
@@ -336,17 +339,16 @@ describe('limite por IP atrás de proxy confiável (?rateLimitProxy)', () => {
     const captura = capturarLog();
     for (let i = 0; i < 6; i += 1) await de(IP_SENTINELA);
 
-    const linhaDoBloqueio = captura.textos
-      .filter(t => t.includes('rate_limit.bloqueio'))
-      .join('\n');
-    expect(captura.textos.filter(t => t.includes('rate_limit.bloqueio'))).toHaveLength(1);
+    const bloqueios = () => captura.textos.filter(t => t.includes('rate_limit.bloqueio'));
+    const linhaDoBloqueio = bloqueios().join('\n');
+    expect(bloqueios()).toHaveLength(1);
     expect(linhaDoBloqueio).toContain('GET');
     expect(linhaDoBloqueio).toContain('/api/alunos');
     expect(linhaDoBloqueio).toMatch(/limite: 5/);
     expect(linhaDoBloqueio).not.toContain(IP_SENTINELA);
 
-    console.warn('controle', { ip: IP_SENTINELA });
-    expect(captura.texto()).toContain(IP_SENTINELA);
+    ctx.LoggerManager.warn('rate_limit.bloqueio', { ip: IP_SENTINELA });
+    expect(bloqueios().join('\n')).toContain(IP_SENTINELA);
   });
 
   test('um ip recebe exatamente as recusas que excedem o limite e o outro nenhuma', async () => {
@@ -417,8 +419,6 @@ describe('limite por IP convivendo com o limite de login (?rateLimitLogin)', () 
     const chamadasGlobais = globais(dubles.incrementar);
     expect(chamadasGlobais).toHaveLength(limite + 1);
     const chaveGlobal = chamadasGlobais[0][0];
-    expect([
-      ...(dubles.store.get(chaveGlobal) ? [dubles.store.get(chaveGlobal).contagem] : [])
-    ]).toEqual([6]);
+    expect(dubles.store.get(chaveGlobal)?.contagem).toBe(6);
   });
 });
