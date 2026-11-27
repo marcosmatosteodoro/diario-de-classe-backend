@@ -1,89 +1,42 @@
-import './guardOnLoad.js';
-import { PrismaClient } from '../generated/client/index.js';
-import { ProfessoresSeed } from './models/professoresSeed.js';
-import { DisponibilidadeProfessorSeed } from './models/disponibilidadeProfessorSeed.js';
-import { AlunosSeed } from './models/alunosSeed.js';
-import { ContratosSeed } from './models/contratosSeed.js';
-import { DiaAulasSeed } from './models/diaAulasSeed.js';
-import { AulasSeed } from './models/aulasSeed.js';
-import { LivrosSeed } from './models/livrosSeed.js';
+import Constants from '../../utilities/constants.js';
+import LoggerManager from '../../utilities/loggerManager.js';
+import { assertSeedAllowed } from './seedGuard.js';
+import { diaCivilSaoPaulo } from './seedCalendario.js';
 
+// Carregar este módulo não grava nem conecta (DEC-004-001 · demonstracao): as etapas, que
+// puxam o client do banco, entram por import() dentro de execute(), depois da recusa
+// (DEC-004-002 · demonstracao).
 export default class Seed {
-  constructor(prisma) {
-    this.prisma = prisma;
-    this.seeds = [
-      'professores',
-      'disponibilidadeProfessores',
-      'alunos',
-      'contratos',
-      'diaAulas',
-      'aulas',
-      'livros'
-    ];
+  constructor({ agora = new Date() } = {}) {
+    this.agora = agora;
   }
 
+  /**
+   * Recusa produção e senha ausente, grava o catálogo relativo a `agora` e devolve as contagens.
+   * @returns {Promise<Record<string, number>>}
+   * @throws {Error} recusa do guard, `RangeError` para `agora` inválido ou falha de gravação
+   */
   async execute() {
-    console.log('🌱 Iniciando seed do banco de dados...');
+    const senha = assertSeedAllowed();
+    const hoje = diaCivilSaoPaulo(this.agora);
 
-    console.log('👥 Criando professores...');
-    this.professores = await ProfessoresSeed.handle(this.params);
-    this.updateParams();
+    const { executarEtapas } = await import('./seedEtapas.js');
+    const quantidades = await executarEtapas({ hoje, senha });
 
-    console.log('👥 Criando disponibilidades de professores...');
-    this.disponibilidadeProfessores = await DisponibilidadeProfessorSeed.handle(this.params);
-    this.updateParams();
-
-    console.log('👥 Criando alunos...');
-    this.alunos = await AlunosSeed.handle(this.params);
-    this.updateParams();
-
-    console.log('👥 Criando contratos...');
-    this.contratos = await ContratosSeed.handle(this.params);
-    this.updateParams();
-
-    console.log('👥 Criando dias de aulas...');
-    this.diaAulas = await DiaAulasSeed.handle(this.params);
-    this.updateParams();
-
-    console.log('👥 Criando aulas...');
-    this.aulas = await AulasSeed.handle(this.params);
-    this.updateParams();
-
-    console.log('📚 Criando livros...');
-    this.livros = await LivrosSeed.handle(this.params);
-    this.updateParams();
-
-    this.seeds.forEach(seed => {
-      console.log(`✅ Criado ${this[seed].length} ${seed}`);
+    LoggerManager.info('seed.executado', {
+      instante: this.agora.toISOString(),
+      ambiente: Constants.env ?? 'desconhecido',
+      quantidades
     });
+
+    return quantidades;
   }
 
-  updateParams() {
-    this.params = {
-      professores: this.professores,
-      disponibilidadeProfessores: this.disponibilidadeProfessores,
-      alunos: this.alunos,
-      contratos: this.contratos,
-      diaAulas: this.diaAulas,
-      aulas: this.aulas,
-      livros: this.livros
-    };
-  }
-
-  static async handle() {
-    const prisma = new PrismaClient();
-    const seed = new Seed(prisma);
-
-    seed
-      .execute()
-      .catch(e => {
-        console.error('💥 Falha no seed:', e);
-        process.exit(1);
-      })
-      .finally(async () => {
-        await prisma.$disconnect();
-      });
+  /**
+   * @param {{ agora?: Date }} [opcoes] instante de referência; padrão: agora
+   * @returns {Promise<Record<string, number>>}
+   */
+  static async handle({ agora = new Date() } = {}) {
+    return new Seed({ agora }).execute();
   }
 }
-
-Seed.handle();

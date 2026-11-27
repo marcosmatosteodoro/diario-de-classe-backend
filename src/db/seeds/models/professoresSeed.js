@@ -1,123 +1,36 @@
 import { CreateUserService } from '../../../services/user/createUserService.js';
-import Constants from '../../../utilities/constants.js';
 import BaseSeed from '../baseSeed.js';
+import { CONTAS_FIXAS_DEMO, PROFESSORES_DEMO } from '../seedCatalogo.js';
 
 export class ProfessoresSeed extends BaseSeed {
   constructor(params = null) {
     super(params);
   }
 
-  generateMocks() {
-    const seedPassword = Constants.seedPassword;
-    return [
-      {
-        nome: 'Ana',
-        sobrenome: 'Silva',
-        email: 'ana.silva@blsidiomas.com',
-        telefone: '11987654321',
-        senha: seedPassword,
-        permissao: 'admin',
-        resetarSenha: false
-      },
-      {
-        nome: 'Carlos',
-        sobrenome: 'Santos',
-        email: 'carlos.santos@blsidiomas.com',
-        telefone: '11876543210',
-        senha: seedPassword,
-        permissao: 'member',
-        resetarSenha: false
-      },
-      {
-        nome: 'Maria',
-        sobrenome: 'Oliveira',
-        email: 'maria.oliveira@blsidiomas.com',
-        telefone: '11765432109',
-        senha: seedPassword,
-        permissao: 'member',
-        resetarSenha: false
-      },
-      {
-        nome: 'João',
-        sobrenome: 'Pereira',
-        email: 'joao.pereira@blsidiomas.com',
-        telefone: '11654321098',
-        senha: seedPassword,
-        permissao: 'member',
-        resetarSenha: true
-      },
-      {
-        nome: 'Fernanda',
-        sobrenome: 'Costa',
-        email: 'fernanda.costa@blsidiomas.com',
-        telefone: '11543210987',
-        senha: seedPassword,
-        permissao: 'admin',
-        resetarSenha: false
-      },
-      {
-        nome: 'Ricardo',
-        sobrenome: 'Almeida',
-        email: 'ricardo.almeida@blsidiomas.com',
-        telefone: '11432109876',
-        senha: seedPassword,
-        permissao: 'member',
-        resetarSenha: false
-      },
-      {
-        nome: 'Juliana',
-        sobrenome: 'Ferreira',
-        email: 'juliana.ferreira@blsidiomas.com',
-        telefone: '11321098765',
-        senha: seedPassword,
-        permissao: 'member',
-        resetarSenha: false
-      },
-      {
-        nome: 'Pedro',
-        sobrenome: 'Lima',
-        email: 'pedro.lima@blsidiomas.com',
-        telefone: '11210987654',
-        senha: seedPassword,
-        permissao: 'member',
-        resetarSenha: true
-      },
-      {
-        nome: 'Camila',
-        sobrenome: 'Rodrigues',
-        email: 'camila.rodrigues@blsidiomas.com',
-        telefone: '11109876543',
-        senha: seedPassword,
-        permissao: 'admin',
-        resetarSenha: false
-      },
-      {
-        nome: 'Bruno',
-        sobrenome: 'Martins',
-        email: 'bruno.martins@blsidiomas.com',
-        telefone: null, // Exemplo sem telefone
-        senha: seedPassword,
-        permissao: 'member',
-        resetarSenha: false
-      },
-      {
-        nome: 'BLS Idiomas',
-        sobrenome: 'admin',
-        email: 'contato@blsrio.com.br',
-        telefone: null, // Exemplo sem telefone
-        senha: seedPassword,
-        permissao: 'admin',
-        resetarSenha: false
-      }
-    ];
+  generateMocks(params) {
+    if (!params || typeof params.senha !== 'string' || params.senha === '') {
+      throw new Error('Senha não informada para gerar seeds dos professores');
+    }
+
+    return [...CONTAS_FIXAS_DEMO, ...PROFESSORES_DEMO].map(
+      ({ nome, sobrenome, email, telefone, permissao, resetarSenha }) => ({
+        nome,
+        sobrenome,
+        email,
+        telefone,
+        senha: params.senha,
+        permissao,
+        resetarSenha
+      })
+    );
   }
 
   getCreateEntityService() {
     return CreateUserService;
   }
 
-  static async handle() {
-    const professoresSeed = new ProfessoresSeed();
+  static async handle(params) {
+    const professoresSeed = new ProfessoresSeed(params);
     return await professoresSeed.execute();
   }
 }

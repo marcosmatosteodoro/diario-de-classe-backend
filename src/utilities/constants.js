@@ -128,6 +128,48 @@ export default class Constants {
     return undefined;
   }
 
+  // Só o texto exato `true` liga (sem trim/caixa, ao contrário de parseTrustProxy): ligar por
+  // engano em produção é o risco; ausente ou outro valor mantém desligado (DEC-002-001 · demonstracao).
+  static demoMode = Constants.parseDemoMode(process.env.DEMO_MODE);
+
+  static parseDemoMode(value) {
+    return value === 'true';
+  }
+
+  // Limite de requisições por IP, desligado por padrão: só o texto exato `true` liga, e N/T são
+  // inteiros >= 1 por regex (Number(env) || default aceitaria `10.5` e `-1`) (DEC-022-007 · seguranca).
+  static rateLimitGlobal = Constants.parseRateLimitGlobal(process.env.RATE_LIMIT_GLOBAL);
+
+  static rateLimitMaxRequisicoes = Constants.parseRateLimitInteiro(
+    process.env.RATE_LIMIT_MAX_REQUISICOES
+  );
+
+  static rateLimitJanelaSegundos = Constants.parseRateLimitInteiro(
+    process.env.RATE_LIMIT_JANELA_SEGUNDOS
+  );
+
+  static parseRateLimitGlobal(value) {
+    return value === 'true';
+  }
+
+  static parseRateLimitInteiro(value) {
+    if (typeof value !== 'string' || !/^\d+$/.test(value)) return 300;
+    const numero = Number(value);
+    return Number.isSafeInteger(numero) && numero >= 1 ? numero : 300;
+  }
+
+  // Lista de e-mails por vírgula, só sem espaços ao redor e sem normalizar caixa: a comparação é
+  // exata com o e-mail gravado, então normalizar poderia proteger conta que não é a fixa (DEC-002-002 · demonstracao).
+  static demoContasFixas = Constants.parseDemoContasFixas(process.env.DEMO_CONTAS_FIXAS);
+
+  static parseDemoContasFixas(value) {
+    if (typeof value !== 'string') return [];
+    return value
+      .split(',')
+      .map(item => item.trim())
+      .filter(item => item !== '');
+  }
+
   /* Database */
   // static database = {
   //   host: process.env.DATABASE_HOST,

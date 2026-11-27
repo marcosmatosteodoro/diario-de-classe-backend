@@ -41,24 +41,23 @@ describe('seed de professores', () => {
     expect(assertSeedAllowed()).toBe('valor-de-teste-do-seed');
   });
 
-  test('todos os usuários são criados com a senha vinda da variável', async () => {
+  test('todos os usuários são criados com a senha recebida por parâmetro', async () => {
     const criados = [];
     jest.spyOn(CreateUserService, 'handle').mockImplementation(async data => {
       criados.push(data);
       return data;
     });
 
-    await ProfessoresSeed.handle();
+    await ProfessoresSeed.handle({ senha: 'senha-sentinela-guard' });
 
-    expect(criados).toHaveLength(11);
-    expect(criados.map(u => u.senha)).toEqual(Array(11).fill('valor-de-teste-do-seed'));
+    expect(criados).toHaveLength(5);
+    expect(criados.map(u => u.senha)).toEqual(Array(5).fill('senha-sentinela-guard'));
   });
 
-  test('sem a variável o seed de professores não cria ninguém', async () => {
-    delete process.env.SEED_PASSWORD;
+  test('sem senha o seed de professores não cria ninguém', async () => {
     const spy = jest.spyOn(CreateUserService, 'handle').mockResolvedValue({});
 
-    await expect(ProfessoresSeed.handle()).rejects.toThrow(/SEED_PASSWORD/);
+    await expect(ProfessoresSeed.handle({})).rejects.toThrow();
     expect(spy).not.toHaveBeenCalled();
   });
 });

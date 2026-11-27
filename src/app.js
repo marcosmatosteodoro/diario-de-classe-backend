@@ -12,6 +12,7 @@ import routes from './routes.js';
 import LoggerManager from './utilities/loggerManager.js';
 import ErrorHandler from './middlewares/error-handler.js';
 import cleanRequest from './middlewares/cleanRequest.js';
+import { limitRequestsPerIp } from './middlewares/limitRequestsPerIp.js';
 import createAccessLog from './middlewares/accessLog.js';
 import logAuthDenials from './middlewares/auth/logAuthDenials.js';
 import i18nMiddleware from './middlewares/i18n.js';
@@ -52,6 +53,7 @@ app.use(cookieParser()); // Habilita parsing de cookies nas requisições
 app.use(helmet()); // Adiciona headers de segurança para proteger a aplicação
 app.use(cors({ origin: Constants.corsOrigins, methods: ['GET', 'POST', 'PUT', 'DELETE'] })); // Restringe o CORS às origens configuradas em CORS_ORIGINS
 app.use(cleanRequest); // Middleware customizado para limpeza/sanitização das requisições
+app.use(limitRequestsPerIp); // Depois do cors (preflight já encerrado) e antes das rotas, sem exceção por rota
 
 // Antes das rotas: observa o status final de toda resposta, inclusive 401/403 de middleware e de erro
 app.use(logAuthDenials);

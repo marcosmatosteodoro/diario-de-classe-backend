@@ -25,7 +25,7 @@
     "db:migrate": "prisma migrate dev --schema=./src/db/prisma/schema.prisma",
     "db:studio": "prisma studio --schema=./src/db/prisma/schema.prisma",
     "db:reset": "prisma migrate reset --schema=./src/db/prisma/schema.prisma",
-    "db:seed": "node src/db/seeds/seed.js",
+    "db:seed": "node src/db/seeds/seedCli.js",
     "clean:uploads": "node scripts/deleteUploadFiles.js",
     "prepare": "husky || echo 'Husky not found, skipping...'",
     "build": "npm run db:generate",

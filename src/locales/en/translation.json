@@ -17,7 +17,9 @@
       "unauthorized": "Unauthorized",
       "service_unavailable": "Service temporarily unavailable",
       "payload_too_large": "Request body exceeds the allowed size",
-      "forbidden": "You do not have permission to perform this action"
+      "forbidden": "You do not have permission to perform this action",
+      "demo_mode_blocked": "This action is not available in the demo",
+      "too_many_requests": "Too many requests. Please try again in {{segundos}} second(s)."
     }
   },
   "validation": {

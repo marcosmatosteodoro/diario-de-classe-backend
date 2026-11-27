@@ -17,7 +17,9 @@
       "unauthorized": "Não autorizado",
       "service_unavailable": "Serviço temporariamente indisponível",
       "payload_too_large": "Corpo da requisição excede o tamanho permitido",
-      "forbidden": "Você não tem permissão para realizar esta ação"
+      "forbidden": "Você não tem permissão para realizar esta ação",
+      "demo_mode_blocked": "Esta ação não está disponível na demonstração",
+      "too_many_requests": "Muitas requisições. Tente novamente em {{segundos}} segundo(s)."
     }
   },
   "validation": {
